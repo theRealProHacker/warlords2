@@ -1,0 +1,9 @@
+{
+ "args": ["--probe", "probe_ui_setup", "--seed", "1"],
+ "steps": [
+  [1, {"assert_state": {"state": "probe_ui_setup", "dialog": null}}],
+  [1, {"shot": "menubar_shot09"}],
+  [1, {"golden": {"ref": "screenshot_09.jpg", "max_mae": 1.0, "regions": {
+       "bar": [0, 0, 640, 17], "pointer": [0, 0, 16, 16]}}}]
+ ]
+}

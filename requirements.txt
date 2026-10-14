@@ -1,0 +1,13 @@
+pygame>=2.6
+numpy
+opencv-python
+pgsm==0.0.2
+pygame-screen-record==0.1.2
+pillow
+pytest
+# --- music rendering (optional; only tools/render_music.py) ---
+# pyopl: DOSBox DBOPL OPL2/OPL3 emulator, GPL-3.0-only (no permissive OPL core ships as a wheel)
+pyopl==2.0
+# tinysoundfont (MIT, for --variant gm) is not listed as a requirement because it depends on
+# pyaudio (needs system PortAudio to build) although offline rendering never imports it:
+#   uv pip install --python .venv/bin/python --no-deps tinysoundfont==0.3.7

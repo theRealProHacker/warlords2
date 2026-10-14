@@ -1,0 +1,11 @@
+{
+ "args": ["--probe", "probe_ui_start", "--seed", "1"],
+ "steps": [
+  [1, {"drag": [[52, 182], [52, 182]], "frames": 6, "button": 3}],
+  [4, {"assert_state": {"dialog": "PopupHelp"}}],
+  [4, {"shot": "popup_help_100"}],
+  [7, {"assert_state": {"dialog": null}}],
+  [8, {"press_button": 100}],
+  [8, {"shot": "after_press_100"}]
+ ]
+}

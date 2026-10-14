@@ -1,0 +1,37 @@
+{
+ "args": ["--seed", "7"],
+ "steps": [
+  [1, {"assert_state": {"state": "menu", "dialog": "VoiceFace"}}],
+  [1, {"shot": "face_shot01"}],
+  [1, {"golden": {"ref": "screenshot_01.jpg", "max_mae": 6.0, "regions": {
+       "bar": [0, 0, 640, 17], "helmet_top": [152, 17, 352, 244],
+       "helmet_right": [392, 261, 112, 47], "helmet_bottom": [152, 308, 352, 149],
+       "menu_left_top": [0, 17, 152, 215], "menu_left_low": [0, 285, 152, 195], "menu_right": [504, 17, 136, 463]}}}],
+  [147, {"assert_state": {"state": "menu", "dialog": null}}],
+  [147, {"shot": "start_shot00"}],
+  [147, {"golden": {"ref": "screenshot_00.jpg", "max_mae": 6.0, "regions": {
+       "logo": [0, 17, 640, 145], "new_scenario": [32, 162, 248, 53], "random_map": [32, 302, 248, 53],
+       "begin": [32, 372, 248, 53], "title": [328, 162, 268, 36], "picture": [328, 198, 268, 230],
+       "left": [0, 162, 32, 318], "lower": [0, 428, 640, 52], "right": [596, 162, 44, 266]}}}],
+  [147, {"golden": {"ref": "screenshot_02.jpg", "max_mae": 6.0, "regions": {
+       "bar": [0, 0, 640, 17], "logo": [0, 17, 640, 145], "picture": [328, 198, 268, 230]}}}],
+  [148, {"press_button": 100}],
+  [149, {"assert_state": {"state": "menu", "dialog": "ScenarioSelect"}}],
+  [150, {"shot": "scenario_list"}],
+  [151, {"press_button": 476}],
+  [153, {"shot": "scenario_tutorial"}],
+  [154, {"press_button": 474}],
+  [156, {"assert_state": {"state": "menu", "dialog": null}}],
+  [156, {"shot": "start_tutorial"}],
+  [157, {"press_button": 100}],
+  [159, {"press_button": 479}],
+  [161, {"press_button": 475}],
+  [163, {"shot": "start_cancelled"}],
+  [164, {"press_button": 101}],
+  [165, {"press_button": 102}],
+  [166, {"assert_state": {"state": "menu", "dialog": null}}],
+  [167, {"rclick": [150, 190]}],
+  [167, {"assert_state": {"dialog": "PopupHelp"}}],
+  [167, {"shot": "help_new_scenario"}]
+ ]
+}

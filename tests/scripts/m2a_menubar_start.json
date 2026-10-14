@@ -1,0 +1,11 @@
+{
+ "args": ["--probe", "probe_ui_start", "--seed", "1"],
+ "steps": [
+  [0, {"move": [620, 470]}],
+  [1, {"assert_state": {"state": "probe_ui_start", "dialog": null}}],
+  [1, {"shot": "menubar_shot00"}],
+  [1, {"golden": {"ref": "screenshot_00.jpg", "max_mae": 1.0, "regions": {
+       "bar": [0, 0, 640, 17], "button_100": [32, 162, 248, 53], "button_101": [32, 232, 248, 53],
+       "button_102": [32, 302, 248, 53], "button_103": [32, 372, 248, 53]}}}]
+ ]
+}

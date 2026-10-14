@@ -1,0 +1,68 @@
+{
+ "args": [
+  "--scenario",
+  "ISLADIA",
+  "--seed",
+  "3"
+ ],
+ "steps": [
+  [
+   2,
+   {
+    "wait_dialog": "progress",
+    "frames": 5
+   }
+  ],
+  [
+   35,
+   {
+    "shot": "building"
+   }
+  ],
+  [
+   53,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   54,
+   {
+    "shot": "map_start"
+   }
+  ],
+  [
+   55,
+   {
+    "click": [
+     450,
+     90
+    ]
+   }
+  ],
+  [
+   57,
+   {
+    "shot": "map_a"
+   }
+  ],
+  [
+   58,
+   {
+    "click": [
+     560,
+     260
+    ]
+   }
+  ],
+  [
+   60,
+   {
+    "shot": "map_b"
+   }
+  ]
+ ]
+}

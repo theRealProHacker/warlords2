@@ -1,0 +1,16 @@
+{
+ "args": ["--seed", "5", "--no-voice"],
+ "steps": [
+  [2, {"press_button": 103}],
+  [3, {"wait_dialog": "progress", "frames": 2}],
+  [6, {"shot": "loading"}],
+  [8, {"assert_state": {"state": "setup", "dialog": "Progress"}}],
+  [45, {"shot": "building"}],
+  [54, {"assert_state": {"state": "setup", "dialog": null}}],
+  [55, {"shot": "setup"}],
+  [56, {"press_button": 141}],
+  [59, {"assert_state": {"state": "game", "dialog": null}}],
+  [59, {"move": [0, 0]}],
+  [60, {"shot": "game"}]
+ ]
+}

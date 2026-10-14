@@ -1,0 +1,24 @@
+{
+ "args": ["--probe", "probe_ui_progress", "--seed", "1"],
+ "steps": [
+  [0, {"move": [620, 470]}],
+  [0, {"wait_dialog": "progress", "frames": 2}],
+  [3, {"assert_state": {"dialog": "Progress"}}],
+  [3, {"shot": "progress_00"}],
+  [3, {"golden": {"ref": "screenshot_03.jpg", "max_mae": 1.0, "regions": {
+       "bscroll": [160, 55, 336, 347], "menubar": [0, 0, 640, 17], "bar": [232, 257, 48, 21]}}}],
+  [14, {"shot": "progress_10"}],
+  [14, {"golden": {"ref": "screenshot_04.jpg", "max_mae": 1.0, "regions": {
+       "bscroll": [160, 55, 336, 347], "menubar": [0, 0, 640, 17], "bar": [232, 257, 64, 21]}}}],
+  [26, {"shot": "progress_30"}],
+  [26, {"golden": {"ref": "screenshot_05.jpg", "max_mae": 1.0, "regions": {
+       "bscroll": [160, 55, 336, 347], "menubar": [0, 0, 640, 17], "bar": [232, 257, 96, 21]}}}],
+  [38, {"shot": "progress_50"}],
+  [38, {"golden": {"ref": "screenshot_06.jpg", "max_mae": 1.0, "regions": {
+       "bscroll": [160, 55, 336, 347], "menubar": [0, 0, 640, 17], "bar": [232, 257, 128, 21]}}}],
+  [50, {"shot": "progress_70"}],
+  [50, {"golden": {"ref": "screenshot_07.jpg", "max_mae": 1.0, "regions": {
+       "bscroll": [160, 55, 336, 347], "menubar": [0, 0, 640, 17], "bar": [232, 257, 160, 21]}}}],
+  [62, {"assert_state": {"dialog": null}}]
+ ]
+}

@@ -1,0 +1,6 @@
+{
+ "args": ["--probe", "probe_cursors", "--seed", "1"],
+ "steps": [
+  [1, {"shot": "buttons_states_cursors"}]
+ ]
+}

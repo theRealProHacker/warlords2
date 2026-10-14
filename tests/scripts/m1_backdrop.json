@@ -1,0 +1,13 @@
+{
+ "args": ["--probe", "probe_backdrop", "--seed", "1"],
+ "steps": [
+  [0, {"assert_state": {"state": "probe_backdrop", "dialog": null}}],
+  [0, {"shot": "backdrop_0"}],
+  [0, {"golden": {"ref": "screenshot_00.jpg", "max_mae": 2.0, "regions": {
+       "upper": [0, 17, 640, 155], "left": [0, 172, 328, 308],
+       "right": [592, 172, 48, 308], "lower": [328, 425, 264, 55]}}}],
+  [10, {"move": [320, 240]}],
+  [20, {"click": [100, 190]}],
+  [29, {"shot": "backdrop_29"}]
+ ]
+}

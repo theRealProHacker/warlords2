@@ -1,0 +1,115 @@
+{
+ "args": [
+  "--scenario",
+  "DRAGON",
+  "--seed",
+  "1"
+ ],
+ "steps": [
+  [
+   0,
+   {
+    "shot": "empty_frame"
+   }
+  ],
+  [
+   0,
+   {
+    "golden": {
+     "ref": "screenshot_08.jpg",
+     "max_mae": 2.0,
+     "regions": {
+      "menubar": [
+       0,
+       0,
+       640,
+       17
+      ],
+      "frame": [
+       0,
+       17,
+       640,
+       463
+      ]
+     }
+    }
+   }
+  ],
+  [
+   2,
+   {
+    "wait_dialog": "progress",
+    "frames": 5
+   }
+  ],
+  [
+   3,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": "Progress"
+    }
+   }
+  ],
+  [
+   53,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   54,
+   {
+    "shot": "map_start"
+   }
+  ],
+  [
+   55,
+   {
+    "click": [
+     420,
+     60
+    ]
+   }
+  ],
+  [
+   57,
+   {
+    "shot": "map_nw"
+   }
+  ],
+  [
+   58,
+   {
+    "click": [
+     600,
+     320
+    ]
+   }
+  ],
+  [
+   60,
+   {
+    "shot": "map_se"
+   }
+  ],
+  [
+   61,
+   {
+    "click": [
+     510,
+     190
+    ]
+   }
+  ],
+  [
+   63,
+   {
+    "shot": "map_centre"
+   }
+  ]
+ ]
+}

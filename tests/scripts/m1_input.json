@@ -1,0 +1,13 @@
+{
+ "args": ["--probe", "probe_loop", "--seed", "1"],
+ "steps": [
+  [0, {"assert_state": {"state": "probe_loop", "dialog": null}}],
+  [2, {"key": "left alt", "hold": true}],
+  [3, {"drag": [[100, 100], [300, 200]], "frames": 4}],
+  [8, {"keyup": "left alt"}],
+  [9, {"key": "a"}],
+  [10, {"rclick": [50, 60]}],
+  [11, {"shot": "loop_11"}],
+  [11, {"assert_state": {"state": "probe_loop"}}]
+ ]
+}

@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "warlords2"
+version = "0.0.1"
+description = "Reimplementation of Warlords II (1993, DOS v1.02) in pygame; reads the user's own game files at run time"
+requires-python = ">=3.12"
+# The engine (formats, model, rules, ai) is standard library only.  Presentation and
+# tool dependencies are installed from requirements.txt.
+dependencies = []
+
+[tool.setuptools.packages.find]
+include = ["warlords2*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
