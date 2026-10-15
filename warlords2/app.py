@@ -36,6 +36,7 @@ STATES = {
 }
 MOUSE_FILE = "STAND.PCK"
 SETTLE_TIMEOUT = 10.0                     # seconds a pgsm hook thread may take
+BANNER_FMT, BANNER_VERSION = 0x27C9, 0x27F8   # res_0a4c:02f3 / 02f7: printf(DS:27c9, DS:27f8)
 
 
 def discover_states(app: App) -> dict[str, BaseState]:
@@ -71,6 +72,9 @@ class App:
         for p in problems:                                    # hash mismatch: reported, not fatal
             print(p, file=sys.stderr)
         self.user = UserDir(cfg.user_dir, cfg.data)
+        from .persist.saves import RunCarry, Saves
+        self.saves = Saves(self.user, self.gd)        # res_0a4c:0250 -> ovl49:0e5f (the slot table)
+        self.run_carry = RunCarry()                   # the run's memory across games (EL §10.4)
 
         # everything is read here, synchronously, before pgsm exists
         pygame.display.init()
@@ -194,6 +198,19 @@ class App:
         finally:
             if recorder:
                 recorder.close()
+
+    def exit_program(self) -> None:
+        """0a4c:02b5, the end of the program: back to text mode, music off, vectors and mouse
+        released (here: the main loop stops and `close` releases the display), then
+        printf(DS:27c9, DS:27f8), the one-line banner with the version, to the console (the
+        text from the user's EXE), and exit(0).  Nothing is written.
+        Evidence: asm res_0a4c:02b5..030b (02f2..02fa printf, 0302 exit(0))."""
+        from .assets.exe import ds_str
+        from .assets.text import printf
+        exe = self.gd.read(EXE_NAME)
+        sys.stdout.write(printf(ds_str(exe, BANNER_FMT), ds_str(exe, BANNER_VERSION)))
+        sys.stdout.flush()
+        self.running = False
 
     def close(self) -> None:
         """Release the display and the thread hook (safe to call twice)."""

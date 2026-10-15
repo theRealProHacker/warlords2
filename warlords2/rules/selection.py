@@ -379,6 +379,26 @@ def palette_moves(state) -> int:
     return low
 
 
+def palette_list(state) -> None:
+    """The DS:483c writes of the movement-kind cell ovl66:070d: 0872 0c8c:07fa(DS:6862, DS:6842,
+    DS:30f6) runs ovl35:08b4 (0886 -> 08c3 ovl51:03d9 mode 2) for every palette entry whose
+    selected word is set and whose type is 0x1c, in palette order; the record is read through
+    the pointer as it is.  Called where 070d runs: inside ovl66:0356 (055c, `redraw_palette` and
+    the host's 0356 points) and after a human move step (0a8b:0d05, before the palette rebuild
+    0d0a).  Not modelled [unverified]: 070d's gate DS:30f8 (0721: set to 1 only by 0356's info
+    area branch 05a9, to 0 by its stack branch 03a0); with DS:5e62 set it is 0 at both sites
+    (every selection path ends in 0356).
+    Evidence: asm ovl66:070d..090f (0721, 0866..0872); 0c8c:07fa..08e0 (0825..0845 pointer and
+    flag, 0873 type 0x1c, 0886 ovl35:08b4); res_0a8b:0d01..0d0f; ovl66:055c."""
+    from .bonuses import list_carried
+    sel = state.selection
+    if sel.selected < 0:
+        return
+    for aid, chosen in zip(sel.palette, sel.palette_selected):
+        if chosen and 0 <= aid < len(state.armies) and state.armies[aid].type_id == HERO_TYPE:
+            list_carried(state, state.armies[aid])
+
+
 def redraw_palette(state) -> None:
     """The state writes of the palette draw ovl66:0356, which the original runs at the end of
     the selection commands (Select Stack 0b62:04e8, Next / Quit & Next / Defend ovl67:01e0,
@@ -394,6 +414,7 @@ def redraw_palette(state) -> None:
     sel = state.selection
     if sel.selected < 0:
         return
+    palette_list(state)                          # 055c -> 070d (its 08b4 lists into DS:483c)
     if not sel.group:
         sel.count = 1
         if sel.moving:

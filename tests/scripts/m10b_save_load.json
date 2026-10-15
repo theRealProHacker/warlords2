@@ -1,0 +1,506 @@
+{
+ "note": "M10b save / load / New Game on ERYTHEA, the Sirians human, the other sides computer. Turn 1 (pop-up, hero offer 287, production 192); Alt+S -> the Save list (ovl49:093b, ovl51:0000: ten rows), row 0 (114), OK 123 -> the input box ovl56:0000 (limit 15, 160 px): 191, a description, Return, OK 189 -> ovl49:0a25 (slot table, SAVE0) and ovl61:0000(0, 0); the state hash is unchanged by the save. Alt+L -> the Load list (ovl49:026b: the used slots), row 0, OK -> ovl49:02d3 -> 0414 in its scroll (group 133: 0..100, no 232b in the same scenario) -> the game screen, the strips ovl68:0952(1, 0) / (0, 0), the message (47, 1) -> a click; the game goes on mid-turn (no turn start) with SCN 0x130 = 1. Alt+E: the computer sides, then the Sirians' turn 2. Alt+N -> the confirmation (45) -> Return = yes -> ovl49:0203: the Game Start screen (the abandoned game's scenario, DS:5d64) and ovl25:0519; Begin 103 -> the Game Setup screen -> Begin 141: a second game with the first one's run memory (rules.setup.new_game(run=)). The fresh-run load is tests/test_m10b_host.py.",
+ "args": [
+  "--scenario",
+  "ERYTHEA",
+  "--seed",
+  "3",
+  "--controls",
+  "HCCCCCCC",
+  "--no-voice"
+ ],
+ "steps": [
+  [
+   2,
+   {
+    "wait_dialog": "progress",
+    "frames": 5
+   }
+  ],
+  [
+   30,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 40
+   }
+  ],
+  [
+   74,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   76,
+   {
+    "wait_dialog": "hero_offer",
+    "frames": 10
+   }
+  ],
+  [
+   90,
+   {
+    "press_button": 287
+   }
+  ],
+  [
+   92,
+   {
+    "wait_dialog": "production",
+    "frames": 10
+   }
+  ],
+  [
+   106,
+   {
+    "press_button": 192
+   }
+  ],
+  [
+   110,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   111,
+   {
+    "state_hash": "before_save",
+    "want": "0df499840730f9ed55dbca72ba5b88419530069cf91d62149f8b27f7871dcb88"
+   }
+  ],
+  [
+   112,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   113,
+   {
+    "key": "s"
+   }
+  ],
+  [
+   114,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   116,
+   {
+    "wait_dialog": "sage_list",
+    "frames": 6
+   }
+  ],
+  [
+   124,
+   {
+    "shot": "01_save_list"
+   }
+  ],
+  [
+   126,
+   {
+    "press_button": 114
+   }
+  ],
+  [
+   128,
+   {
+    "press_button": 123
+   }
+  ],
+  [
+   130,
+   {
+    "wait_dialog": "input_box",
+    "frames": 4
+   }
+  ],
+  [
+   134,
+   {
+    "press_button": 191
+   }
+  ],
+  [
+   136,
+   {
+    "key": "e",
+    "text": "E"
+   }
+  ],
+  [
+   137,
+   {
+    "key": "r",
+    "text": "r"
+   }
+  ],
+  [
+   138,
+   {
+    "key": "y",
+    "text": "y"
+   }
+  ],
+  [
+   139,
+   {
+    "key": "t",
+    "text": "t"
+   }
+  ],
+  [
+   140,
+   {
+    "key": "h",
+    "text": "h"
+   }
+  ],
+  [
+   141,
+   {
+    "key": "e",
+    "text": "e"
+   }
+  ],
+  [
+   142,
+   {
+    "key": "a",
+    "text": "a"
+   }
+  ],
+  [
+   143,
+   {
+    "key": "space",
+    "text": " "
+   }
+  ],
+  [
+   144,
+   {
+    "key": "o",
+    "text": "o"
+   }
+  ],
+  [
+   145,
+   {
+    "key": "n",
+    "text": "n"
+   }
+  ],
+  [
+   146,
+   {
+    "key": "e",
+    "text": "e"
+   }
+  ],
+  [
+   150,
+   {
+    "shot": "02_save_description"
+   }
+  ],
+  [
+   151,
+   {
+    "key": "return"
+   }
+  ],
+  [
+   153,
+   {
+    "press_button": 189
+   }
+  ],
+  [
+   156,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   157,
+   {
+    "state_hash": "saved",
+    "want": "0df499840730f9ed55dbca72ba5b88419530069cf91d62149f8b27f7871dcb88"
+   }
+  ],
+  [
+   160,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   161,
+   {
+    "key": "l"
+   }
+  ],
+  [
+   162,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   164,
+   {
+    "wait_dialog": "sage_list",
+    "frames": 6
+   }
+  ],
+  [
+   170,
+   {
+    "shot": "03_load_list"
+   }
+  ],
+  [
+   172,
+   {
+    "press_button": 114
+   }
+  ],
+  [
+   174,
+   {
+    "press_button": 123
+   }
+  ],
+  [
+   176,
+   {
+    "wait_dialog": "progress",
+    "frames": 6
+   }
+  ],
+  [
+   178,
+   {
+    "shot": "04_load_progress"
+   }
+  ],
+  [
+   180,
+   {
+    "wait_dialog": "message",
+    "frames": 30
+   }
+  ],
+  [
+   212,
+   {
+    "shot": "05_load_message"
+   }
+  ],
+  [
+   214,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   218,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   219,
+   {
+    "state_hash": "loaded",
+    "want": "009235a75e54a1a13b5fe27fe7658889f4d658eebf51774d0bb237460d1b03a6"
+   }
+  ],
+  [
+   220,
+   {
+    "shot": "06_loaded"
+   }
+  ],
+  [
+   222,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   223,
+   {
+    "key": "e"
+   }
+  ],
+  [
+   224,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   226,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 900
+   }
+  ],
+  [
+   1130,
+   {
+    "state_hash": "turn_2",
+    "want": "d1f6b20cddc4efc2e933f6ea214d72f488c5c5944e94a63054655ce0a85137a4"
+   }
+  ],
+  [
+   1131,
+   {
+    "shot": "07_turn_2"
+   }
+  ],
+  [
+   1140,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   1160,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   1162,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   1163,
+   {
+    "key": "n"
+   }
+  ],
+  [
+   1164,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   1166,
+   {
+    "wait_dialog": "confirm",
+    "frames": 4
+   }
+  ],
+  [
+   1170,
+   {
+    "shot": "08_new_game_confirm"
+   }
+  ],
+  [
+   1172,
+   {
+    "key": "return"
+   }
+  ],
+  [
+   1180,
+   {
+    "assert_state": {
+     "state": "menu",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   1181,
+   {
+    "shot": "09_game_start_after_new_game"
+   }
+  ],
+  [
+   1184,
+   {
+    "press_button": 103
+   }
+  ],
+  [
+   1188,
+   {
+    "wait_dialog": "progress",
+    "frames": 6
+   }
+  ],
+  [
+   1250,
+   {
+    "assert_state": {
+     "state": "setup",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   1252,
+   {
+    "press_button": 141
+   }
+  ],
+  [
+   1256,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 200
+   }
+  ],
+  [
+   1490,
+   {
+    "state_hash": "second_game",
+    "want": "97ad9ff0c39861b220703383abaf1876b11a20707bb6e1cf7f026ec55a282e2a"
+   }
+  ],
+  [
+   1491,
+   {
+    "shot": "10_second_game"
+   }
+  ]
+ ]
+}

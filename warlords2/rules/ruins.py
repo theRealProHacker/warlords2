@@ -213,6 +213,8 @@ def guardian_kills(state, site, hero) -> bool:
     Evidence: decomp ovl34:07ad: B = signed sum of the hero's type-1 item values (ovl51:03d9 mode
     2), S = armies of any owner on the hero's square (records 0x181-1..0), H = hero +8, M = the
     guardian's strength word 2c04:1007 + 2t; dies when 90 + 3S + 5(H + B - M) < rnd(1,100,0)."""
+    from .bonuses import list_carried
+    list_carried(state, hero)                      # ovl34:07bf ovl51:03d9(2, DS:5e5e), before the roll
     base, per_army, per_point = K.RUIN_SURVIVE.value
     s = sum(1 for a in state.armies if (a.x, a.y) == (hero.x, hero.y))
     m = state.monsters[site.guardian_or_ally].strength if site.guardian_or_ally < len(state.monsters) else 0
@@ -256,8 +258,8 @@ def ruin_search(state, si: int, x: int, y: int) -> list:
             a, b = K.NEWS_RUIN_DEATH.value
             H.news(state, p, a, b, 0, name)
             _stat(state, p, K.STAT_HERO_LOST.value)
-            from .bonuses import carried_items
-            for i in carried_items(state, hero):
+            from .bonuses import list_carried
+            for i in list_carried(state, hero):        # ovl34:0323 ovl51:03d9(2, DS:5e5e)
                 if i < K.STANDARDS.value:
                     _stat(state, p, K.STAT_STANDARD_LOST.value)
             events += H.hero_died(state, hero.id, hero.x, hero.y)

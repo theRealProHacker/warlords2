@@ -179,7 +179,7 @@ def kind_cell(state):
     """ovl66:070d: the movement-kind cell of the selected palette armies, or None."""
     from ..rules.movement import stack_flies_07fa, type_flag
     group = selected_armies(state)
-    return kind_of(stack_flies_07fa(state, group), all(a.flags & ABOARD for a in group),
+    return kind_of(stack_flies_07fa(state, group, write=False), all(a.flags & ABOARD for a in group),
                    any(type_flag(state, a.type_id, "flag17") for a in group),
                    any(type_flag(state, a.type_id, "flag18") for a in group))
 

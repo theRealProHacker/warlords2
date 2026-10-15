@@ -145,8 +145,11 @@ class RunCarry:
     names: list[str] = field(default_factory=list)
 
     def enter(self, state: GameState, record: dict | None) -> None:
-        """A game is the run's memory now (Begin of a new game, a load)."""
+        """A game is the run's memory now (Begin of a new game, a load); its list name buffer
+        is the run's (`GameState.list_names` is `names`, so the engine's ovl51:03d9 writes and
+        the dialogs' lists share DS:483c)."""
         self.game, self.record = state, record
+        state.list_names = self.names
 
     def write_names(self, names: list[str]) -> None:
         """An ovl51 list fills entries 0..len-1 of DS:483c (the rest keep their bytes)."""
@@ -328,7 +331,7 @@ class Saves:
 
     def load_game(self, carry: RunCarry, n: int, *, where: str = "game", rng=None,
                   process=None, alt_names: bool = False, advisor: dict | None = None,
-                  cards=None) -> SL.Loaded:
+                  cards=None, saved=False) -> SL.Loaded:
         """ovl49:0414(n, 1, 0), up to its return (the caller then closes the progress scroll
         and calls `finish_load`).  Same run (`carry.game` set): the run part of that game (its
         dice, AI process words, buffers; army types not re-read).  Fresh run: `fresh_run_part`
@@ -343,12 +346,14 @@ class Saves:
         `rng` that is another object raises ValueError (joining `states.menu.session_dice` and
         `GameState.rng` into one stream is the host's).
         The host catches: NoGameInMemory, ValueError (a malformed file, `read_game`; a stream
-        mismatch) and FileNotFoundError (a fresh run whose army type file is missing)."""
+        mismatch) and FileNotFoundError (a fresh run whose army type file is missing).
+        `saved`: the caller's `read_game(n)` (the file is read once; False = read it here)."""
         from ..ai.cards import card_reader, load_draws
         live = carry.game
         if live is not None and rng is not None and rng is not live.rng:
             raise ValueError("a same-run load continues the run's stream carry.game.rng, not another")
-        saved = self.read_game(n)
+        if saved is False:
+            saved = self.read_game(n)
         if saved is None:
             if live is None:
                 raise NoGameInMemory("failed open of save file %d with no game in memory" % n)
@@ -358,7 +363,7 @@ class Saves:
                 run = SL.run_part(live)
             else:
                 run = SL.fresh_run_part(rng, self.army_types(saved, alt_names), process=process,
-                                        **(advisor or {}))
+                                        list_names=carry.names, **(advisor or {}))
             cards = cards if cards is not None else card_reader(self.gd)
             res = SL.load(saved, run, where=where, live_record=carry.record, live=live,
                           ai_read=lambda st: load_draws(st, cards, run.process))

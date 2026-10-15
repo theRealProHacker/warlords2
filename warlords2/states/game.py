@@ -4,8 +4,9 @@ Entered with `new_game=NewGameConfig` and `overview=` the strategic bitmap the s
 screen's scenario load built (ovl63:232b runs inside ovl57:0194, before the Game Setup
 screen; `states.setup.load_scroll`), or with `new_game` alone (--scenario via
 `states.boot`, which has no setup screen: the building phase runs the same load first),
-or `load_slot=n` (M10b).  `on_enter` runs on pgsm's hook thread, so it only stores the
-arguments; the engine game is started by the building phase on the main thread.  Until
+or `load_slot=n` (M10b: `start_load` from the first `step`, no building phase).  `on_enter`
+runs on pgsm's hook thread, so it only stores the arguments; the engine game is started by
+the building phase (or the load) on the main thread.  Until
 then the state draws the empty game frame (SCREEN0-3, SHOT 08) with the program's one menu
 bar (`ui.menubar.title_bar`) as the Game Setup screen left it (ovl57:0416 / 0564: all
 titles off but Game / Quit, rules.md section 9.7); with --scenario there was no setup
@@ -111,7 +112,7 @@ from ..ui import registry
 from ..ui import tutorial  # noqa: F401  (registers the tutorial pop-ups)
 from ..ui.dialog import DialogStack
 from ..ui.mapview import AREA, MapView
-from ..ui.menubar import MenuDialog, saved_games, title_bar, with_codes
+from ..ui.menubar import MenuDialog, saved_games, saved_maps, title_bar, with_codes
 from ..ui.minimap import RECT as OVERVIEW_RECT
 from ..ui.minimap import Minimap
 from ..ui.widgets import draw_pointer, kit
@@ -227,15 +228,28 @@ class Game(BaseState):
         self.run_start = self.run_prev = self.run_phase = None
         self.shield_strip = None
         self.strip_saved = None
+        self.load_where = self.load_backdrop = self.load_prev = None
+        self.load_started = self.pointer_hidden = False
 
     def on_enter(self, frm: str, new_game=None, load_slot=None, overview=None) -> None:
         self.config, self.load_slot, self.overview = new_game, load_slot, overview
+        self.dialogs = GameDialogs(self)
+        self.load_where = self.load_backdrop = self.load_prev = None
+        self.load_started = self.pointer_hidden = False
+        if load_slot is not None:                 # Load Game (ovl49:02d3 -> 0414): `start_load`
+            self.load_where = LOAD_WHERE.get(frm, "game")
+            if self.load_where == "game" and self.state is not None:
+                # DS:2a86 stays 1: the game screen stays up under the scroll until 02d3 redraws
+                self.load_prev = (self.phase_name, self.phase)
+                self._next = None
+                return
+            if frm != "game":                     # (502 is live in a game only in human / over)
+                self.load_backdrop = frm          # the Game Start / Setup screen stays up under it
         self.state, self.phase_name, self.phase = None, None, None
         self.map_ready = False
-        self.dialogs = GameDialogs(self)
         self.battle_names = [None, None]          # DS:4148 / 4134 (ui.dialogs.fight)
-        self._next = "building"
-        self.no_setup = frm != "setup"
+        self._next = "building" if load_slot is None else None
+        self.no_setup = frm != "setup" and load_slot is None
         self.bar = None
         self.turn_events = None
         self.blank_map = None
@@ -247,9 +261,12 @@ class Game(BaseState):
         self.strip_saved = None
 
     def on_exit(self, to: str) -> None:
+        """The game stays the run's memory (`persist.saves.RunCarry.game`, entered at Begin and
+        at every load): a later Begin, load or New Game takes its run words (EL §10.4, §10.7)."""
         self.abandon_run()
-        if self.state is not None:                # DS:5dea outlives the game (`start_engine`)
-            self.app.ds_city_counts = list(self.state.city_counts)
+        if self.state is not None:                # (already so: entered at Begin / the load)
+            from ..ui.dialogs.save_load import run_carry
+            run_carry(self.app).game = self.state
 
     def abandon_run(self) -> None:
         """A run parked at a present point is left (the game or the app closes)."""
@@ -263,7 +280,7 @@ class Game(BaseState):
         if self.bar is None:
             self.bar = title_bar(self.app)
             if self.no_setup:                     # what ovl57:0416 and 1372:132f(0) left
-                self.bar.pre_game(saved_games(self.app), saved_games(self.app), False)
+                self.bar.pre_game(saved_games(self.app), saved_maps(self.app), False)
                 self.bar.repaint()
         if self.sprites is None:
             self.sprites = Sprites(self.app.assets)
@@ -271,19 +288,20 @@ class Game(BaseState):
 
     def start_engine(self, sc=None) -> None:
         """Start the engine game (rules.setup.new_game) from the loaded scenario `sc`
-        (loaded here when None) with the overview bitmap of the load.  The city counts DS:5dea
-        are DGROUP memory of the program run, not of the game: no new-game path calls ovl62:03f9,
-        so a second game of the session starts with the counts the previous one left (kept per
-        App, `App.ds_city_counts`, written when the game state is left; zero, the EXE image's
-        BSS value, in the first game), and Begin's menu refresh ovl61:0174 -> 0519 (0745 /
-        0886, the computer phase's `start_run`) reads them before the first 03f9 (ovl36:1149 or
-        the turn start).  A load (M10b) keeps them too until its recount ovl49:0361."""
+        (loaded here when None) with the overview bitmap of the load.  A Begin in a run that had
+        a game keeps that game's run memory (`rules.saveload.run_part` of `RunCarry.game`, the
+        last game: abandoned by New Game, or loaded; EL §10.7): the path cache, the battle
+        arrays, the selection words, the caches DS:5dca / 5dda / 5dea (no new-game path calls
+        ovl62:03f9, so Begin's menu refresh ovl61:0174 -> 0519 reads the old counts), the report
+        block, the list name buffer and the army records.  The new game is then the run's memory
+        with the scenario record DS:5d64 (`RunCarry.enter`), and its dice are the run's one
+        stream (`states.menu.session_dice`, X06)."""
         from ..audio import audio
         from ..formats.scenario import load_scenario
         from ..formats.tables import parse_armytypes
+        from ..rules.saveload import run_part
         from ..rules.setup import new_game, unused_side_name
-        if self.load_slot is not None:
-            raise NotImplementedError("Load Game (load_slot) is M10b")
+        from ..ui.dialogs.save_load import run_carry
         cfg = self.config
         if cfg is None:
             raise RuntimeError("game entered without new_game= or load_slot=")
@@ -293,20 +311,138 @@ class Game(BaseState):
         types = parse_armytypes(a.read(f"TERRAIN{terrain_set(sc)}/ARMYTYP{'2' if cfg.army_set else 'E'}.DAT"))
         from ..rules.heroes import load_hero_names
         from ..ai.cards import card_reader
+        carry = run_carry(self.app)
+        run = run_part(carry.game) if carry.game is not None else None
         st = self.state = new_game(sc, cfg, list(types), unused_name=unused_side_name(a.read("WARLORD2.EXE")),
                                    hero_names=load_hero_names(self.app.gd, terrain_set(sc)),
-                                   cards=card_reader(self.app.gd), process=self.app.ai_process)
-        carried = getattr(self.app, "ds_city_counts", None)
-        if carried is not None:                   # DS:5dea as the previous game left it
-            st.city_counts[:] = carried
+                                   cards=card_reader(self.app.gd), process=self.app.ai_process, run=run)
+        carry.enter(st, scenario_record(self.app, cfg.scenario, carry.record))
+        self.app.session_dice = st.rng            # the run's one stream goes on in the game
         snd = audio(self.app)                     # DS:26c8 / 37a4 and the FILE.DAT group sizes
         st.advisor_talking = int(snd.settings.speech)
         st.advisor_digital = int(snd.mixer.available)
         st.advisor_groups = {g: snd.members(g) for g in sorted(advice_groups())}
         if self.no_setup:
-            self.bar.pre_game(saved_games(self.app), saved_games(self.app), st.flags[SCN_SAVE_MAP] != 0)
+            self.bar.pre_game(saved_games(self.app), saved_maps(self.app), st.flags[SCN_SAVE_MAP] != 0)
         self.minimap = Minimap(self.sprites, MapColors.load(a, st.flags[SCN_TERRAIN_SET]), self.overview)
         self.view.follow(st)
+
+    # ------------------------------------------------------------------ Load Game (M10b)
+
+    def start_load(self) -> None:
+        """ovl49:02d3(e) after the Load list: 0414(e, 1, 0) in its scroll
+        (`save_load.open_load`), then the rest of 02d3 (`load_done`).  Entered from the game
+        (`load_where` "game", DS:2a86: the game screen stays up), the Game Start screen
+        ("game_start", DS:28c6) or the Game Setup screen ("setup"); the screen it came from
+        stays up under the scroll until ovl61:0000 draws the game screen."""
+        from ..ui.dialogs import save_load
+        save_load.open_load(self, self.load_slot, self.load_where, self.load_done, refused=self.load_refused)
+
+    def hide_pointer(self) -> None:
+        """ovl49:0606 12bf:07a5: the pointer hidden for the rest of the load's scroll (shown again
+        at 092f, 12bf:0757: `load_done` / `load_refused`)."""
+        self.pointer_hidden = True
+
+    def load_refused(self) -> None:
+        """A load the host cannot run (logged by `save_load.load_work`: a file that is not a
+        save of this program, a missing army type file, or a failed open with no game in
+        memory, register X47): nothing was changed, and the Cancel path of 02d3 runs as the
+        stand-in: DS:28c6 ? ovl60:0000(0) : DS:2a86 ? ovl61:0000(0, 0) : ovl57:0000(0, 0, 0, 1)."""
+        where, self.load_where, self.load_slot = self.load_where, None, None
+        self.pointer_hidden = False                # 092f 12bf:0757
+        if where == "game_start":
+            return self.request("menu", draw=False)
+        if where == "setup":
+            return self.request("setup", back=True)
+        self.phase_name, self.phase = self.load_prev
+        self.load_prev = None
+        self.redraw_game_screen()
+
+    def load_done(self, result) -> None:
+        """The rest of ovl49:02d3 after 0414 (`persist.saves.Saves.finish_load` =
+        `rules.saveload.after_load`), its present points drawn in its order: "game_screen"
+        (ovl61:0000(DS:28c6, 0): the game frame, map, overview, info cell, palette and menu
+        refresh, bar repaint, the info area ovl66:0356; DS:2a86 = 1), DS:28c6 = 0, the strips
+        ovl68:0952(1, 0) and (0, 0), the message ovl61:10fb (`save_load.load_message`, waits);
+        "map" / "frame_off" (drawn by the phase from the state) and "music" mode 1 (M10c, X32)
+        follow the message.  The game goes on mid-turn in the human phase of SCN 0x110 (or the
+        over phase after an acknowledged victory, SCN 0x15b / 0x157): no turn start.  The
+        overview bitmap is the one ovl63:232b built, else the one already there (DS:581d)."""
+        import threading
+        from ..rules import present as PR
+        from ..ui.dialogs import save_load
+        loaded = result.loaded
+        st = loaded.state
+        self.pointer_hidden = False                # ovl49:092f 12bf:0757 (after the scroll's close)
+        points = []
+        me = threading.current_thread()
+        PR.attach(me, lambda point, info: points.append((point, info)))
+        try:
+            save_load.saves(self.app).finish_load(loaded, self.load_where)
+        finally:
+            PR.detach(me)
+        self.app.session_dice = st.rng            # the run's one stream (X06 / X49)
+        for point, info in points:
+            if point == "game_screen":
+                self._show_loaded(st, result.overview)
+            elif point == "strip":
+                self.strip_call(info["at"])
+            elif point == "message":
+                save_load.load_message(self, st)
+                break                              # "map", "frame_off", "music": nothing to draw here
+
+    def _show_loaded(self, st, overview) -> None:
+        """ovl61:0000(DS:28c6, 0) on the loaded game: DS:2a86 = 1, DS:28c6 = 0."""
+        from ..rules import turn as T
+        a = self.app.assets
+        self.state = st
+        self.config = None
+        if overview is not None or self.minimap is None:
+            self.minimap = Minimap(self.sprites, MapColors.load(a, st.flags[SCN_TERRAIN_SET]), overview)
+        else:                                      # DS:581d as it was (no ovl63:232b)
+            self.minimap = Minimap(self.sprites, MapColors.load(a, st.flags[SCN_TERRAIN_SET]),
+                                   self.minimap.pixels)
+        self.view.follow(st)
+        self.load_where = self.load_backdrop = self.load_prev = self.load_slot = None
+        self.blank_map, self.bar_blank, self.turn_events = None, False, None
+        self.run_palette = self.held_screen = None
+        self.phase_name = "over" if T.loop_over(st) else "human"
+        self.phase = phase_class(self.phase_name)(self)
+        self._next = None
+        self.phase.enter()                         # ovl61:0174 -> 0519 and 1372:132f
+        self.map_ready = True
+        self.palette_drawn()                       # ovl61:008f ovl66:0356
+
+    def redraw_game_screen(self) -> None:
+        """ovl61:0000(0, 0) (the Cancel paths of ovl49:0995 / 02d3, ovl34:1434, after a save):
+        map, overview, the palette and menu refresh ovl61:0174 -> 0519, the bar repaint and the
+        info area ovl66:0356."""
+        self._refresh_palette()
+        if self.bar is not None:
+            self.bar.repaint()
+        self.palette_drawn()
+
+    def new_game_confirmed(self) -> None:
+        """ovl49:0203 (New Game confirmed): the state part on this game (`rules.saveload.new_game`:
+        every army record freed, map words, explored layer), DS:2a86 = DS:166a = 0, then the
+        Game Start screen ovl60:0000(1) with its talking face, and after it ovl25:0519 (the AI
+        set-up of all eight sides on this game's SCN, `ai.cards.setup_all`, its dice after the
+        face's).  The game stays the run's memory (`RunCarry.game`)."""
+        from ..ai.cards import card_reader, setup_all
+        from ..rules import saveload as SL
+        st = self.state
+        SL.new_game(st)
+        cards = card_reader(self.app.gd)
+        self.request("menu", after_face=lambda: setup_all(st, cards))
+
+    def scenario_dir(self) -> str:
+        """DS:5da0 (record +0x3c of DS:5d64): the scenario directory of the game (the .CTY
+        descriptions)."""
+        from ..ui.dialogs.save_load import run_carry
+        rec = run_carry(self.app).record
+        if rec is not None:
+            return rec["str_3c"]
+        return getattr(self.config, "scenario", "") if self.config is not None else ""
 
     def apply(self, cmd):
         """Run one command of the human phase through the engine (no main-loop pass follows:
@@ -346,8 +482,15 @@ class Game(BaseState):
 
     def palette_drawn(self) -> None:
         """ovl66:0356 ran: the info area shows the numbers as they are now (`ui.palettes.Painter`),
-        and the marble strip of the turn start is gone (`bar_blank`)."""
+        and the marble strip of the turn start is gone (`bar_blank`).  Its 055c -> 070d writes the
+        movement-kind cell's item lists into DS:483c (`rules.selection.palette_list`; the paint
+        itself reads without writing): at a dialog close of `PALETTE_ON_CLOSE` (the Stack
+        dialog's ovl66:14d3 / 14fd -> ovl61:0000(0, 0) included), after a save, a load, ...
+        (where the engine's `redraw_palette` already wrote, the same list again)."""
         self.bar_blank = False
+        if self.state is not None:
+            from ..rules.selection import palette_list
+            palette_list(self.state)
         if self.state is not None and self.sprites is not None:
             from ..ui.palettes import painter_for
             painter_for(self).palette_drawn(self.state)
@@ -566,6 +709,9 @@ class Game(BaseState):
 
     def step(self, events, dt):
         self._ready()
+        if self.load_slot is not None and not self.load_started:
+            self.load_started = True
+            return self.start_load()
         if self._next is not None:
             self.phase_name, self._next = self._next, None
             cls = phase_class(self.phase_name)
@@ -624,6 +770,12 @@ class Game(BaseState):
 
     def paint(self, fb):
         self._ready()
+        if self.load_backdrop is not None:         # the scroll of a load over the screen it came from
+            self.app.manager.states[self.load_backdrop].paint(fb)
+            shape = dialog_pointer(self.dialogs)
+            if shape is not None:
+                kit(self.app).cursors.current = shape
+            return
         fb.blit(self.app.assets.picture(BACKDROP), (0, 0))
         if self.map_ready:
             if self.blank_map == BLACK:
@@ -661,7 +813,7 @@ class Game(BaseState):
 
     def draw(self, s):
         super().draw(s)
-        if not getattr(self.phase, "hides_pointer", False):     # a computer side's turn: ovl61:21e8 / 21fd
+        if not getattr(self.phase, "hides_pointer", False) and not self.pointer_hidden:   # a computer side's turn: ovl61:21e8 / 21fd; a load (ovl49:0606..092f)
             draw_pointer(self.app, s, self.dialogs)
 
 
@@ -698,3 +850,16 @@ def _end_turn(host):
     fn = getattr(host, "end_turn", None)
     if fn is not None:
         fn()
+
+
+LOAD_WHERE = {"menu": "game_start", "setup": "setup", "game": "game"}   # DS:28c6 / neither / DS:2a86
+
+
+def scenario_record(app, directory: str, current: dict | None) -> dict | None:
+    """DS:5d64 at Begin: the record the Game Start screen made current (`current`), else the
+    SCENARIO.DAT record of `directory` (--scenario has no Game Start screen); None for a
+    directory without a record (the random map, M11)."""
+    if current is not None and current["str_3c"].upper() == directory.upper():
+        return current
+    from .menu import scenario_records
+    return next((r for r in scenario_records(kit(app)) if r["str_3c"].upper() == directory.upper()), None)

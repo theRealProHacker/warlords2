@@ -113,13 +113,18 @@ class InputBox(Dialog):
         return None if self.editor is None else self.editor.text
 
     def _type(self, events) -> None:
-        """ovl56:03a6; the events after the one that ended it are not read in this frame."""
+        """ovl56:03a6; the keys typed after the one that ended it stay in the BIOS buffer
+        (ovl59:020d reads one key per call), so the box's own key read 07be:0064 gets them next
+        (as `hero_name.HeroName.finish` hands them on): "abc, Return, Return" presses 189."""
         r = self.editor.feed(events)
         if r is not None:
-            (how, text), _ = r
+            (how, text), i = r
             if how == "ok":
                 self.text = text
             self.editor = None
+            keys = [e for e in events[i + 1:] if e.type in (pygame.KEYDOWN, pygame.KEYUP)]
+            if keys and self.stack is not None:
+                self.update(keys, 0)
 
     def update(self, events, dt) -> None:
         if self.editor is not None:

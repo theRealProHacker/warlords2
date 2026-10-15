@@ -104,14 +104,16 @@ class RunPart:
     `production_report`: the heap block DS:4464 (ovl43, allocated once per run).
     `armies`: the army table 1e1d:8880 as the last game left it (plain data), which a Begin
     keeps but for owner / x / y (ovl53:00c1..00fe; `begin_carry`); a load reads it from the
-    file instead.  None = a fresh run (BSS).
-    The ovl49 / ovl51 words DS:128c / 128e / 1290 and the list name buffer DS:483c are the
-    dialog's (persist / ui), and DS:0a54 / DS:5c38 live on the App."""
+    file instead.  None = a fresh run (BSS).  `list_names`: the ovl51 name buffer DS:483c
+    (`GameState.list_names`, the same list object: the run has one), None = a fresh run (BSS:
+    empty).  The ovl49 words DS:128c / 128e / 1290 are the dialog's (persist / ui), and
+    DS:0a54 / DS:5c38 live on the App."""
     fields: dict
     rng: Any
     process: Any = None
     production_report: ProductionReport | None = None
     armies: list | None = None
+    list_names: list | None = None
 
 
 def run_part(state: GameState) -> RunPart:
@@ -123,18 +125,19 @@ def run_part(state: GameState) -> RunPart:
     (EL "Save / Load / Quit", What a load keeps)."""
     d = serialize.dump(state, rng=False)
     return RunPart({k: d[k] for k in RUN_FIELDS}, state.rng, state.ai.proc, state.production_report,
-                   d["armies"])
+                   d["armies"], state.list_names)
 
 
 def fresh_run_part(rng, army_types, advisor_talking: int = 0, advisor_digital: int = 0,
-                   advisor_groups: dict | None = None, process=None) -> RunPart:
+                   advisor_groups: dict | None = None, process=None, list_names: list | None = None) -> RunPart:
     """The run part of a load in a fresh run of the program: the BSS / EXE-image values (zero
     selection words and battle arrays, no search field, no cost map, a cleared path cache, zero
     caches and city counts, no overview bitmap, DS:16a6 = 0), the army types as the run loads
     them on first use (FILE.DAT (21, DS:26c4) with the loaded SCN 0x161: the caller reads
     them), the session's advisor settings, the run's AI process (`process`: pass the App's
     `AiProcess`; its `allocated` 0 makes the AI read draw the 0519 dice; None, for tests, gets
-    a new one at the AI read) and an empty report block.
+    a new one at the AI read), an empty report block and the run's list name buffer DS:483c
+    (`list_names`: what the pre-game lists left, the host's `RunCarry.names`; None = empty).
     `rng`: the run's dice stream; the EXE seeds it from the clock at the first roll (EL §2), the
     stand-in is `rules.rng.Rng(cfg.seed, cfg.rng)` (plan register X49).
     Evidence: EXE image zeros (file 0x33250 + DS) of DS:5dfe..5e62, 41fa..436a, 4160, 16a6,
@@ -146,7 +149,7 @@ def fresh_run_part(rng, army_types, advisor_talking: int = 0, advisor_digital: i
                    advisor_talking=advisor_talking, advisor_digital=advisor_digital,
                    advisor_groups=dict(advisor_groups or {}))
     fields = {k: serialize.plain(getattr(st, k)) for k in RUN_FIELDS}
-    return RunPart(fields, rng, process, ProductionReport())
+    return RunPart(fields, rng, process, ProductionReport(), list_names=list_names)
 
 
 def _null_selection(state) -> None:
@@ -194,6 +197,8 @@ def merge(saved: dict, run: RunPart) -> GameState:
     d.update(format=serialize.FORMAT, pending=None, rng=None)
     st = serialize.load(d, rng=run.rng)
     st.production_report = run.production_report if run.production_report is not None else ProductionReport()
+    if run.list_names is not None:
+        st.list_names = run.list_names
     _null_selection(st)
     off, v = K.SCN_LOADED.value
     st.flags[off] = v
@@ -355,7 +360,7 @@ def begin_carry(state: GameState, run: RunPart) -> None:
     words (DS:5dfe / 5e00 / 2bda / 5dfc / 5dfa / 3250 / 6862 / 6842 / 6852; ovl53 nulls only the
     pointers), the caches DS:5dca / 5dda / 5dea (no new-game path calls 0372 / 02bf / 03f9),
     DS:16a6 (ovl53 writes it only to set it), the army type table (loaded once per run), the
-    session's advisor words, the report block DS:4464 and the army table (its records keep
+    session's advisor words, the report block DS:4464, the list name buffer DS:483c and the army table (its records keep
     every byte; ovl53 then sets owner 0xff, x = y = -1, `rules.setup.new_game`).  Called by
     `rules.setup.new_game(run=)` right after the state is built, so the set-up steps overwrite
     what the EXE's overwrite (the cost map, the search field by the territories' distance maps,
@@ -373,4 +378,6 @@ def begin_carry(state: GameState, run: RunPart) -> None:
         setattr(state, k, getattr(tmp, k))
     if run.production_report is not None:
         state.production_report = run.production_report
+    if run.list_names is not None:
+        state.list_names = run.list_names
 

@@ -34,10 +34,14 @@ Evidence (asm ovl49, ovl51, ovl56, ovl34:1434; texts STRING.DAT, read from the u
   ovl61:0174 -> 0519, bar, the info area ovl66:0356) : ovl57:0000(0, 0, 0, 1) (the Game Setup
   screen again).
 The ovl51 name buffer DS:483c is one per program run (`persist.saves.RunCarry.names`, App
-`run_carry`); every user-interface writer goes through `list_names`: the slot lists (persist),
-the sage's entries (ovl34:1610, 1735), the scenario list (ovl60:058d, 05bf: record +0x14), the
-hero panel's items (ovl51:03d9 mode 6 from ovl40:05b3) and the Setup Side leaders
-(ovl51:03d9 mode 7 from ovl57:1773).
+`run_carry`, the same list as the entered game's `GameState.list_names`).  The user-interface
+writers go through `list_names`: the slot lists (persist), the sage's entries (ovl34:1610,
+1735), the scenario list (ovl60:058d, 05bf: record +0x14), the hero panel's items (ovl51:03d9
+mode 6 from ovl40:05b3), the Setup Side leaders (mode 7 from ovl57:1773) and Random Characters
+(mode 7 from ovl57:209e, per qualifying side before its roll).  The engine's writers go
+through `rules.bonuses.list_names` on the state (mode 2: ovl28:184d, ovl34:0323 / 07bf,
+ovl35:0821 / 0883 / 08c3, ovl36:16fd / 1e26 / 1eac, ovl38:0d29 / 0d80, ovl47:0a89; mode 3:
+ovl34:18b5), headless too, so a later Load list draws what they left.
 """
 from __future__ import annotations
 
@@ -94,10 +98,14 @@ def list_names(app, names: list[str]) -> None:
 
 def where_of(host) -> str:
     """"game_start" (DS:28c6, the Game Start screen), "game" (DS:2a86: a game screen is up,
-    set by ovl61:0000; not yet in the game state's building phase) or "setup" (neither)."""
+    set by ovl61:0000; not yet in the game state's building phase) or "setup" (neither).  A
+    Game running a load (`load_where`) is where the load came from until 02d3's ovl61:0000."""
     from ...states.menu import Menu
     if isinstance(host, Menu):
         return "game_start"
+    lw = getattr(host, "load_where", None)
+    if lw is not None:
+        return lw
     if getattr(host, "state", None) is not None and getattr(host, "phase_name", None) not in (None, "building"):
         return "game"
     return "setup"
@@ -197,14 +205,15 @@ class LoadResult(NamedTuple):
     failed: bool                 # the open failed (0414 jumped to 08b1, register X47)
 
 
-def load_work(app, n: int, where: str, advisor: dict | None = None):
+def load_work(app, n: int, where: str, advisor: dict | None = None, hide: Callable[[], None] | None = None):
     """ovl49:0414(n, 1, 0) up to its 90 as a `"progress"` generator (group 133); returns
     (Loaded, failed), or (None, failed) when the load was refused (logged: a failed open with
     no game in memory, register X47 open; a file that is not a save of this program; a missing
     army type file).  `advisor`: advisor_talking / advisor_digital / advisor_groups for a
     fresh-run load (`persist.saves.Saves.load_game`).  The dice: the run's one stream, the
     game's in a run with a game in memory, else the session's (`states.menu.session_dice`,
-    register X49)."""
+    register X49).  `hide()`: the pointer hidden after the 10 (ovl49:0606 12bf:07a5, before the
+    open); it is shown again at 092f (12bf:0757), after the scroll closed: the host's."""
     from ...persist.saves import NoGameInMemory
     from ...states.menu import session_dice
     carry, sv = run_carry(app), saves(app)
@@ -212,11 +221,15 @@ def load_work(app, n: int, where: str, advisor: dict | None = None):
         advisor = advisor_words(app)
     for p in STEPS_BEFORE_OPEN:
         yield p
+    if hide is not None:
+        hide()
     rng = carry.game.rng if carry.game is not None else session_dice(app)
     try:
-        failed = sv.read_game(n) is None
+        saved = sv.read_game(n)                  # the open and the reads of 0414, once
+        failed = saved is None
         res = sv.load_game(carry, n, where=where, rng=rng, process=app.ai_process,
-                           alt_names=bool(getattr(app.cfg, "alt_names", False)), advisor=advisor)
+                           alt_names=bool(getattr(app.cfg, "alt_names", False)), advisor=advisor,
+                           saved=saved)
     except (NoGameInMemory, ValueError, FileNotFoundError) as e:
         log.error("Load Game refused: %s", e)
         return None, False
@@ -272,7 +285,8 @@ def open_load(host, n: int, where: str, done: Callable[[LoadResult], None], advi
         registry.open_dialog("progress", host, group=BUILD_GROUP, work=build_work(app, res.state, pixels),
                              on_close=lambda _: done(LoadResult(res, pixels, failed)))
 
-    registry.open_dialog("progress", host, group=LOAD_GROUP, work=load_work(app, n, where, advisor),
+    hide = getattr(host, "hide_pointer", None)
+    registry.open_dialog("progress", host, group=LOAD_GROUP, work=load_work(app, n, where, advisor, hide),
                          on_close=read_done)
 
 
@@ -311,6 +325,7 @@ def exit_program(app) -> None:
     app.running = False
 
 
+@registry.action(registry.MENU_ID["quit"])
 def quit_game(host) -> None:
     """ovl49:0000 (menu 505, Ctrl+Q).  Without a game screen (DS:2a86 == 0) ovl49:0072 at
     once; else the confirmation, yes -> 0072, no -> ovl34:1434.  0072: the talking face

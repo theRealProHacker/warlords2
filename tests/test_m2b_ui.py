@@ -74,11 +74,18 @@ def test_scenario_list_is_the_six_records(app):
 
 @gamedata
 def test_load_game_and_random_map_inert(app):
+    import pygame
     frames(app, 2)
     menu = app.manager.current_state()
     assert registry.has_action(101) and not registry.has_action(102)    # 101: M10b's Load Game
     assert menu.buttons.state[101] == DISABLED                # no saves (ovl49:0e25)
     assert menu.buttons.state[102] == NORMAL
+    b = next(b for b in menu.buttons.buttons if b.id == 101)            # a press on the disabled 101
+    s = app.cfg.scale
+    c = ((b.rect[0] + 4) * s, (b.rect[1] + 4) * s)
+    app.step([pygame.event.Event(pygame.MOUSEBUTTONDOWN, pos=c, button=1)])
+    app.step([pygame.event.Event(pygame.MOUSEBUTTONUP, pos=c, button=1)])
+    assert not menu.dialogs and app.manager.current_state_str() == "menu"
     menu.on_button(102)
     frames(app, 1)
     assert app.manager.current_state_str() == "menu" and not menu.dialogs
@@ -348,17 +355,30 @@ def test_quit_speaks_then_exits(voice_app):
 
 
 @gamedata
-def test_quit_in_a_game_asks_first(app):
+def test_quit_in_a_game_asks_first(app, capsys):
+    """ovl49:0000 with DS:2a86 set (a game screen): the confirmation; No = ovl34:1434 (the game
+    screen again, `redraw_game_screen`), Yes = ovl49:0072 -> 0a4c:02b5 (`App.exit_program`:
+    the banner printf(DS:27c9, DS:27f8) from the EXE, the run ends)."""
+    from warlords2.assets.exe import ds_str
     from warlords2.states.base import BaseState
     host = BaseState(app)
+    from types import SimpleNamespace
+    from warlords2.rules.rng import Rng
+    host.state, host.phase_name = SimpleNamespace(rng=Rng(1, "python")), "human"   # a game screen is up
+    redraws = []
+    host.redraw_game_screen = lambda: redraws.append(1)
     registry.run_action(registry.MENU_ID["quit"], host)
     d = host.dialogs.top
     assert d.dialog_id == "confirm" and len(d.lines) == 4
     d.close(False)
-    assert app.running and not host.dialogs
+    assert app.running and not host.dialogs and redraws == [1]
     registry.run_action(registry.MENU_ID["quit"], host)
+    capsys.readouterr()
     host.dialogs.top.close(True)                             # yes: ovl49:0072, no face (voice off)
     assert not app.running
+    exe = app.gd.read("WARLORD2.EXE")
+    assert capsys.readouterr().out == ds_str(exe, 0x27C9).replace("%s", ds_str(exe, 0x27F8))
+    app.running = True
 
 
 def _settle(app, name):

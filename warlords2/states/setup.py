@@ -101,6 +101,7 @@ from ..ui.dialogs.options import apply_preset, matches, presets
 from ..ui.dialogs.setup_side import (OFF_A0, OFF_ALIVE, OFF_B0, OFF_CARD, OFF_CONTROL, OFF_ENH, OFF_LEVEL,
                                       leader_names)
 from ..ui.layout import DISABLED, NORMAL, PRESSED
+from ..ui.menubar import saved_games, saved_maps
 from ..ui.widgets import blit_opaque, kit, text_centred, tick_frames
 from .host import ScreenHost
 from .menu import session_dice
@@ -231,18 +232,28 @@ class Setup(ScreenHost):
         self.ready = False
         self.anim: tuple[int, int, int, int] | None = None    # (side, old label, frame 1..3, frames left)
 
-    def on_enter(self, frm: str, scenario: str | None = None, random_map=None, **kw) -> None:
+    def on_enter(self, frm: str, scenario: str | None = None, random_map=None, back: bool = False, **kw) -> None:
+        """ovl57:0000(1, 1, 1, 0) from Game Start (the scenario load), or with `back`
+        ovl57:0000(0, 0, 0, 1) (the Cancel path of ovl34:1434 / ovl49:02d3 after the Load list
+        of this screen, here a load the host refused): di = 0 no frame or screen redraw (no
+        quotation roll, 00fb / 0141), si = 1 no scroll and no OPTIONS.DAT read (0042 / 00f1),
+        [bp+0xa] = 0 no load (0071); the buttons and the bar as they were (ovl57:0416)."""
         if kw:
             raise TypeError(f"setup: unexpected arguments {sorted(kw)}")
         if random_map is not None:
             raise NotImplementedError("random maps are M11's (ovl57:10e8)")
         super().on_enter(frm)
+        if back:
+            self.starting = False
+            return
         self.scenario, self.sides, self.ready, self.anim = scenario, None, False, None
         self.rng_state, self.rolls, self.overview = None, [], None
 
     # ------------------------------------------------------------------ load
 
     def enter_screen(self, k) -> None:
+        if self.ready:                                       # back (ovl57:0000(0, 0, 0, 1)): ovl57:0416 only
+            return self.refresh()
         self.bar.repaint()                                   # 1372:132f(0)
 
     def start_screen(self, k) -> None:
@@ -273,6 +284,11 @@ class Setup(ScreenHost):
         self.quote = quote_lines(read_quote(data, self.roll(1, count, 0)))
         self.bar.repaint()
         self.ready = True
+        self.refresh()
+
+    def redraw_screen(self) -> None:
+        """ovl57:0000(0, 0, 0, 1) (the Cancel paths of the Load list and of ovl34:1434 on this
+        screen): the buttons and the bar again."""
         self.refresh()
 
     def options_path(self, k):
@@ -314,7 +330,7 @@ class Setup(ScreenHost):
             self.set_button(id, NORMAL)
         any_computer = any(s.playing_computer(p) for p in range(N_SIDES))
         self.set_button(RANDOM_CHARS, NORMAL if any_computer else DISABLED)
-        self.bar.pre_game(False, False, s.get(SAVE_MAP) != 0)
+        self.bar.pre_game(saved_games(self.app), saved_maps(self.app), s.get(SAVE_MAP) != 0)   # ovl57:0599 / 05b3
 
     def cycle(self, p: int) -> None:
         """ovl57:0a4e."""
@@ -351,11 +367,16 @@ class Setup(ScreenHost):
         self.refresh()
 
     def random_characters(self) -> None:
-        """ovl57:2051."""
+        """ovl57:2051: for each side with 0x137 != 0, 0xd0 == 1, 0xc0 != 3 (s = 0..7) the list
+        ovl51:03d9(7, level) (209e: the leader names into DS:483c, `save_load.list_names`), then
+        0xe0 = rnd(1, DS:482e - 1, 0)."""
+        from ..ui.dialogs.save_load import list_names
         k, s = kit(self.app), self.sides
         for p in range(N_SIDES):
             if s.playing_computer(p):
-                n = len(leader_names(k, s.get(OFF_LEVEL, p)))
+                names = leader_names(k, s.get(OFF_LEVEL, p))
+                list_names(self.app, names)
+                n = len(names)
                 s.set(OFF_CARD, p, self.roll(1, n - 1, 0))
         self.refresh()
 

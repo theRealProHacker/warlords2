@@ -28,7 +28,7 @@ from __future__ import annotations
 
 from ..model.ids import HERO_TYPE, NO_OWNER, Terrain
 from . import heroes as H
-from .bonuses import carried_items
+from .bonuses import carried_items, list_carried
 from .constants import history as K
 from .economy import cached_cities, refresh_cities, s16
 from .movement import type_flag
@@ -144,7 +144,7 @@ def _standards(state, loser: int, winner: int, armies: list, types: list) -> Non
     for i, aid in enumerate(armies):
         if types[i] != HERO_TYPE:
             continue
-        for item in carried_items(state, state.armies[aid]):
+        for item in list_carried(state, state.armies[aid]):
             if item >= K.STANDARDS.value:
                 continue
             if both:

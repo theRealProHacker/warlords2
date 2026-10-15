@@ -51,18 +51,52 @@ def carried_items(state, army) -> list[int]:
             if it.state == ItemState.CARRIED and it.holder == army.id]
 
 
+def list_names(state, names) -> None:
+    """ovl51:03d9's writes of the list name buffer DS:483c: entry k = names[k] (strcpy into
+    DS:483c + 32 k), the entries past them keep their bytes (no list clears them; mode 0, the
+    only clearing one, has no caller).  The buffer is run memory (`GameState.list_names`,
+    shared with `persist.saves.RunCarry.names`): rows past a later list's count draw it
+    (ovl51:00f3, register X45).
+    Evidence: asm ovl51:03d9..06fa (03e6 DS:482e = 0; 0531 / 05bc / 0425 / 0636 strcpy
+    0000:4a70 to 483c + 32 k, DS:482e += 1)."""
+    buf = state.list_names
+    if len(buf) < len(names):
+        buf.extend([""] * (len(names) - len(buf)))
+    buf[:len(names)] = list(names)
+
+
+def list_carried(state, army) -> list[int]:
+    """ovl51:03d9(2, ., ., army): the army's carried items (`carried_items`) listed, their names
+    into DS:483c (`list_names`); returns the item indices.
+    Evidence: asm ovl51:0531..05b9."""
+    items = carried_items(state, army)
+    list_names(state, [state.items[i].name for i in items])
+    return items
+
+
+def list_lying(state, x: int, y: int, records: int) -> list[int]:
+    """ovl51:03d9(3, x, y): the items 0..records-1 lying on (x, y) (state 1), in table order,
+    their names into DS:483c; returns the item indices.
+    Evidence: asm ovl51:05bc..0633."""
+    items = [i for i, it in enumerate(state.items[:records])
+             if it.state == ItemState.ON_MAP and (it.x, it.y) == (x, y)]
+    list_names(state, [state.items[i].name for i in items])
+    return items
+
+
 def battle_items(state, army) -> int:
     """Sum of the values of carried type-1 (battle) items.
-    Evidence: ovl38:0d1a (decomp 06b33a): item +0x14 == 1 -> += signed byte +0x15."""
-    return sum(s8(state.items[i].value) for i in carried_items(state, army)
+    Evidence: ovl38:0d1a (decomp 06b33a): item +0x14 == 1 -> += signed byte +0x15; the list
+    is ovl51:03d9 mode 2 (ovl38:0d29, `list_carried`)."""
+    return sum(s8(state.items[i].value) for i in list_carried(state, army)
                if state.items[i].type == ItemType.BATTLE)
 
 
 def command_items(state, army) -> int:
     """Sum of carried type-2 (command) item values plus 1 per type-8 item (standard).
-    Evidence: ovl38:0d71 (decomp 06b391)."""
+    Evidence: ovl38:0d71 (decomp 06b391); the list is ovl51:03d9 mode 2 (ovl38:0d80)."""
     n = 0
-    for i in carried_items(state, army):
+    for i in list_carried(state, army):
         it = state.items[i]
         if it.type == ItemType.COMMAND:
             n += s8(it.value)

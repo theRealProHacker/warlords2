@@ -8,6 +8,8 @@ into the game (ovl57:0cfe -> ovl61:0000(0, 1)), so only the engine game starts h
 135 then 137) runs first, its rolls from an `Rng` like the one `new_game` starts with.
 Then the main loop runs (`Game.start_turns`: ovl61:0000(0, 1) -> ovl61:2123, whose passes begin
 with the site tiles, map words and cost map) before the first frame of the map.
+A load (`load_slot=`) does not pass here: `Game.step` runs `Game.start_load` (the game screen
+of an in-game load stays up, with its phase, under the scroll; DS:2a86 stays 1).
 """
 from __future__ import annotations
 
@@ -22,7 +24,7 @@ class Building(Phase):
     def enter(self) -> None:
         g = self.game
         self.done = False
-        if g.overview is None and g.load_slot is None:
+        if g.overview is None:
             cfg = g.config
             load_scroll(g, cfg.scenario, Rng(cfg.seed, cfg.rng), self._loaded)
         else:

@@ -4,7 +4,7 @@ Evidence (asm ovl61:0519..0929): 1372:0eab(0, 1) .. 1372:0eab(7, 1) switch every
 every menu on (0eab(0, on) loops over all menus, 1372:0e17 with item 0 sets the mask to
 0xffffff); then 1372:0ef8(id, 0) switches off:
 * 502 Load Game when ovl49:0e25 says no saved game, 504 Load Map when ovl49:0e42 says no
-  saved map (`menubar.saved_games`);
+  saved map (`menubar.saved_games` / `saved_maps`);
 * 503 Save Map when SCN 0x120 == 0 or SCN 0x130 != 0;
 * 508 Disband without a selected stack (DS:5e62); 519 Signpost without one or when the
   terrain SCN 0x710[tile] of its square is not 9 (the sign);
@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from ..model.ids import HERO_TYPE, MAP_EXPLORED, MAP_W, ROAD_STANDARD, ItemState, Terrain
 from . import registry
-from .menubar import saved_games
+from .menubar import saved_games, saved_maps
 
 SCN_SAVE_MAP, SCN_130, SCN_15B = 0x120, 0x130, 0x15B
 SIGN, TEMPLE_KIND = int(Terrain.TOWER), 1                  # 0726 cmp di, 9; site +0x18 == 1
@@ -53,7 +53,7 @@ def menu_states(app, state, lead) -> dict[str, bool]:
     std = state.items[p] if p < len(state.items) else None
     off = {
         "load_game": not saved_games(app),
-        "load_map": not saved_games(app),
+        "load_map": not saved_maps(app),
         "save_map": state.flags.get(SCN_SAVE_MAP, 0) == 0 or state.flags.get(SCN_130, 0) != 0,
         "disband": not sel,
         "signpost": not sel or terrain != SIGN,

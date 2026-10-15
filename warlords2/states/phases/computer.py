@@ -477,8 +477,9 @@ class ComputerTurn(Phase):
 
     def p_quit(self, at):
         """0a4c:02b5: the program ends (155e:02a0, ..., exit(0)); the engine thread stays where
-        it is and is abandoned when the app closes."""
-        self.game.app.running = False
+        it is and is abandoned when the app closes (`App.exit_program`: the console banner too)."""
+        from ...ui.dialogs.save_load import exit_program
+        exit_program(self.game.app)
         return self._ended()
 
     def _ended(self):

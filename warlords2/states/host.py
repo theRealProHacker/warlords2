@@ -13,10 +13,8 @@ Chord (ovl58:0b5f, `audio.effects.chord`) sites of the input dispatch:
 * a right press over a button opens its help unless a left press is held on a button
   (08a9:0143, `ui.keys.right_help`).
 
-Quit (menu id 505) is ovl49:0000 (07be:02ea): before a game (DS:2a86 = 0, set by
-ovl61:0000) it calls ovl49:0072 at once, in a game it opens the confirmation ovl56:0088
-with STRING (44, 0..4), whose yes is ovl49:0072 (stub 307f:007a).  ovl49:0072: the talking
-face ovl58:026f(4), then the exit (0a4c:02b5).
+Quit (menu id 505, ovl49:0000) is `ui.dialogs.save_load.quit_game`; `face` here is the
+talking face ovl58:026f the pre-game screens and Quit share.
 """
 from __future__ import annotations
 
@@ -25,8 +23,6 @@ from typing import TYPE_CHECKING, Callable
 import pygame
 
 from ..audio import effects, voice
-from ..model.newgame import NewGameConfig
-from ..rules.rng import Rng
 from ..ui import registry
 from ..ui.keys import right_help
 from ..ui.layout import NORMAL
@@ -41,7 +37,6 @@ KEY_CASES = frozenset((0x08, 0x09, 0x11, 0x20, 0x2C, 0x2E, 0x35, 0x3D, 0x3F, *ra
                        0x112, 0x116, 0x11F, 0x126, 0x12C, 0x12D, 0x131, 0x132, 0x147, 0x14F, 0x153))
 CTRL_W = 0x17
 UPPER = range(0x41, 0x5B)
-QUIT_SPEECH, QUIT_TEXT = 4, 44
 
 
 def unbound_key(code: int) -> bool:
@@ -56,20 +51,6 @@ def face(host, speech: int, roll: Callable[[int, int, int], int], then: Callable
         return then()
     registry.open_dialog("voice_face", host, speech=speech, blink=roll(*voice.BLINK_ROLL),
                          on_close=lambda r: then())
-
-
-@registry.action(registry.MENU_ID["quit"])
-def quit_game(host) -> None:
-    """ovl49:0000.  In a game the face's roll would come from the game's dice; it is drawn
-    from a fresh Rng of the seed here (the game ends with it)."""
-    def leave() -> None:
-        host.app.running = False                         # 0a4c:02b5
-    if isinstance(host, ScreenHost):
-        return face(host, QUIT_SPEECH, host.roll, leave)
-    text = kit(host.app).text.group(QUIT_TEXT)
-    rng = Rng(host.app.cfg.seed, NewGameConfig.rng)
-    registry.open_dialog("confirm", host, title=text[0], lines=text[1:5],
-                         on_close=lambda yes: yes and face(host, QUIT_SPEECH, rng.rnd, leave))
 
 
 class ScreenHost(BaseState):

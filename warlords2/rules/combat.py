@@ -428,7 +428,10 @@ def _group(state, ids) -> list:
 
 
 def _flight_items(state, army) -> int:
-    return sum(1 for i in carried_items(state, army) if state.items[i].type == ItemType.FLIGHT)
+    """ovl35:08b4 from the combat prelude (ovl36:05e9): the list ovl51:03d9 mode 2 (08c3, the
+    names into DS:483c) counted for type 5."""
+    from .bonuses import list_carried
+    return sum(1 for i in list_carried(state, army) if state.items[i].type == ItemType.FLIGHT)
 
 
 def relation_byte(state, a: int, b: int) -> int:

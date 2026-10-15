@@ -46,11 +46,15 @@ die source); the setup screen hands its state to Begin (`NewGameConfig.rng_state
 music on the way to the first game draws no die: mode 0 before the face (ovl60:00fd) and at
 the setup screen's entry (ovl57:003a / 003c) plays the fixed FILE.DAT entries (8, 0) /
 (7, 0), and Begin's mode 11 (ovl57:0e24 / 0e26) (19, 0) / (7, 0) (register X32).
-Not modelled: after a game the stream does not continue from the game's dice (the game's
-`GameState.rng` is its own copy of the stream).
+After a game the stream goes on from the game's dice: a game's `GameState.rng` becomes
+`session_dice` when the game is entered (Begin, a load; `states.game.Game`), so New Game's
+face, the AI set-up ovl25:0519 after it and every later screen roll from the one stream.
 
-No saved games or maps exist before M10b / M11, so ovl49:0e25 / 0e42 are false here; 101
-and 102 run their registered actions and are inert until M10b / M11 register them.
+The current record is DS:5d64 (`persist.saves.RunCarry.record`): set on the first visit and
+by the scenario list, and by a load (the file's record); a later entry shows its directory
+(after New Game the abandoned game's scenario, ovl60:005e: DS:2a0c is set).  Button 101 and
+menu item 502 are live iff a game slot is used (ovl49:0e25, `ui.menubar.saved_games`); 102
+runs its registered action and is inert until M11 registers it.
 """
 from __future__ import annotations
 
@@ -65,8 +69,9 @@ from ..formats.scenario import parse_scenario_dat
 from ..model.newgame import NewGameConfig
 from ..rules.rng import Rng
 from ..ui import registry
+from ..ui.dialogs.save_load import run_carry
 from ..ui.layout import DISABLED, NORMAL
-from ..ui.menubar import saved_games
+from ..ui.menubar import saved_games, saved_maps
 from ..ui.widgets import blit_opaque, text_centred
 from .host import ScreenHost
 
@@ -134,15 +139,22 @@ class Menu(ScreenHost):
         self.directory: str | None = None    # DS:5da0 (record +0x3c)
         self.random = False                  # DS:28c8
         self.greet = False                   # ovl58:026f(2) pending
+        self.after_face = None               # New Game's ovl25:0519 after the face
+        self.forced = False                  # `scenario=` given at the entry
 
-    def on_enter(self, frm: str, scenario: str | None = None, **kw) -> None:
-        """ovl60:0000(1).  `scenario` (a directory name) makes that scenario current."""
+    def on_enter(self, frm: str, scenario: str | None = None, draw: bool = True, after_face=None, **kw) -> None:
+        """ovl60:0000(draw).  `scenario` (a directory name) makes that scenario current.  `draw`
+        False is ovl60:0000(0) (the Cancel path of ovl34:1434 / ovl49:02d3: no talking face).
+        `after_face()` runs once the face is done (at once with the talking advisor off): New
+        Game's ovl25:0519, which ovl49:0203 calls after ovl60:0000(1) returns (025d / 0263)."""
         if kw:
             raise TypeError(f"menu: unexpected arguments {sorted(kw)}")
         super().on_enter(frm)
         if scenario is not None:
             self.directory = scenario.upper()
-        self.greet = True
+        self.forced = scenario is not None
+        self.greet = bool(draw)
+        self.after_face = after_face
 
     def enter_screen(self, k: Kit) -> None:
         """ovl60:0000: the current record (DS:28ce) by directory, the first visit's default
@@ -150,10 +162,15 @@ class Menu(ScreenHost):
         if self.records is None:
             self.records = scenario_records(k)
         dirs = [r["str_3c"].upper() for r in self.records]
+        carry = run_carry(self.app)
+        if carry.record is not None and not self.forced:    # DS:5d64 as the run left it (a game, a load)
+            self.directory = carry.record["str_3c"].upper()
+        self.forced = False
         if self.directory is None:                           # first visit (DS:2a0c)
             want = ds_str(k.exe, DEFAULT_DIR).upper()
             self.index = dirs.index(want) if want in dirs else 0
             self.directory = dirs[self.index]
+            carry.record = self.records[self.index]          # 00a2..00ae / 00d2..00de: the copy to DS:5d64
         elif self.directory in dirs:
             self.index = dirs.index(self.directory)
         self.random = self.directory == ds_str(k.exe, RANDOM_DIR).upper()
@@ -161,9 +178,12 @@ class Menu(ScreenHost):
 
     def start_screen(self, k: Kit) -> None:
         """ovl60:0000(1) ends with the talking face ovl58:026f(2)."""
+        then, self.after_face = self.after_face, None
         if self.greet:
             self.greet = False
-            self.face(GREETING, lambda: None)
+            self.face(GREETING, then or (lambda: None))
+        elif then is not None:
+            then()
 
     def roll(self, dice: int, sides: int, add: int) -> int:
         """ovl59:02bf from the run's one stream (`session_dice`)."""
@@ -177,7 +197,7 @@ class Menu(ScreenHost):
         self.set_button(RANDOM_MAP, DISABLED if self.random else NORMAL)
         for id in RANDOM_PANEL:
             self.hide_button(id)            # the panel is M11's (random_map)
-        self.bar.pre_game(saved_games(self.app), saved_games(self.app), False)
+        self.bar.pre_game(saved_games(self.app), saved_maps(self.app), False)
 
     def choose(self, index: int | None) -> None:
         """ovl60:067c: list result; None = Cancel."""
@@ -185,6 +205,12 @@ class Menu(ScreenHost):
             self.index = index
             self.directory = self.records[index]["str_3c"].upper()
             self.random = False
+            run_carry(self.app).record = self.records[index]      # ovl60:067c: the copy to DS:5d64
+        self.refresh()
+
+    def redraw_screen(self) -> None:
+        """ovl60:0000(0) (the Cancel paths of the Load list and of ovl34:1434): the buttons and
+        the bar again, no face."""
         self.refresh()
 
     def on_button(self, id: int) -> None:

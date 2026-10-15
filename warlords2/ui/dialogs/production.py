@@ -561,8 +561,12 @@ class CityScreen(Dialog):
 
     def description(self, file: int) -> list[str]:
         if self.ci not in self._descriptions:
-            cfg = getattr(self.host, "config", None)
-            scen = getattr(cfg, "scenario", "") if cfg is not None else ""
+            fn = getattr(self.host, "scenario_dir", None)          # DS:5da0 (the game's record)
+            if fn is not None:
+                scen = fn()
+            else:
+                cfg = getattr(self.host, "config", None)
+                scen = getattr(cfg, "scenario", "") if cfg is not None else ""
             self._descriptions[self.ci] = city_info.description(self.kit, scen, self.ci)
         return self._descriptions[self.ci]
 

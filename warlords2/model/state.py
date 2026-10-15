@@ -330,6 +330,16 @@ class GameState:
         # counts it): presentation bookkeeping for the user interface, which keeps the info area
         # as 0356 last drew it (`ui.palettes.Painter`).  Not game state: not saved, not hashed.
         self.palette_draws = 0
+        # The ovl51 list name buffer DS:483c (one string per 32-byte entry), written by every
+        # ovl51:03d9 list (`rules.bonuses.list_names`: the item lists of the combat bonuses, the
+        # flight / double-move counts, the gold items, a hero's death, the battle history, the
+        # ruin guardian, Take, Plant Standard, the AI's item sharing) and by the dialogs' lists;
+        # rows past a later list's count draw what is left (ovl51:00f3, register X45).  Run
+        # memory like the report block: not saved, not hashed, one list per program run (the
+        # host shares `persist.saves.RunCarry.names` with the game it enters); copy() gives the
+        # snapshot its own copy (a preview never writes the run's buffer), restore and the
+        # engine's rollback leave it (the EXE writes it also on the paths ours refuse).
+        self.list_names: list[str] = []
 
     def army_type(self, type_id: int) -> ArmyType:
         """The record with this id; the game scans for type_id (tables.md §1, ovl44:14ac).
@@ -384,4 +394,5 @@ class GameState:
         new = load(dump(self))
         new.ai.proc = self.ai.proc.snapshot(new.ai.blocks)
         new.production_report = self.production_report.copy()
+        new.list_names = list(self.list_names)
         return new

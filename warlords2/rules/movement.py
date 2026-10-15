@@ -100,12 +100,15 @@ def alloc_army(state):
     return a
 
 
-def carried_count(state, a, item_type: int) -> int:
+def carried_count(state, a, item_type: int, write: bool = True) -> int:
     """Number of items of `item_type` the army carries.
     Evidence: ovl35:08b4 (type 5) / ovl35:0874 (type 6) count the list of ovl51:03d9 mode 2
-    (items with state 3 and holder = the army's index)."""
-    return sum(1 for it in state.items
-               if it.state == ItemState.CARRIED and it.holder == a.id and it.type == item_type)
+    (items with state 3 and holder = the army's index; its names into DS:483c at ovl35:08c3 /
+    0883, `rules.bonuses.list_carried`).  `write` False: the same count without the write (a
+    drawing of ours that is not an EXE call of 08b4 / 0874, e.g. the per-frame palette paint)."""
+    from .bonuses import carried_items, list_carried
+    items = list_carried(state, a) if write else carried_items(state, a)
+    return sum(1 for i in items if state.items[i].type == item_type)
 
 
 def armies_at(state, x: int, y: int) -> list:
@@ -464,6 +467,7 @@ def _tail_01fd(state, lead, status) -> list:
         return []
     from . import selection as S                         # circular at module level
     if status is not None:
+        S.palette_list(state)                            # asm 0a8b:0d05 (ovl66:070d, the old palette)
         S.build_palette(state)                           # asm 0a8b:0d0a (ovl66:0000)
         S.redraw_palette(state)                          # asm 0a8b:0d0f (ovl66:0356)
     if lead.goto == (lead.x, lead.y):                    # asm 0c8c:027c..029a
@@ -529,14 +533,15 @@ def remove_army(state, a) -> None:
     a.vector_dest, a.transit, a.moves_left = 0, 0xFF, 0
 
 
-def stack_flies_07fa(state, armies) -> bool:
-    """Whether the armies move as a flying stack.
-    Evidence: 0c8c:07fa, the flying test of 0c8c:0529 on a list."""
+def stack_flies_07fa(state, armies, write: bool = True) -> bool:
+    """Whether the armies move as a flying stack.  `write` False: without the DS:483c writes of
+    its ovl35:08b4 calls (`carried_count`), for a paint that is not an EXE call.
+    Evidence: 0c8c:07fa, the flying test of 0c8c:0529 on a list (0886 ovl35:08b4 per hero)."""
     all_fly, nonheroes_fly, flyer, item = True, True, False, False
     for a in armies:
         f = _flies(state, a)
         on_boat = bool(a.flags & K.ABOARD.value)
-        if a.type_id == HERO_TYPE and carried_count(state, a, ItemType.FLIGHT):
+        if a.type_id == HERO_TYPE and carried_count(state, a, ItemType.FLIGHT, write):
             item = True
         if not f or on_boat:
             all_fly = False

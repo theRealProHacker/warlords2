@@ -659,13 +659,16 @@ def share_items(state, H) -> None:
     1a3d(H, M, I, 6), (H, F, I, 5), (H, G, I, 7); 1906..1a26 B pass: 1918..1932 H != -1, B
     cbw != 0; 1940..196c lowest strictly below; 196e r == -1; 1977..1a12 e = 0..21, cbw row
     byte, 199e / 19ad / 19bc types 1 / 2 / 8, 19d1..1a0c; 1a20 repeat while a hand-over)."""
+    from ...rules.bonuses import list_names
     H = list(H)[:LIST] + [-1] * (LIST - len(list(H)[:LIST]))
     G, F, Mv, B = ([0] * LIST for _ in range(4))
     I = [[EMPTY] * N_ITEMS for _ in range(LIST)]
     for k in range(LIST):
         if H[k] == -1:
             continue
-        for m, it in enumerate(_carried(state, H[k])):
+        items = _carried(state, H[k])
+        list_names(state, [state.items[i].name for i in items])      # ovl28:184d: into DS:483c
+        for m, it in enumerate(items):
             I[k][m] = it & 0xFF
             t = state.items[it].type & 0xFF
             if t in B_TYPES:

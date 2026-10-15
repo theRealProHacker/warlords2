@@ -571,11 +571,11 @@ def hero_died(state, army_id, x, y) -> list:
     SCN 0x110 -> ovl44:0410(-2) cities: +0x31 = 0, target (-1, -1).  The road bit 0x40 is not
     set, so a dropped standard is not 'planted' (ovl47:0b47).  The splash ovl58:023d at 173b is
     the present point "sound"."""
-    from .bonuses import carried_items
+    from .bonuses import list_carried
     from .constants import city as KC
     a = state.armies[army_id]
     slot_of(state, a).used = 0
-    items = carried_items(state, a)
+    items = list_carried(state, a)                # ovl36:16fd ovl51:03d9(2): the names into DS:483c
     lost = bool(items) and state.world.terrain(x, y) == Terrain.WATER
     if lost:
         present("sound", name="splash", at="ovl36:173b")     # ovl58:023d
@@ -653,8 +653,8 @@ def take_all(state, cmd: C.TakeAll) -> list:
     if cmd.hero != state.selection.hero:
         raise IllegalCommand("take all works on the selected hero (DS:5e5e)")
     x, y = hero.x, hero.y
-    taken = [i for i, it in enumerate(state.items[:K.ITEM_RECORDS.value])
-             if it.state == ItemState.ON_MAP and (it.x, it.y) == (x, y)]
+    from .bonuses import list_lying
+    taken = list_lying(state, x, y, K.ITEM_RECORDS.value)      # 18b5 ovl51:03d9(3, x, y)
     events = []
     for i in taken:
         it = state.items[i]
@@ -705,8 +705,8 @@ def plant_flag(state, cmd: C.PlantFlag) -> list:
     if t in K.PLANT_REFUSED_TERRAIN.value or state.world.roads[i] & ROAD_STANDARD:
         raise IllegalCommand("the standard cannot be planted here")
     p = state.current
-    from .bonuses import carried_items
-    if p not in carried_items(state, hero):
+    from .bonuses import list_carried
+    if p not in list_carried(state, hero):        # ovl47:0a89, written also when it is not carried
         raise IllegalCommand("the hero does not carry the side's standard")
     it = state.items[p]
     it.x, it.y, it.state, it.holder = hero.x, hero.y, int(ItemState.ON_MAP), 0

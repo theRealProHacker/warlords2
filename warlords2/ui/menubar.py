@@ -418,5 +418,11 @@ def title_bar(app) -> TitleBar:
 
 
 def saved_games(app) -> bool:
-    """ovl49:0e25 / 0e42: there are no saves or map slots before M10b / M11."""
+    """ovl49:0e25: a game slot of the run's slot table is used (`persist.saves.Saves.any_used`)."""
+    from .dialogs.save_load import saves
+    return saves(app).any_used() != 0
+
+
+def saved_maps(app) -> bool:
+    """ovl49:0e42: a map slot DS:4672 is used; the map slots are M11's (none before)."""
     return False

@@ -47,7 +47,7 @@ from __future__ import annotations
 from ..model import events as E
 from ..model.ids import HERO_TYPE
 from ..model.state import SCN_ARMY_HIGH
-from .bonuses import ABOARD_FLAG, carried_items, s8
+from .bonuses import ABOARD_FLAG, carried_items, list_carried, s8
 from .constants import city as K
 
 N_SIDES = 8
@@ -102,11 +102,12 @@ def cached_cities(state, p: int) -> int:
 def gold_items(state, p: int) -> int:
     """Sum of the values of type-7 items carried by p's heroes.
     Evidence: asm ovl35:07cf..0873: armies of owner p with type 0x1c (no position test), items listed
-    by ovl51:03d9 mode 2, item +0x14 == 7 adds the signed byte +0x15."""
+    by ovl51:03d9 mode 2 (ovl35:0821, `list_carried`: the names into DS:483c), item +0x14 == 7
+    adds the signed byte +0x15; the records from the last one down (0x181 - 1 .. 0)."""
     total = 0
-    for a in state.armies:
+    for a in reversed(state.armies):
         if a.owner == p and a.type_id == HERO_TYPE:
-            total += sum(s8(state.items[i].value) for i in carried_items(state, a)
+            total += sum(s8(state.items[i].value) for i in list_carried(state, a)
                          if state.items[i].type == K.GOLD_ITEM.value)
     return total
 

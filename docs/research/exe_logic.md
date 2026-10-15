@@ -2201,6 +2201,24 @@ DS:5e62 / 5e5e / 5e3e are nulled); the overview bitmap (unless 232b runs); DS:0a
 DS:128c / 128e / 1290 and DS:483c.  Recomputed: DS:5dca / 5dda / 5dea, the cost map, the map
 words.  Cleared (game load only): the path cache.
 
+DS:483c, the ovl51 list name buffer, is written by every ovl51:03d9 list (asm ovl51:03d9..06fa:
+03e6 DS:482e = 0; entry k = strcpy(DS:483c + 32 k, name), DS:4bfc[k] = item / card number; the
+entries past the list keep their bytes; mode 0, the only clearing one, has no caller): mode 2
+(the items an army carries, state 3 and holder = its index, items 0..21 in table order) at
+ovl28:184d (AI item sharing), ovl34:0323 / 07bf (ruin guardian), ovl35:0821 (gold items, records
+0x181 - 1 .. 0), 0883 / 08c3 (double-move / flight counts), ovl36:16fd (hero death), 1e26 /
+1eac (battle history), ovl38:0d29 / 0d80 (battle / command items), ovl47:0a89 (Plant Standard,
+also when the standard is not carried); mode 3 (the items lying on x, y) at ovl34:18b5 (Take);
+mode 6 at ovl40:05b3 (hero panel); mode 7 (the leader lines of CARDS\<K|L|W>nnn.DSC) at
+ovl57:1773 and ovl57:209e (Random Characters, per side with 0x137 != 0, 0xd0 == 1, 0xc0 != 3,
+before its rnd(1, DS:482e - 1, 0)); and ovl34:1735 (the sage's list).  Engine:
+`GameState.list_names` (run memory, not saved), `rules.bonuses.list_names` / `list_carried` /
+`list_lying`.  The movement-kind cell ovl66:070d writes its lists (0872 0c8c:07fa -> 0886
+ovl35:08b4 for each selected palette hero) only where it runs: ovl66:055c (the end of 0356's
+stack branch) and res_0a8b:0d05 (a human move step, before 0d0a / 0d0f); it returns at once
+while DS:30f8 is set (0721; 0356 sets it to 1 in its info-area branch 05a9, to 0 at 03a0)
+(`rules.selection.palette_list`).
+
 ### 10.5 New Game, ovl49:019d -> 0203
 
 019d asks (ovl56:0088, STRING group 45) with 307f:007f = 0203 as *yes*.  0203: ovl45:1de4;
@@ -2237,4 +2255,28 @@ search field and the cost map are rewritten by the set-up's own searches (territ
 neighbour table), the overview bitmap by the loader's ovl63:232b.  Engine:
 `rules.setup.new_game(..., run=rules.saveload.run_part(previous game))`,
 `rules.saveload.begin_carry`.
+
+### 10.8 Host (M10b package G)
+
+The run memory is `persist.saves.RunCarry` on the App (made at start-up with the slot table,
+res_0a4c:0250 -> ovl49:0e5f): `game` (the last game: entered at Begin and every load, kept by
+New Game and the Game Start screen), `record` (DS:5d64: the Game Start screen's first visit and
+its scenario list, Begin, a load), DS:128c / 128e and the name buffer.  The dice stream is one
+per run: the entered game's `rng` becomes the session stream.  A load runs in its scroll over
+the screen it came from (DS:2a86 keeps the game screen up in a game) and then draws 02d3's
+present points in order; the game resumes in the human (or over) phase of SCN 0x110 with no
+turn start.  Stand-in [X47]: a load the program cannot run (a failed open with no game in
+memory, a file that is not ours) takes 02d3's Cancel path.  The pointer is hidden from the 10
+(ovl49:0606 12bf:07a5) to after the scroll's close (092f 12bf:0757).
+
+From the Game Setup screen 02d3 runs ovl61:0000(0, 0), which skips the frame ovl61:092a
+(000a..0014), and ovl65:0000, which only allocates the VBOX save bitmap (1012:09cf / 01fe,
+ovl52:0000 "Cannot allocate VBOX saveBM"): nothing draws the frame.  Measured on our screens,
+every pixel where the Setup screen differs from the frame SCREEN0-3 lies in the menu bar row,
+the map DS:2ab0 (ovl64:006c), the overview (ovl63:0000), the info cell DS:2a9c (0aeb) or the
+palette rectangle DS:2a94 = (400, 355, 224, 114), which ovl61:0a9d (007b) covers with marble
+(picture 25, source (0, 0)); so the Setup pixels do not survive and the frame under them is
+SCREEN0-3, as `states.game.Game` paints it.  [Open, not M10b] ovl61:0a9d's marble over DS:2a94
+at every ovl61:0000 (Begin and the loads) is not drawn by `Game.paint`, which shows SCREEN0-3's
+own pixels there (2408 pixels differ between the palette buttons on an ERYTHEA turn-1 frame).
 
