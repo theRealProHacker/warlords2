@@ -1,7 +1,10 @@
 """M4c: human phase, palettes, path marks, move animation, right-click panels.
 
-The TUTORIA script (tests/scripts/m4c_tutoria.json) lacks the tutorial pop-ups from frame 03 on
-(0b62:04f7..063f, 0c8c:02c9, 0c8c:030e..0415 with SCN 0x12e set): pending M8a.
+The game runs the real turn start since M8a (two humans, TUTORIA's Darklords made human: strict
+mode cannot play a computer side before M8b1); the fixture dismisses the Turn pop-up and the
+tutorial pages, accepts the turn-1 hero offer, closes the turn-1 production screen and marks the
+select tutorial pages as shown (SCN byte 0x134 bits 3, 4, 7), so these tests see the M4c screens
+alone.  tests/scripts/m4c_tutoria.json shows the first-select page (25, 3).
 """
 import os
 
@@ -17,6 +20,7 @@ from warlords2.model import commands as C  # noqa: E402
 from warlords2.model.ids import MAP_W, ROAD_PIECE_MASK  # noqa: E402
 from warlords2.rules.mapwords import refresh_map  # noqa: E402
 from warlords2.rules.movement import alloc_army  # noqa: E402
+from warlords2.rules.selection import redraw_palette  # noqa: E402
 from warlords2.ui import palettes as PL  # noqa: E402
 from warlords2.ui import registry  # noqa: E402
 from warlords2.ui.info import panel_rect, square_centre  # noqa: E402
@@ -47,21 +51,33 @@ def test_marks_like_ovl66_17e7():
 
 @pytest.fixture
 def game(game, tmp_path):
+    import pygame
     a = App(parse_args(["--data", game, "--headless", "--no-voice", "--seed", "3", "--scenario", "TUTORIA",
-                        "--user-dir", str(tmp_path / "u")]))
-    for _ in range(60):
-        a.step([])
+                        "--controls", "HCCCCCCH", "--user-dir", str(tmp_path / "u")]))
+    answer = {"hero_offer": 287, "production": 192}     # accept (ovl47:120c), Done (ovl45)
+    for _ in range(120):
         g = a.manager.current_state()
-        if getattr(g, "phase_name", None) == "human":
+        top = g.dialogs.top if g.dialogs else None
+        if top is not None and getattr(top, "dialog_id", "") in answer:
+            top.press(answer[top.dialog_id])
+            up = []
+        else:
+            up = [pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=(320, 240))] if g.dialogs else []
+        a.step(up)
+        g = a.manager.current_state()
+        if getattr(g, "phase_name", None) == "human" and not g.dialogs:
             break
-    assert a.manager.current_state_str() == "game" and g.phase_name == "human"
+    assert a.manager.current_state_str() == "game" and g.phase_name == "human" and not g.dialogs
+    g.state.flags[0x134] |= 0x08 | 0x10 | 0x80               # the select pages count as shown
     yield g
     a.close()
 
 
 def _hero(g):
+    """The leader a select of the start square picks: the turn-1 hero (sorted first)."""
     st = g.state
-    return next(a for a in st.armies if a.owner == st.current and a.x >= 0)
+    own = [a for a in st.armies if a.owner == st.current and a.x >= 0]
+    return next((a for a in own if a.type_id == 28), own[0])
 
 
 def _join(g, n):
@@ -75,17 +91,12 @@ def _join(g, n):
 
 
 @gamedata
-def test_turn_start_stand_in_gives_moves(game):
-    assert game.state.armies[_hero(game).id].moves_left > 0
-
-
-@gamedata
 def test_select_group_ungroup_via_palette_buttons(game):
     h = _join(game, 2)
     ph = game.phase
     ph.select((h.x, h.y))
     sel = game.state.selection
-    assert PL.leader(game.state) is not None and len(sel.palette) == 3
+    assert PL.leader(game.state) is not None and len(sel.palette) == 4    # hero, army 3, two joined
     assert sel.palette_selected.count(1) == 1                       # ovl67:06eb: the leader's group
     ph.button(PL.GROUP_ALL)
     assert all(game.state.selection.palette_selected)
@@ -93,7 +104,7 @@ def test_select_group_ungroup_via_palette_buttons(game):
     ph.refresh()
     assert PL.UNGROUP_ALL not in ph.palette.hidden and PL.GROUP_ALL in ph.palette.hidden
     ph.button(PL.UNGROUP_ALL)
-    assert game.state.selection.palette_selected == [1, 0, 0]
+    assert game.state.selection.palette_selected == [1, 0, 0, 0]
     ph.button(PL.SELECT_ARMY[1])                                    # join slot 1
     assert game.state.selection.palette_selected[:2] == [1, 1]
     ph.button(PL.SELECT_ARMY[1])                                    # and leave again
@@ -204,8 +215,8 @@ def test_next_quit_defend(game):
     ph = game.phase
     ph.button(PL.NEXT)
     assert game.state.selection.selected == h.id
-    ph.button(PL.DEFEND)
-    assert game.state.selection.selected == -1 and not game.state.armies[h.id].flags & 1
+    ph.button(PL.DEFEND)                                            # Next goes on to army 3
+    assert game.state.selection.selected not in (-1, h.id) and not game.state.armies[h.id].flags & 1
     ph.select((h.x, h.y))
     ph.button(PL.QUIT_NEXT)
     assert game.state.armies[h.id].flags & 0x40
@@ -355,6 +366,37 @@ def test_selection_frame_freezes_while_held(game):
     assert ph.ants_ticks != frozen[0] or ph.ants_phase != frozen[1]
 
 
+def test_group_of_reads_the_stored_2bda():
+    """The commands' group is the stack the order routines see: DS:5e3e (non-null slots) with
+    the stored DS:2bda, else DS:5e62 alone; not len(DS:5e3e)."""
+    from types import SimpleNamespace
+    from warlords2.states.phases.human import group_of as phase_group
+    from warlords2.ui.dialogs.search_result import group_of as search_group
+    sel = SimpleNamespace(selected=4, moving=[4, 7], group=0)
+    st = SimpleNamespace(selection=sel)
+    for group_of in (phase_group, search_group):
+        sel.moving, sel.group = [4, 7], 0
+        assert group_of(st) == (4,)
+        sel.moving, sel.group = [4, -1, 7], 1
+        assert group_of(st) == (4, 7)
+
+
+@gamedata
+def test_selection_frame_kind_is_the_stored_2bda(game, monkeypatch):
+    """ovl64:020a: the group frames (ovl62:0b27) with the stored DS:2bda set, else the single
+    army's (0afd)."""
+    import pygame
+    ph, st, h = game.phase, game.state, _hero(game)
+    rows = []
+    monkeypatch.setattr(ph, "_ants_frame", lambda sx, sy, c: rows.append(sy) or pygame.Surface((40, 40)))
+    fb = pygame.Surface((640, 480))
+    left, top = game.view.origin
+    for moving, group in (([h.id, h.id + 1], 0), ([h.id], 1)):
+        st.selection.moving, st.selection.group = moving, group
+        ph.ants(fb, st, h, left, top)
+    assert rows == [0, 40]                                    # frames 0-3, then 4-7
+
+
 @gamedata
 def test_selection_frame_colour_is_the_word_table(game):
     from warlords2.assets.exe import ds_word
@@ -382,6 +424,7 @@ def test_kind_cell_with_no_selected_army_is_fly(game):
     sel = game.state.selection
     sel.palette_selected = [0] * len(sel.palette)                    # set-up: none selected
     assert PL.kind_cell(game.state) == PL.KIND_FLY                   # 0c8c:07fa all-fly flag starts at 1
+    redraw_palette(game.state)                                       # ovl66:0356 -> 070d -> 0912
     assert PL.lowest_moves(game.state) == 100
 
 

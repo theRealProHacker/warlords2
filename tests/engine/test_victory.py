@@ -15,7 +15,7 @@ from warlords2.model import events as E
 from warlords2.model.ids import HERO_TYPE, MAP_W, ROAD_SEEN, Control, Terrain
 from warlords2.model.options import GameOptions
 from warlords2.model.state import SCN_SURRENDER_OFFERED, SCN_VICTORY
-from warlords2.rules import diplomacy as D, engine, heroes as H, turn as T, victory as V
+from warlords2.rules import diplomacy as D, economy as EC, engine, heroes as H, turn as T, victory as V
 from warlords2.rules.constants import diplomacy as K
 from warlords2.rules.engine import IllegalCommand
 
@@ -191,7 +191,8 @@ def dragon(game, hidden=0):
 def test_surrender_offer_accepted_ends_in_victory(game, ai_stubs):
     """ovl68:04bd: 0x15d and not 0x15f -> ovl61:1f68 (0x15f = 1, question pending); button
     0x1e5 -> ovl61:1e4e: live computers alive = 0, 0x15b = 1, news (p, 7, p, 0), ovl61:1fbd
-    (0x157 = 1); its button ovl61:2004: Hidden Map off, ovl68:04bd(0)."""
+    (0x157 = 1, the screen pending); its button 0x1e3 (CloseVictory) -> ovl61:2004: Hidden Map off
+    (2026), ovl68:04bd(0)."""
     st = dragon(game, hidden=1)
     st.flags[SCN_SURRENDER_OFFERED] = 1
     ev = T.resume(st, 0)
@@ -200,11 +201,19 @@ def test_surrender_offer_accepted_ends_in_victory(game, ai_stubs):
         engine.apply(st, C.EndTurn())
     computers = [p.index for p in st.players if p.alive and p.control == COMP]
     ev = engine.apply(st, C.AcceptSurrender(True))
-    assert isinstance(ev[0], E.Victory) and ev[0].info["player"] == 0
+    assert ev == [st.pending] and isinstance(ev[0], E.Victory) and ev[0].info["player"] == 0
     assert not any(st.players[p].alive for p in computers) and st.players[0].alive
-    assert st.flags[SCN_VICTORY] == 1 and st.flags[0x157] == 1 and not st.options.hidden_map
-    assert st.news[0][-1] == [7, 0, 0, ""] and st.pending is None
+    assert st.flags[SCN_VICTORY] == 1 and st.flags[0x157] == 1
+    assert st.options.hidden_map                         # still on while the screen is up
+    assert st.news[0][-1] == [7, 0, 0, ""]
+    with pytest.raises(IllegalCommand):
+        engine.apply(st, C.EndTurn())                    # the screen waits for its button
+    ev = engine.apply(st, C.CloseVictory())
+    assert not st.options.hidden_map and st.pending is None and not any(isinstance(e, E.Victory) for e in ev)
+    assert T.loop_over(st)
     assert engine.apply(st, C.EndTurn()) == []           # ovl61:2074: nothing after 0x15b
+    with pytest.raises(IllegalCommand):
+        engine.apply(st, C.CloseVictory())               # no screen up
 
 
 @pytest.mark.gamedata
@@ -218,7 +227,7 @@ def test_surrender_declined_and_play_goes_on(game, ai_stubs):
     assert ev[0].info == {"kind": "surrender_declined"} and st.pending is None
     live = [p.index for p in st.players if p.alive]
     assert all(st.flags[0x10F3 + 2 * c] == 0 for c in live)
-    assert not st.flags.get(SCN_VICTORY) and T.resume(st, 2) == []
+    assert not st.flags.get(SCN_VICTORY) and T.resume(st, 2) == [E.TurnCue({"kind": "info_bar"})]   # ovl68:05a8
     with pytest.raises(IllegalCommand):
         engine.apply(st, C.AcceptSurrender(True))      # nothing pending
 
@@ -229,7 +238,9 @@ def test_victory_screen_at_the_winners_turn_start(game, ai_stubs):
     st = dragon(game)
     st.flags[SCN_VICTORY] = 1
     ev = T.resume(st, 0)
-    assert [type(e) for e in ev][:1] == [E.Victory] and st.flags[0x157] == 1
+    assert ev == [st.pending] and isinstance(ev[0], E.Victory) and st.flags[0x157] == 1
+    rest = engine.apply(st, C.CloseVictory())            # ovl61:2004 -> ovl68:04bd(0)
+    assert rest and rest[-1] == E.TurnCue({"kind": "info_bar"}) and st.pending is None
     assert not any(isinstance(e, E.Victory) for e in T.resume(st, 0))
 
 
@@ -253,6 +264,7 @@ def test_resign_burns_everything_either_way(monkeypatch, graceful):
     died = []
     monkeypatch.setattr(H, "hero_died", lambda s, aid, x, y: died.append(aid) or [])
     st.rng = Dice()
+    EC.refresh_cities(st)                        # the stored count DS:5dea the gate 151c reads
     ev = engine.apply(st, C.Resign(graceful))
     assert isinstance(ev[0], E.Resigned) and ev[0].info["graceful"] == graceful
     assert st.cities[a].owner == 0xF and st.cities[b].owner == 1
@@ -260,16 +272,26 @@ def test_resign_burns_everything_either_way(monkeypatch, graceful):
     assert all(r & ROAD_SEEN for r in st.world.roads) and st.players[0].infamy == 0
     assert (st.selection.selected, st.selection.hero, st.selection.moving) == (-1, -1, [])
     assert st.players[0].alive
+    assert EC.city_count(st, 0) == 0 and EC.cached_cities(st, 0) == 1     # no 03f9 in 1608
+    from warlords2.model.serialize import dump
+    before = dump(st, rng=False)
+    ev = engine.apply(st, C.Resign(graceful))                              # 151c passes again
+    assert [type(e) for e in ev] == [E.Resigned] and dump(st, rng=False) == before
     st.rng = Dice(0)
-    V.eliminate(st)
-    assert not st.players[0].alive
+    V.eliminate(st)                              # ovl61:18b3 recounts first
+    assert not st.players[0].alive and EC.cached_cities(st, 0) == 0
 
 
 def test_resign_without_cities_does_nothing():
-    """ovl49:150d: DS:5dea[0x110] == 0 -> the dialog does not open."""
+    """ovl49:150d: DS:5dea[0x110] == 0 -> the dialog does not open; the stored word, so a city
+    taken since the last ovl62:03f9 does not count yet."""
     st = mk_state()
     put(st, 1, 0, 6, 6)
     assert engine.apply(st, C.Resign(True)) == [] and st.armies[0].owner == 0
+    city(st, 10, 10, 0, 1)
+    assert engine.apply(st, C.Resign(True)) == [] and st.armies[0].owner == 0
+    EC.refresh_cities(st)
+    assert engine.apply(st, C.Resign(True)) and st.armies[0].owner == 0xFF
 
 
 def test_resign_only_for_a_human_side():

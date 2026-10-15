@@ -7,6 +7,7 @@ import pygame
 
 from ..states.base import BaseState
 from ..ui import registry
+from ..ui.keys import left_press, right_help
 from ..ui.layout import DISABLED, NORMAL, PRESSED
 from ..ui.menubar import MenuBar, with_codes
 from ..ui.widgets import ButtonRow, draw_button, draw_pointer, kit
@@ -54,9 +55,10 @@ class UiHost(BaseState):
     menu bar with this screen's enable mask, the dialog stack and the pointer on top.
 
     Input while no dialog is open: a left press on a title opens its menu, else the
-    buttons take it and a release over one runs its registered action; a right press
-    over a button opens its help (`registry.right_click("button")`); a key goes to the
-    menu bar.  Events after the one that opened a dialog wait for the next frame."""
+    buttons take it (a press on a disabled or pressed one chords, 07be:0e7b) and a release
+    over one runs its registered action; a right press over a button opens its help
+    (`ui.keys.right_help`: not while a left press is held on a button, 08a9:0143); a key
+    goes to the menu bar, none while a button is held (07be:006f).  Events after the one that opened a dialog wait for the next frame."""
 
     backdrop = "startup.pck"
     screen: int | None = None               # JOIN screen whose buttons are live
@@ -85,16 +87,16 @@ class UiHost(BaseState):
             if self.dialogs:
                 return
             if e.type == pygame.MOUSEBUTTONDOWN and e.button == 3:
-                b = self.buttons.at(e.pos)
-                if b:
-                    registry.right_click_handler("button")(self, b.id, e.pos)
+                right_help(self, self.buttons, e.pos)
             elif e.type == pygame.MOUSEBUTTONDOWN and e.button == 1 and self.bar.press(self, e.pos):
                 continue
-            elif e.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION):
+            elif e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                left_press(self.app, self.buttons, e)
+            elif e.type in (pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION):
                 hit = self.buttons.event(e)
                 if hit is not None:
                     registry.run_action(hit, self)
-            elif code is not None:
+            elif code is not None and self.buttons.held is None:     # 07be:006f DS:166c
                 self.bar.key(self, code)
 
     def paint(self, fb):

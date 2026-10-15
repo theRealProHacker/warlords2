@@ -22,6 +22,96 @@
   [
    53,
    {
+    "wait_dialog": "turn_start",
+    "frames": 4
+   }
+  ],
+  [
+   55,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   57,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 4
+   }
+  ],
+  [
+   59,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   61,
+   {
+    "wait_dialog": "hero_offer",
+    "frames": 4
+   }
+  ],
+  [
+   63,
+   {
+    "press_button": 287
+   }
+  ],
+  [
+   65,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 4
+   }
+  ],
+  [
+   67,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   69,
+   {
+    "wait_dialog": "production",
+    "frames": 4
+   }
+  ],
+  [
+   71,
+   {
+    "press_button": 192
+   }
+  ],
+  [
+   73,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 4
+   }
+  ],
+  [
+   75,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   79,
+   {
     "assert_state": {
      "state": "game",
      "dialog": null
@@ -29,13 +119,13 @@
    }
   ],
   [
-   54,
+   80,
    {
     "shot": "map_start"
    }
   ],
   [
-   55,
+   81,
    {
     "click": [
      450,
@@ -44,13 +134,13 @@
    }
   ],
   [
-   57,
+   83,
    {
     "shot": "map_a"
    }
   ],
   [
-   58,
+   84,
    {
     "click": [
      560,
@@ -59,7 +149,7 @@
    }
   ],
   [
-   60,
+   86,
    {
     "shot": "map_b"
    }

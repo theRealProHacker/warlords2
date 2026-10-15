@@ -29,14 +29,15 @@ and the restore is not the inverse of the patch (see `_restore_target_city`).
 
 The path cache (`GameState.path_cache`, 20 `PathSlot`s, 0555:02f2) is looked up before the
 direct step and before any search, and a search result is stored in it (`find_path`); it is
-cleared only by 0555:0350: at its allocation (0555:02f2, first use) and on the save path
-(ovl29:0dff at ovl29:0e51) -> `clear_cache`.  Not modelled: the view scroll 0555:13e4 (called on
-an uninitialised stack word, display only) and the distance-map mode (mask bit 0x10,
-0555:1ab9, AI only: it skips the cache lookup and store but still patches the cost map).
+cleared only by 0555:0350: at its allocation (0555:02f2, first use) and by the game load
+(the AI read ovl29:0dff at ovl29:0e51, ovl49:0414 -> `rules.saveload.load`) -> `clear_cache`.  The distance-map mode (mask bit 0x10, 0555:1ab9,
+AI only) is `distance_map`: the same search without cache, shortcut, start stop and backtrace.
+Not modelled: the view scroll 0555:13e4 (called on an uninitialised stack word, display only).
 """
 from __future__ import annotations
 
 from math import isqrt
+from typing import NamedTuple
 
 from ..model.ids import MAP_H, MAP_OWNER_MASK, MAP_PORT, MAP_W, ROAD_PIECE_MASK, Control, Terrain
 from ..model.state import PATH_SLOT_CODES, cleared_path_cache
@@ -146,7 +147,7 @@ def cached_cost_map(state) -> list[int]:
 def clear_cache(state) -> None:
     """Clear the 20 path-cache slots (all words and codes 0).
     Evidence: asm 0555:0350 -> 0555:146c for slots 19..0 (only when the cache exists, DS:00de);
-    callers 0555:02f2 (allocation on first use) and ovl29:0e51 (save path ovl29:0dff)."""
+    callers 0555:02f2 (allocation on first use) and ovl29:0e51 (the load's AI read ovl29:0dff)."""
     state.path_cache = cleared_path_cache()
 
 
@@ -270,11 +271,16 @@ def _neighbours(x: int, y: int):
         j += 1
 
 
+# The neighbour list of every square as flat indices (`_neighbours`, DS:00e2 order).
+_NB = tuple(tuple(ny * W + nx for nx, ny in _neighbours(i % W, i // W)) for i in range(W * H))
+
+
 class _Search:
     """State of one 0555:000a call: the distance field and the registers the backtrace reads."""
 
-    def __init__(self, state, src, dst, mode, mask):
+    def __init__(self, state, src, dst, mode, mask, limit: int = 0):
         self.src, self.dst, self.mode, self.mask = src, dst, mode, mask
+        self.limit = limit                                     # DS:3f70 (distance map only)
         self.cm = cached_cost_map(state)                      # patched in place, see restore()
         self.patched = -1
         di = dst[1] * W + dst[0]
@@ -296,70 +302,94 @@ class _Search:
             _restore_target_city(self.state, self.cm, self.patched)
 
     def flood(self, pass_no: int) -> int:
-        """0555:0373 (mask bit 0x10, the distance-map mode, is not used by movement)."""
+        """0555:0373.  Distance-map mode (mask bit 0x10): box margin and ring count R = DS:3f70
+        and r = 0 in both passes (asm 03c0..03d1), return 1 at the top of the round where r == R
+        (04eb..04fe), and no stop at the start square (086e).
+        Rounds r = 0, 1, ...: every square of the ring box (x outer, y inner) inside the pass
+        box whose field value is < 1 is settled (value negated) and relaxes its neighbours in
+        the DS:00e2 list order (`_NB`); CX keeps the last cost the loop computed.  Written for
+        speed (precomputed neighbour indices, locals, flat index); tests/engine/test_flood_fast
+        keeps the plain version and compares the two."""
         sx, sy = self.src
         dx, dy = self.dst
-        margin = K.PASS_MARGIN.value[pass_no]
-        if pass_no == 0:
+        dmap = bool(self.mask & K.MASK_DISTANCE_MAP.value)
+        if dmap:
+            margin = self.limit
             self.radius = 0
-        self.cx = dy                                           # asm 0555:043d: CX = dst y
+        else:
+            margin = K.PASS_MARGIN.value[pass_no]
+            if pass_no == 0:
+                self.radius = 0
+        cx = dy                                                # asm 0555:043d: CX = dst y
         xlo, xhi = max(min(dx, sx) - margin, 0), min(max(dx, sx) + margin, W - 1)
         ylo, yhi = max(min(dy, sy) - margin, 0), min(max(dy, sy) + margin, H - 1)
         dist, cm, mode, mask = self.dist, self.cm, self.mode, self.mask
+        nbs = _NB
         blocked = K.BLOCKED.value
-        water, cross = K.CM_WATER.value, K.CM_CROSSING.value
+        water, cross, city = K.CM_WATER.value, K.CM_CROSSING.value, K.CM_CITY.value
+        costm, hills, woods = K.CM_COST.value, K.CM_HILLS.value, K.CM_WOODS.value
+        mh, mw = mask & K.MASK_HILLS.value, mask & K.MASK_WOODS.value
+        land, fly, ship = K.MODE_LAND.value, K.MODE_FLY.value, K.MODE_SHIP.value
+        fly_cost, bonus_cost = K.FLY_COST.value, K.BONUS_COST.value
+        pen = self.penalty
+        si = sy * W + sx
+        radius = self.radius
         going, result = True, 1
-        while going:
-            r = self.radius
-            expanded = False
-            for x in range(max(dx - r, 0, xlo), min(dx + r, W - 1, xhi) + 1):
-                for y in range(max(dy - r, 0, ylo), min(dy + r, H - 1, yhi) + 1):
-                    i = y * W + x
-                    v = dist[i]
-                    if v >= 1:
-                        continue
-                    expanded = True
-                    d = -v
-                    dist[i] = d
-                    b1 = cm[i]
-                    for nx, ny in _neighbours(x, y):
-                        j = ny * W + nx
-                        if dist[j] == blocked:
+        try:
+            while going:
+                if dmap and radius == margin:
+                    return result
+                r = radius
+                expanded = False
+                y0, y1 = max(dy - r, 0, ylo), min(dy + r, H - 1, yhi) + 1
+                for x in range(max(dx - r, 0, xlo), min(dx + r, W - 1, xhi) + 1):
+                    for i in range(y0 * W + x, y1 * W + x, W):
+                        v = dist[i]
+                        if v >= 1:
                             continue
-                        b2 = cm[j]
-                        c = b2 & K.CM_COST.value
-                        self.cx = c
-                        if (nx, ny) == (sx, sy):
-                            if (mode == K.MODE_LAND.value and not b1 & cross and not b2 & cross
-                                    and (b2 & water) != (b1 & water)):
+                        expanded = True
+                        d = -v
+                        dist[i] = d
+                        b1 = cm[i]
+                        b1w, b1c = b1 & water, b1 & cross
+                        for j in nbs[i]:
+                            dj = dist[j]
+                            if dj == blocked:
                                 continue
-                            c = 1
-                        elif mode == K.MODE_FLY.value:
-                            if b2 & water and not b2 & cross:
-                                c = K.FLY_COST.value
+                            b2 = cm[j]
+                            c = cx = b2 & costm
+                            if j == si:
+                                if mode == land and not b1c and not b2 & cross and (b2 & water) != b1w:
+                                    continue
+                                c = 1
+                            elif mode == fly:
+                                if b2 & water and not b2 & cross:
+                                    c = fly_cost
+                                else:
+                                    c = c if (c or 2) <= 2 and c else fly_cost
+                            elif mode == ship:
+                                if not b2 & water and not b2 & city:
+                                    dist[j] = blocked
+                                    continue
                             else:
-                                c = c if (c or 2) <= 2 and c else K.FLY_COST.value
-                        elif mode == K.MODE_SHIP.value:
-                            if not b2 & water and not b2 & K.CM_CITY.value:
-                                dist[j] = blocked
-                                continue
-                        else:
-                            if not b1 & cross and not b2 & cross and (b2 & water) != (b1 & water):
-                                continue
-                            if mask and c > 2 and ((mask & K.MASK_HILLS.value and b2 & K.CM_HILLS.value)
-                                                   or (mask & K.MASK_WOODS.value and b2 & K.CM_WOODS.value)):
-                                c = K.BONUS_COST.value
-                            if (not b1 & water or b1 & cross) and b2 & water and not b2 & cross:
-                                c += self.penalty
-                        self.cx = c
-                        if abs(dist[j]) > d + c:
-                            dist[j] = -d - c
-                    if (x, y) == (sx, sy):
-                        going = False
-            self.radius += 1
-            if not expanded:
-                going, result = False, 0
-        return result
+                                if not b1c and not b2 & cross and (b2 & water) != b1w:
+                                    continue
+                                if mask and c > 2 and ((mh and b2 & hills) or (mw and b2 & woods)):
+                                    c = bonus_cost
+                                if (not b1w or b1c) and b2 & water and not b2 & cross:
+                                    c += pen
+                            cx = c
+                            if (dj if dj >= 0 else -dj) > d + c:
+                                dist[j] = -d - c
+                        if i == si and not dmap:
+                            going = False
+                radius += 1
+                if not expanded:
+                    going, result = False, 0
+            return result
+        finally:
+            self.radius = radius
+            self.cx = cx
 
     def backtrace(self) -> list[int]:
         """0555:117b: direction codes from the start down the field (<= 198)."""
@@ -450,9 +480,10 @@ def _lookup(state, k: int, src, dst, mode, mask):
 def _store(state, dist: int, src, dst, mode, mask, buf: list[int], far: bool) -> None:
     """0555:16f0(dist, req, far): slot 0 for a near request; else the first slot 1..19 whose
     validity word is 0, else the one with the smallest stored source-destination distance (first
-    on ties) if that is below `dist`, else nothing.  201 bytes are copied: the last (always
-    0xff) lands in the low byte of the next slot's validity word (for slot 19 it lands past the
-    0x10b8-byte block: not modelled)."""
+    on ties) if that is below `dist`, else nothing.  The 200 direction bytes are copied into
+    +0x0e..+0xd5 (si = 199..0, asm 0555:17b7..17e3: `mov si, 0xc8` then `mov ax, si; dec si; or
+    ax, ax; jne` before each copy), then state 2, mode, mask, source and the (possibly cut)
+    destination; the next slot is not touched."""
     cache = state.path_cache
     if not far:
         target = 0
@@ -471,9 +502,6 @@ def _store(state, dist: int, src, dst, mode, mask, buf: list[int], far: bool) ->
             return
     slot = cache[target]
     slot.codes = list(buf[:PATH_SLOT_CODES])
-    if target + 1 < len(cache):
-        nxt = cache[target + 1]
-        nxt.valid = (nxt.valid & 0xFF00) | buf[PATH_SLOT_CODES]
     slot.valid = K.CACHE_VALID.value
     slot.mode, slot.mask, slot.src, slot.dst = mode, mask, tuple(src), tuple(dst)
 
@@ -492,13 +520,16 @@ def find_path(state, src: tuple, dst: tuple, mode: int, mask: int) -> list[int] 
     `mode` with bonus `mask` (rules.movement.stack_mode), or None when there is no path.  The
     path may stop short of `dst` (198 codes, or no lower neighbour).  Reads and writes the
     path cache and patches / restores the cached cost map (`state` changes).
-    Evidence: asm 0555:000a: destination off the map -> none (0034..0056); 201-byte buffer
-    filled with 0xff (0063..007a); cache slot 0 (1508(req, 0) at 008f), then slots 1..19 when
-    0a8b:0acc(src, dst) >= 15 (1508(req, 1) at 00ae); direct step 0555:020e only for distance
-    1 (00c3); search 0555:08bf, destination BLOCKED and not a city -> none (0132..015c), passes
+    Evidence: asm 0555:000a: destination off the map -> none (0034..0056); the 200-byte
+    direction buffer filled with 0xff (dx = 199..0, 0063..007a); cache slot 0 (1508(req, 0) at
+    008f), then slots 1..19 when 0a8b:0acc(src, dst) >= 15 (1508(req, 1) at 00ae); direct step
+    0555:020e only for distance 1 (00c3); search 0555:08bf, destination BLOCKED and not a city
+    -> none (0132..015c), passes
     0/1 of 0555:0373, backtrace 0555:117b, whose cut rewrites the request destination
     (0555:13aa); the result stored by 0555:16f0 (dist < 15 -> slot 0, else 1..19; 01b6..01dd);
-    target city restored by 0555:0bde(req, 0) (01e0)."""
+    target city restored by 0555:0bde(req, 0) (01e0).  A search (not a cache hit, not the
+    direct step, not off the map) leaves its field in `state.dist_table` (DS:3f86, locked at
+    00dc..00ed, written from 08bf at 010a on), also when it finds no path."""
     if not (0 <= dst[0] < W and 0 <= dst[1] < H):
         return None
     src, dst = tuple(src), tuple(dst)
@@ -516,6 +547,7 @@ def find_path(state, src: tuple, dst: tuple, mode: int, mask: int) -> list[int] 
         if codes is not None:
             return codes
     s = _Search(state, src, dst, mode, mask)
+    state.dist_table = s.dist                            # DS:3f86: 08bf (010a) onwards
     try:
         di = dst[1] * W + dst[0]
         if s.dist[di] == K.BLOCKED.value and not s.cm[di] & K.CM_CITY.value:
@@ -529,9 +561,56 @@ def find_path(state, src: tuple, dst: tuple, mode: int, mask: int) -> list[int] 
         if found != 1:
             return None
         codes = s.backtrace()
-        buf = codes + [K.NO_DIRECTION.value] * (PATH_SLOT_CODES + 1 - len(codes))
+        buf = codes + [K.NO_DIRECTION.value] * (PATH_SLOT_CODES - len(codes))
         _store(state, dist, src, s.dst, mode, mask, buf, dist >= K.CACHE_FAR.value)
         return codes
+    finally:
+        s.restore()
+
+
+class DistanceMap(NamedTuple):
+    """Result of `distance_map`: 0555:000a's return value and the field T (DS:3f86,
+    `state.dist_table`) it left, indexed y * 112 + x (the original's x * 0x9c + y), signed
+    words; None only when no search has written the buffer yet."""
+    found: int
+    field: list | None
+
+    def value(self, x: int, y: int) -> int:
+        """T at (x, y): 0x7531 impassable, 30000 not reached, v > 0 expanded, -v reached but not
+        expanded (|T| is the distance, 1 at the centre).
+        Evidence: ai.md §7a.4 encoding (0555:08bf init, 0373 finalise `neg` / relax write)."""
+        return self.field[y * W + x]
+
+
+def distance_map(state, limit: int, x: int, y: int, mode: int, mask: int) -> DistanceMap:
+    """The distance map 0555:1ab9(limit, x, y, mode, mask): rings 0..limit-1 of the 0555:0373
+    relaxation from (x, y) inside the box (x, y) +- limit, in move `mode` with bonus `mask`.
+    Changes only the cached cost map, and that only for a foreign city at (x, y), which is
+    patched and restored (0555:0bde, the restore is not the inverse: `_restore_target_city`).
+    Evidence: asm 0555:1ab9..1b09: DS:3f70 = limit, record start = target = (x, y), mode, mask
+    | 0x10, then 0555:000a (its result is returned); in 000a mask 0x10 skips the cache slots
+    0 / 1..19 and the adjacent step (007f..0085 -> 00dc), the backtrace 117b and the store
+    16f0 (0190..0196); a target off the map returns 0 before T is touched (0034..0056:
+    `field` is the previous T, `state.dist_table`, as the last search left it); an impassable non-city target
+    returns 0 with T as 0555:08bf left it (0132..015c); else T[target] = -1 and passes 0, 1 of
+    0373 while it returned 0 (015f..0186), each with R = limit and r from 0 (03c8..03d1), so
+    pass 1 after a round without progress finds the target expanded and returns 0 at once;
+    DS:3f6e (10 / 20) and the hidden-map test of 08bf apply as in a path search."""
+    if not (0 <= x < W and 0 <= y < H):
+        return DistanceMap(0, state.dist_table or None)
+    s = _Search(state, (x, y), (x, y), mode, mask | K.MASK_DISTANCE_MAP.value, limit)
+    state.dist_table = s.dist
+    try:
+        i = y * W + x
+        if s.dist[i] == K.BLOCKED.value and not s.cm[i] & K.CM_CITY.value:
+            return DistanceMap(0, s.dist)
+        s.dist[i] = K.START_MARK.value
+        found = 0
+        for p in range(K.PASSES.value):
+            found = s.flood(p)
+            if found:
+                break
+        return DistanceMap(found, s.dist)
     finally:
         s.restore()
 

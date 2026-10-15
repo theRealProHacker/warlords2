@@ -16,6 +16,7 @@ A step is `[frame, {op: value, option: value, ...}]` in logical frames and logic
 | `assert_state` | `{"state": name, "dialog": class name or null}` | | pgsm state, top dialog |
 | `golden` | `{"ref": file, "regions": {name: [x, y, w, h]}, "max_mae": n}` | | `debug.golden.compare` |
 | `wait_dialog` | registry dialog id | `frames` (default 60) | the top dialog was opened as that id (`registry.open_dialog`) at `frame` or within `frames` frames after it |
+| `state_hash` | a label | `want` (hex digest) | records the engine state hash (`GameState.hash`) of the presented frame in the results; with `want` it must equal it |
 
 Input steps are posted into pygame's queue by `before_frame(frame)`, before that frame's
 `pygame.event.get()`; positions are multiplied by the window scale because `Input.feed`
@@ -42,12 +43,12 @@ if TYPE_CHECKING:
 
 SHOT_ROOT = Path("out/shots")
 UNAVAILABLE = {                                # plan steps whose subject does not exist yet
-    "assert_hash": "the engine state hash needs the game state (M3, M4a)",
+    "assert_hash": "the engine state hash needs the game state (M3, M4a); state_hash records it",
 }
 OPTIONS = {"key": {"text", "hold"}, "keyup": set(), "click": set(), "rclick": set(), "move": set(),
            "drag": {"frames", "button"}, "press_button": set(), "shot": set(), "assert_state": set(),
-           "golden": set(), "wait_dialog": {"frames"}}
-CHECKS = {"shot", "assert_state", "golden"}
+           "golden": set(), "wait_dialog": {"frames"}, "state_hash": {"want"}}
+CHECKS = {"shot", "assert_state", "golden", "state_hash"}
 WAIT_FRAMES = 60
 TEXT = {"space": " ", "return": "\r", "tab": "\t"}
 BUTTONS = {"click": 1, "rclick": 3}
@@ -192,6 +193,8 @@ class Script:
             ok = isinstance(v, str) and v and "/" not in v
         elif op == "assert_state":
             ok = isinstance(v, dict) and v and set(v) <= {"state", "dialog"}
+        elif op == "state_hash":
+            ok = isinstance(v, str) and bool(v)
         else:
             ok = (isinstance(v, dict) and set(v) == {"ref", "regions", "max_mae"}
                   and isinstance(v["max_mae"], (int, float)) and isinstance(v["regions"], dict)
@@ -210,6 +213,15 @@ class Script:
         self.results.append({"frame": frame, "op": "assert_state", "want": want, "got": got, "ok": got == want})
         if got != want:
             raise ScriptAssertion(f"frame {frame}: assert_state wants {want}, got {got}")
+
+    def _state_hash(self, frame: int, label: str, want: str | None = None) -> None:
+        st = getattr(self.app.manager.current_state(), "state", None)
+        got = st.hash() if st is not None else None
+        ok = want is None or got == want
+        self.results.append({"frame": frame, "op": "state_hash", "label": label, "hash": got,
+                             "want": want, "ok": ok})
+        if not ok:
+            raise ScriptAssertion(f"frame {frame}: state_hash {label!r} wants {want}, got {got}")
 
     def _golden(self, frame: int, g: dict) -> None:
         mae = golden.compare(self.app.screen.present_surface, g["ref"], {k: tuple(r) for k, r in g["regions"].items()})
@@ -240,7 +252,10 @@ class Script:
         self._checked.add(frame)
         for st in self.checks.get(frame, ()):
             op = next(k for k in st if k in CHECKS)
-            getattr(self, f"_{op}")(frame, st[op])
+            if op == "state_hash":
+                self._state_hash(frame, st[op], st.get("want"))
+            else:
+                getattr(self, f"_{op}")(frame, st[op])
         for w in [w for w in self.waits if w[0] <= frame]:
             start, deadline, name = w
             top = self.app.manager.current_state().dialogs.top

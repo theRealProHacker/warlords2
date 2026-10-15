@@ -14,12 +14,16 @@ Sources (re-read by M9a from out/asm/; EL = docs/research/exe_logic.md):
 The relation byte 2c04:153b[a*8+b] is `state.relations[a][b]`: bits 0-1 the current state of a
 towards b, bits 2-3 a's proposal to b (0 peace, 1 neutral, 2 war), bits 4-5 of the diagonal byte
 [p][p] the marks of ovl00:0cc7, bits 6-7 kept.  ovl25:09ab ("show the message"), which the
-resolution and treachery test, is rules.heroes.is_computer: SCN 0x0d0[0x110] == 1, or DS:0836,
-which is 1 only while ovl25:0000 runs (set at ovl25:0071, cleared at ovl25:0354), i.e. while a
-computer side is on turn.
+resolution and treachery test, is rules.heroes.is_computer: SCN 0x0d0[0x110] == 1, or DS:0836
+!= 0, which is 1 only while ovl25:0000 runs (set at ovl25:0071, cleared at ovl25:0354), i.e. while
+a computer side is on turn.
 Not modelled (presentation only): the redraws ovl61:011f and the message boxes ovl61:11d1; the
-messages are `Msg` events.  News entries go through rules.heroes.news (ovl41:1244); the original
-passes a NULL name for the diplomacy kinds, recorded as "".
+messages are `Msg` events.  News entries go through rules.heroes.news (ovl41:1244).  For the
+kinds 8, 9 and 10 the original pushes a NULL far pointer as the name (`push 0` dword at
+ovl00:0f0d / 101f, ovl36:2240) and ovl41:1244 strcpy's (0000:4a70, asm ovl41:130d..1324) the
+bytes at 0000:0000 (the interrupt vector table) into the entry's name field: garbage, but never
+displayed, since the news texts of these kinds print only the two side names (cases ovl41:1633,
+164f, 166b format the records 2c04:0 + side * 0x14).  The name is recorded as "" here.
 """
 from __future__ import annotations
 
@@ -29,6 +33,7 @@ from ..model.ids import MAP_OWNER_MASK, MAP_W, NO_OWNER, Relation
 from . import heroes as H
 from .constants import diplomacy as K
 from .constants import turn as KT
+from .present import present
 from .economy import s16
 from .engine import IllegalCommand
 
@@ -68,6 +73,14 @@ def set_proposal(state, a: int, b: int, v: int) -> None:
     state.relations[a][b] = (state.relations[a][b] & ~(m << s) & 0xFF) | ((v & m) << s)
 
 
+MSG_WAIT = 0x14                     # ovl00:0f5f / ovl36:2232: ovl61:11d1(msg, 0x14)
+
+
+def _present_msg(ev, wait: int) -> None:
+    """The message through ovl61:11d1(msg, wait) (present point "message")."""
+    present("message", group=ev.group, index=ev.index, args=ev.args, wait=wait)
+
+
 def _shown(state) -> bool:
     """ovl25:09ab and SCN 0x159 (asm ovl00:0f1d..0f34)."""
     return bool(state.flags.get(KT.SCN_VIEWED.value, 0)) and H.is_computer(state)
@@ -79,8 +92,10 @@ def _shown(state) -> bool:
 def propose(state, cmd: C.Propose) -> list:
     """The side on turn proposes `relation` to side `other` (the Diplomatic Action buttons).
     Evidence: asm ovl00:0a69..0aec: proposal bits of [0x110][b] = relation & 3 (and 0xf3, shl 2,
-    or); a human side's dialog lists the other sides without itself, so the button index is
-    raised by one from the own column on (0a80..0a94; `other` here is the side itself); then the
+    or); a human side's dialog lists the other sides without itself, so the button index cx is
+    raised by one from the own column on (0a80..0a94: SCN 0x0d0[0x110] == 0 and 0x110 <= cx ->
+    cx + 1).  `cmd.other` here is the real side index, already past that shift: the M9b
+    Diplomatic Action dialog converts its button index b to b + (b >= own side); then the
     dialog is redrawn (0ad6..0ae6).  The dialog opens only with Diplomacy on (ovl00:0346 tests
     SCN 0x11c); 0a69 itself tests nothing else (a dead side's column is drawn empty, ovl00:052c)."""
     p = state.current
@@ -149,6 +164,7 @@ def resolve(state, a) -> list:
                 H.news(state, a, K.NEWS_WAR.value, a, b, "")
                 if _shown(state):
                     events.append(_msg(K.MSG_WAR.value, state.players[b].name))
+                    _present_msg(events[-1], MSG_WAIT)
         elif proposal(state, b, a) <= q:
             set_current(state, a, b, q)
             set_current(state, b, a, q)
@@ -157,6 +173,7 @@ def resolve(state, a) -> list:
                 H.news(state, a, K.NEWS_PEACE.value, a, b, "")
                 if _shown(state):
                     events.append(_msg(K.MSG_PEACE.value, state.players[b].name))
+                    _present_msg(events[-1], MSG_WAIT)
     return events
 
 
@@ -199,7 +216,12 @@ def treachery(state, x: int, y: int) -> list:
     2c04:10e3[p] += it (2146); [p][o] and [o][p]: current 2, proposal 2 (215f..21c9); not
     ovl25:09ab (a human side): redraw and ovl36:0000(x, y) again (21cf..21ee); ovl25:09ab and
     SCN 0x159: STRING (111, 2) with o's name (21f4..2238); ovl41:1244(p, 8, p, o, NULL) (2257).
-    The attack uses the selection (DS:5e62 / 5e3e), which the question left as the group."""
+    The attack uses the selection (DS:5e62 / 5e3e), which the question left as the group.  The
+    capture question (ovl31:0000) is answered inside that nested ovl36:0000 before 21f4 runs; here
+    the attack returns with CityCaptured pending (the only question it can leave there: combat.py
+    raises TreacheryPrompt only before the relation is war), so the kind-8 entry goes into the
+    event's info["news_after"] and rules.city.capture writes it after the answer's own entries.
+    Between 21ee and 2257 a human side writes nothing else (21f4 tests ovl25:09ab)."""
     from . import combat
     w = state.world
     o = w.flags[y * MAP_W + x] & MAP_OWNER_MASK
@@ -217,12 +239,20 @@ def treachery(state, x: int, y: int) -> list:
         set_current(state, a, b, K.WAR.value)
         set_proposal(state, a, b, K.WAR.value)
     events.append(E.Treachery({"player": p, "other": o, "from": rel, "infamy": v, "x": x, "y": y}))
+    news = [p, K.NEWS_TREACHERY.value, p, o, ""]
     if not H.is_computer(state):
         group = tuple(state.selection.moving)
         events += combat.attack(state, C.Attack(group, x, y))
+        if isinstance(state.pending, E.CityCaptured):
+            # The capture dialog is modal inside the nested ovl36:0000, so what its answer
+            # writes (a quest entry via ovl01:1ded) comes before 2257: rules.city.capture
+            # writes this entry after the answer.
+            state.pending.info["news_after"] = news
+            return events
     elif state.flags.get(KT.SCN_VIEWED.value, 0):
         events.append(_msg(K.MSG_TREACHERY.value, state.players[o].name))
-    H.news(state, p, K.NEWS_TREACHERY.value, p, o, "")
+        _present_msg(events[-1], MSG_WAIT)                 # ovl61:11d1(.., 0x14) at 2238
+    H.news(state, *news)
     return events
 
 
@@ -231,9 +261,7 @@ def confirm_treachery(state, cmd: C.ConfirmTreachery) -> list:
     and the attack, no changes nothing.
     Evidence: ovl36:0000 shows the yes / no dialog ovl56:0088 with the far handlers 3024:006b ->
     ovl36:20a8 (`treachery`) and 3024:0070 -> ovl36:2262 (ovl61:011f redraw only), then returns
-    (asm ovl36:010c..0170).  A pending CityCaptured question of the attack comes before the news
-    entry of 20a8 here; in the original the capture dialog is modal inside ovl36:0000, so a quest
-    entry it writes (ovl01:1ded) precedes the kind-8 entry there too."""
+    (asm ovl36:010c..0170)."""
     ev = state.pending
     if not isinstance(ev, E.TreacheryPrompt):
         raise IllegalCommand("no treachery question pending")
@@ -252,7 +280,10 @@ def rating(state) -> list:
     Evidence: asm ovl00:0aed..0cb6: list of live sides (0x137) in index order; insertion sort
     ascending by the signed word 2c04:10e3[side] with a strict < (0b92..0b9b, stable); titles
     from the jump table ovl00:0cb7 indexed by count - 1 (cases 0bb9..0c82).  Returns [(side,
-    title)]; empty without live sides (the jump-table index is out of range there)."""
+    title)]; empty without live sides (the jump-table index is out of range there).  The inner
+    loop compares infamy[list[cx]] with infamy[list[cx - 1]] before its cx > 0 test (0b66..0b9b),
+    so at cx = 0 it reads the word before the list (a stack word); the cx test then stops the
+    loop either way, so the read changes nothing."""
     sides = [p.index for p in state.players if p.alive]
     sides.sort(key=lambda s: s16(state.players[s].infamy))
     titles = K.RATING_TABLE.value.get(len(sides), ())

@@ -1,0 +1,383 @@
+{
+ "note": "TUTORIA, two humans, the Military Advisor on (--options word 9).  Turn 1: the Turn pop-up, the hero offer (page (25, 0)) accepted, the capital's production screen (pages (25, 1) / (25, 2)) closed; the first select (its page (25, 3) opens on the press and closes on the release, M8a) takes the hero alone; it walks to (51, 68) (move-tail page (25, 9)).  Shift over Zekond (50, 69) shows the question mark; its click opens the advisor ovl36:1f19 (shot 06: STRING (0x7e, odds), here 9 = 19 trial wins of the tutorial-immune hero, SCN 0x12e).  The click with the sword attacks (ovl36:0000): no war sample without effects, so the window ovl37:0160 opens at once; one kill (13 BIOS ticks); the result line (0x8e) with the hero's name; dismissed; the page (25, 10) over the capture question (ovl31:0283, once per run); Raze (284): the DS:0a56 message (ovl31:029f, popup 5), then the map with the ruin tiles (ovl32:016b).  The attack needs --allow-unverified (the after-battle hook ai_memory, ovl25:09d7, is M8b1's): run it with that flag; tests/test_m5b_ui.py runs this script with set_allow_unverified(True) and checks the dialogs frame by frame; a strict run (tests/test_scripts.py) is refused at the attack, so the checks after it are left out of the script.",
+ "args": [
+  "--scenario",
+  "TUTORIA",
+  "--seed",
+  "3",
+  "--controls",
+  "HCCCCCCH",
+  "--options",
+  "0,0,0,0,0,0,0,0,1,0",
+  "--no-voice"
+ ],
+ "steps": [
+  [
+   2,
+   {
+    "wait_dialog": "progress",
+    "frames": 5
+   }
+  ],
+  [
+   50,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 30
+   }
+  ],
+  [
+   84,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   85,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 4
+   }
+  ],
+  [
+   90,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   92,
+   {
+    "wait_dialog": "hero_offer",
+    "frames": 4
+   }
+  ],
+  [
+   95,
+   {
+    "press_button": 287
+   }
+  ],
+  [
+   96,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 4
+   }
+  ],
+  [
+   102,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   106,
+   {
+    "press_button": 192
+   }
+  ],
+  [
+   107,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 4
+   }
+  ],
+  [
+   112,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   118,
+   {
+    "shot": "00_turn1"
+   }
+  ],
+  [
+   124,
+   {
+    "move": [
+     196,
+     210
+    ]
+   }
+  ],
+  [
+   126,
+   {
+    "click": [
+     196,
+     210
+    ]
+   }
+  ],
+  [
+   150,
+   {
+    "shot": "01"
+   }
+  ],
+  [
+   158,
+   {
+    "key": "left"
+   }
+  ],
+  [
+   160,
+   {
+    "key": "left"
+   }
+  ],
+  [
+   162,
+   {
+    "move": [
+     36,
+     370
+    ]
+   }
+  ],
+  [
+   163,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   164,
+   {
+    "click": [
+     36,
+     370
+    ]
+   }
+  ],
+  [
+   165,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   168,
+   {
+    "shot": "02_path"
+   }
+  ],
+  [
+   170,
+   {
+    "press_button": 173
+   }
+  ],
+  [
+   226,
+   {
+    "shot": "03_moved"
+   }
+  ],
+  [
+   230,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 4
+   }
+  ],
+  [
+   233,
+   {
+    "shot": "03b_move_page"
+   }
+  ],
+  [
+   236,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   240,
+   {
+    "move": [
+     156,
+     250
+    ]
+   }
+  ],
+  [
+   242,
+   {
+    "shot": "04_sword"
+   }
+  ],
+  [
+   243,
+   {
+    "key": "left shift",
+    "hold": true
+   }
+  ],
+  [
+   244,
+   {
+    "move": [
+     157,
+     250
+    ]
+   }
+  ],
+  [
+   246,
+   {
+    "shot": "05_question"
+   }
+  ],
+  [
+   247,
+   {
+    "click": [
+     157,
+     250
+    ]
+   }
+  ],
+  [
+   248,
+   {
+    "keyup": "left shift"
+   }
+  ],
+  [
+   249,
+   {
+    "wait_dialog": "advisor",
+    "frames": 3
+   }
+  ],
+  [
+   252,
+   {
+    "shot": "06_advisor"
+   }
+  ],
+  [
+   254,
+   {
+    "press_button": 424
+   }
+  ],
+  [
+   258,
+   {
+    "move": [
+     156,
+     250
+    ]
+   }
+  ],
+  [
+   260,
+   {
+    "click": [
+     156,
+     250
+    ]
+   }
+  ],
+  [
+   263,
+   {
+    "shot": "07_fight_start"
+   }
+  ],
+  [
+   270,
+   {
+    "shot": "08_fight_blast"
+   }
+  ],
+  [
+   304,
+   {
+    "shot": "09_fight_result"
+   }
+  ],
+  [
+   306,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   310,
+   {
+    "shot": "10_tutorial_won_city"
+   }
+  ],
+  [
+   312,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   316,
+   {
+    "shot": "11_capture"
+   }
+  ],
+  [
+   318,
+   {
+    "press_button": 284
+   }
+  ],
+  [
+   322,
+   {
+    "shot": "12_in_ruins"
+   }
+  ],
+  [
+   324,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   330,
+   {
+    "shot": "13_razed"
+   }
+  ]
+ ]
+}

@@ -1,0 +1,33 @@
+{
+ "note": "Hero menu on TUTORIA turn 1 after the free hero is accepted: Hero > Inspect (key ',', ovl40:0000) with the hero's standard carried, Carried / Ground switches, Done; Hero > Levels (key 'u', ovl47:1652), closed by 469.",
+ "args": ["--scenario", "TUTORIA", "--seed", "3", "--controls", "HCCCCCCH", "--no-voice"],
+ "steps": [
+  [2, {"wait_dialog": "progress", "frames": 5}],
+  [50, {"wait_dialog": "turn_start", "frames": 30}],
+  [84, {"click": [320, 240]}],
+  [86, {"wait_dialog": "tutorial_page", "frames": 6}],
+  [96, {"click": [320, 240]}],
+  [98, {"wait_dialog": "hero_offer", "frames": 4}],
+  [104, {"press_button": 287}],
+  [106, {"wait_dialog": "tutorial_page", "frames": 6}],
+  [114, {"click": [320, 240]}],
+  [116, {"wait_dialog": "production", "frames": 4}],
+  [122, {"press_button": 192}],
+  [124, {"wait_dialog": "tutorial_page", "frames": 4}],
+  [130, {"click": [320, 240]}],
+  [134, {"assert_state": {"state": "game", "dialog": null}}],
+  [136, {"key": ","}],
+  [138, {"wait_dialog": "hero_inspect", "frames": 2}],
+  [142, {"shot": "01_inspect"}],
+  [144, {"press_button": 249}],
+  [148, {"shot": "02_inspect_ground"}],
+  [150, {"press_button": 250}],
+  [154, {"press_button": 242}],
+  [158, {"assert_state": {"state": "game", "dialog": null}}],
+  [160, {"key": "u"}],
+  [162, {"wait_dialog": "hero_levels", "frames": 2}],
+  [166, {"shot": "03_levels"}],
+  [168, {"press_button": 469}],
+  [172, {"assert_state": {"state": "game", "dialog": null}}]
+ ]
+}

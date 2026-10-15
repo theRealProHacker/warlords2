@@ -338,8 +338,8 @@ def reward(state) -> tuple:
     rnd(1,3,2).  Everything else (also gold < 100): gold rnd(2,1000,1000)."""
     p = state.current
     rnd = state.rng.rnd
-    from .economy import city_count
-    if city_count(state, p) < K.REWARD_FEW_CITIES.value and H.turn(state) > K.REWARD_LATE_TURN.value:
+    from .economy import cached_cities
+    if cached_cities(state, p) < K.REWARD_FEW_CITIES.value and H.turn(state) > K.REWARD_LATE_TURN.value:
         return "allies", rnd(*K.REWARD_ALLIES_MANY.value)
     if s16(state.players[p].gold) >= K.REWARD_GOLD_MIN.value:
         items = [i for i, it in enumerate(state.items) if it.state == ItemState.NOT_IN_PLAY
@@ -402,3 +402,45 @@ def _view_word(state) -> int:
         return 0
     humans = sum(1 for pl in state.players if pl.alive and pl.control == Control.HUMAN)
     return int(humans == 1 and bool(state.options.hidden_map))
+
+
+# ------------------------------------------------------------------------------- quest page
+
+
+def quest_page(state) -> list:
+    """The engine part of the quest page ovl01:0167 for the current side.  The page shows the
+    quest when the record's word +0 is set and the army record of its hero (+4, read without
+    any other check) has x >= 0, y >= 0 and type 0x1c; then quest types 2 and 3 draw their map
+    with ovl63:158d, which rebuilds the army bits (`rules.mapwords.army_bits`).  Otherwise the
+    page shows the no-quest line STRING (20, -1): ovl59:04f0 index -1 -> ovl59:02bf(1, 4, -1) on
+    the game's dice, returned as `Msg(20, index)`.  Reached from the temple's quest
+    (ovl01:011b: 0d7a(0), then 0167; after an assignment the quest is always shown) and from
+    Report > Quest (07be:02a7, command `QuestPage`).
+    Evidence: asm ovl01:0167..0201 (si: 2c04:1103 + 0xc p != 0, army[+0x1107] +0 / +2 >= 0,
+    +4 == 0x1c), 020e..025f (si == 0: the roll at 0244), 02b2..02b8 (si: ovl01:0320), 03bb..03c8
+    (switch on +2, table cs:0d57), 0591..06a9 (type 1: item +0x16 == 2 -> its site +0x17, site
+    word +0x1d |= 1 << SCN 0x110, no seen test), 06fe..0785 / 0788..0845 (types 2 / 3 ->
+    ovl63:158d)."""
+    from .mapwords import army_bits
+    from .constants.combat import TEXT_ROLL_ADD
+    q = state.players[state.current].quest
+    rec = state.armies[q.hero] if isinstance(q.hero, int) and 0 <= q.hero < len(state.armies) else None
+    if q.active != 0 and rec is not None and rec.x >= 0 and rec.y >= 0 and rec.type_id == HERO_TYPE:
+        if q.type == K.QUEST_ITEM_TYPE.value and state.items[q.target].state == ItemState.IN_SITE:
+            state.sites[state.items[q.target].holder].shown_mask |= 1 << state.current   # 0682..06a9
+        if q.type in K.QUEST_PAGE_TYPES.value:
+            army_bits(state)
+        return []
+    r = state.rng.rnd(1, K.NO_QUEST_COUNT.value, TEXT_ROLL_ADD.value)
+    return [E.Msg(group=K.NO_QUEST_GROUP.value, index=r)]
+
+
+def quest_page_command(state, cmd) -> list:
+    """Command `QuestPage` (Report > Quest, key / menu 07be:02a7 -> ovl01:0167) for a human side:
+    `quest_page`.
+    Evidence: asm res_07be:02a7 (lcall ovl01:0167); the report menu exists only in the human
+    turn."""
+    from .engine import IllegalCommand
+    if not _human(state):
+        raise IllegalCommand("the quest page belongs to a human side")
+    return quest_page(state)

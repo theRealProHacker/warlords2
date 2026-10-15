@@ -6,10 +6,11 @@ Evidence (asm ovl46, ovl66, ovl15):
   square list 0b62:007d sorted by 0b62:09ec (`rules.selection.square_list`), icons only:
   y = top + 16, x0 = ((left + 128 - n * 24 / 2 - 16 + 4) >> 3) << 3, then 24 px apart, each
   ovl64:08be(type +4, owner +5, ring 0, mode 0) - the army's own sheet through the army mask.
-* Army panel ovl46:0626(type, +6, +8, +0xb, +7, +0xa, x, y) (nothing for type -1): 240x128 around
+* Army panel ovl46:0626(type, +6, +8, +0xb, +7, +0xa, x, y) (type -1, an army of type byte 0xff:
+  nothing at all, `Nothing`): 240x128 around
   (x, y) (ovl46:1486), POPUP3.PCK from (0, 0) (DS:1050) through its mask; SetFont(2, 15, 0, 3);
   title centred at (L + 112, T + 8): the hero's name (2c04:0223 + 20 * (+0xa)) for type 0x1c,
-  else the type's name (ovl44:14f4); ovl64:08be(type, SCN 0x110, ring 1) at (L + 96, T + 31);
+  else the type's name (ovl44:14f4, `ui.typename`); ovl64:08be(type, SCN 0x110, ring 1) at (L + 96, T + 31);
   for a non-hero with +0xa = n medals, the first n of the ABITS 8x8 rectangles DS:2fa6, 2fae,
   2fb6, 2fbe at (L + 128, T + 36), (L + 88, T + 36), (L + 128, T + 45), (L + 88, T + 45);
   "Strength: %d" (DS:10a8, +8) right-aligned (ovl59:0103) at (L + 104, T + 66), "Movement: %d"
@@ -36,6 +37,7 @@ from ...model.ids import HERO_TYPE
 from .. import registry
 from ...rules.bonuses import s8
 from ..palettes import ABITS, blit_opaque, kind_of, painter_for
+from ..typename import type_name
 from ..widgets import kit
 from . import LARGE, POPUP, POPUP3, Panel, panel_rect, two_lines
 
@@ -91,7 +93,7 @@ def army_content(k, painter, state, a):
         if a.type_id == HERO_TYPE:
             title = state.heroes[a.hero_slot].name
         else:
-            title = state.army_type(a.type_id).name
+            title = type_name(k, state, a.type_id)                   # ovl46:0774
         w = f.width(title)
         f.draw(fb, left + TITLE_AT[0] - int(w / 2), top + TITLE_AT[1], title, INK, SHADOW)
         painter.army(fb, a.type_id, state.current, left + ICON_AT[0], top + ICON_AT[1], ring=1)
@@ -109,10 +111,26 @@ def army_content(k, painter, state, a):
     return content
 
 
+class Nothing(Panel):
+    """ovl46:0626 for type byte 0xff: it returns at 0634..0639 (cmp si, -1) before hiding the
+    pointer, saving the screen or drawing; its callers still set DS:1174 (ovl66:0c8a, 17e5 via
+    0ad9's flag test, ovl40:1340), so the right press waits for the release like a panel.
+    The release then runs ovl46:11cf, which blits the save bitmap DS:4494 that the last real
+    panel freed (1012:0975 zeroed its plane count +0x34 and kept the plane pointers) at that
+    panel's place and shows the pointer (12bf:0757) without a matching hide: what the freed
+    memory then holds is not determinable (heap reuse), so here nothing is restored (X36 c)."""
+    hides_pointer = False
+
+    def draw(self, fb) -> None:
+        pass
+
+
 @registry.dialog("info/army_unit")
 def army_panel(host, army, pos, on_close=None):
     k = kit(host.app)
     a = host.state.armies[army]
+    if s8(a.type_id) == -1:
+        return Nothing(k, host.app.input, panel_rect(pos, LARGE), POPUP3, lambda fb, x, y: None, on_close)
     return Panel(k, host.app.input, panel_rect(pos, LARGE), POPUP3,
                  army_content(k, painter_for(host), host.state, a), on_close)
 
@@ -152,7 +170,8 @@ def palette(host, _id, pos):
     if not 0 <= i < len(STATUS_TEXTS):
         return None
     p = st.current
-    value = (economy.city_count(st, p), st.players[p].gold, economy.income(st, p), economy.upkeep(st, p))[i]
+    value = (economy.cached_cities(st, p), st.players[p].gold, economy.cached_income(st, p),
+             economy.cached_upkeep(st, p))[i]
     return _texts(host, pos, STATUS_TEXTS[i], value)
 
 

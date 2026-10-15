@@ -14,6 +14,7 @@ from warlords2.formats.tables import parse_armytypes
 from warlords2.model.ids import (LEVEL_OFF, MAP_W, NO_OWNER, Control, ItemState, SiteKind)
 from warlords2.model.newgame import NewGameConfig
 from warlords2.model.options import GameOptions
+from movekit import neighbour_memo
 from warlords2.rules.constants import allowing_unverified
 from warlords2.rules.constants import setup as K
 from warlords2.rules.rng import Rng
@@ -57,7 +58,7 @@ def _unused(root):
 
 
 def build(game, name, sc=None, **kw):
-    with allowing_unverified(False):
+    with allowing_unverified(False), neighbour_memo():
         return new_game(sc or _scenario(game, name), cfg(name, **kw), list(_armytypes(game)),
                         unused_name=_unused(game))
 

@@ -11,20 +11,20 @@ Evidence (WARLORD2.EXE ovl57 unless noted; `sides` is the Game Setup screen's SC
   ends at "CARDS\\", the open fails and the list is empty (no leaders); five visible
   rows hold list indices (row i = i, -1 past the end), moved down by card - 4 when the
   card is 5 or more; the chosen leader (DS:5958) is the card; popup type 4, JOIN screen 27;
-* page ovl57:180b: "Setup Side" (EXE DS:25b3) SetFont(1, 15, 0, 3) centred at (320, 55);
+* page ovl57:180b: the title EXE DS:25b3 SetFont(1, 15, 0, 3) centred at (320, 55);
   two frames, (138, 107, 368, 67) and (138, 194, 368, 165): the outline in the side's
   colour 0x0B0, then twice in colour 0x0A0, each one pixel up and left; SetFont(2, 0x0A0,
-  0x0B0, 3): "Side Name" (DS:25c8) at (160, 96) and "Leader" (DS:25d9) at (160, 181), each
+  0x0B0, 3): DS:25c8 at (160, 96) and DS:25d9 at (160, 181), each
   on colour 3 (width x 17); the side's shield (ovl64:0bf7 mode 0: SHIELDS.PCK
   (40 p, 0, 40, 40), opaque, side 15 -> 8) at (144, 122), (456, 122) and (144, 202);
-  SetFont(2, 15, 0, 3): "Retype the name of this side" (DS:25e0) centred at (320, 116);
+  SetFont(2, 15, 0, 3): DS:25e0 centred at (320, 116);
   the name box ovl59:0058 at (229, 138, 188, 22): colour 3, bevel 14d0:02e5(4, 2), the
-  name opaque at (232, 140); colour 0 lines (196, 218, 72) and (384, 218, 96); "Name"
-  (DS:25fd) at (196, 203), "Description" (DS:2602) at (384, 203);
+  name opaque at (232, 140); colour 0 lines (196, 218, 72) and (384, 218, 96); DS:25fd
+  at (196, 203), DS:2602 at (384, 203);
 * list ovl57:1be6: bevel (188, 248, 188, 102) colours 4 / 2, colour 3 inside; for a
   computer side each filled row's leader at (196, 252 + 19 i), ink 15 for the chosen
   one, else 5 / 7 / 9 for level 0 / 1 / 2;
-* description ovl57:1d0f: a human side shows "N/A" (DS:260e, DS:2612) at (196, 224)
+* description ovl57:1d0f: a human side shows DS:260e and DS:2612 at (196, 224)
   and (384, 224) in ink 15; a computer side the chosen leader at (192, 224) and lines
   1-6 of its .DSC file (ovl57:20dc: lines end at CR, a line exists while a CR follows it;
   the name ovl57:21c1 from DS:2616 "KLW" and DS:261a, so for level 3 again no file and
@@ -39,10 +39,15 @@ Evidence (WARLORD2.EXE ovl57 unless noted; `sides` is the Game Setup screen's SC
   464-468 -> ovl57:1e8a(i) (a filled row's leader becomes the card);
 * retype ovl56:03a6(box, name, 15, 128): the field starts empty, inner rectangle
   colour 3, text at (232, 140) in SetFont(2, 15, 0, 3), the cursor glyph DS:2375 at
-  text width + 5 (blinking 15 / 9 per key poll; drawn steady here, X05); Return keeps
+  text width + 5 (its ink alternates 15 / 9 each time the key poll ovl59:020d returns: on
+  a key, or when its poll count (1000 / 20000) or a time test on 0000:1bf0 (emulated
+  floating point, not decoded) ends; drawn steady in 15 here); Return keeps
   the typed text (also when empty), Escape keeps the old name; Backspace; characters
   0x20-0x7a while fewer than 14 are typed and the text typed so far (before the new
   character, ovl56:0495..04cf) is narrower than 128 px.
+Input outside the retype (DS:166a = 1, ovl57:17f5; `ui.keys.popup_input`): Return presses 457
+(DS:155c), Esc 458 (DS:1514), 'A'..'Z' nothing, any other key the chord; a left press on a
+disabled button chords (07be:0e7b).
 """
 from __future__ import annotations
 
@@ -53,6 +58,7 @@ from ...assets.fonts import CHANCE17, CHANCE36
 from ...model.ids import Control
 from .. import registry
 from ..dialog import Dialog
+from ..keys import popup_input
 from ..layout import DISABLED, NORMAL
 from ..widgets import ButtonRow, blit_opaque, kit, text_centred
 
@@ -143,6 +149,9 @@ class SetupSide(Dialog):
         self.computer = sides.get(OFF_CONTROL, p) == COMPUTER
         self.level = sides.get(OFF_LEVEL, p)
         self.names = leader_names(k, self.level) if self.computer else []
+        if self.computer:                       # ovl57:1753..1773: ovl51:03d9(7) writes DS:483c
+            from .save_load import list_names
+            list_names(host.app, self.names)
         self.rows = [-1] * ROWS
         if self.computer:
             self.rows = [i if i < len(self.names) else -1 for i in range(ROWS)]
@@ -208,7 +217,7 @@ class SetupSide(Dialog):
                 self.sides.set_name(self.p, self.typing)
                 self.typing = None
                 return
-            if e.key == pygame.K_ESCAPE:
+            if e.key in (pygame.K_ESCAPE, pygame.K_DELETE):  # Del = Esc (ovl59:020d 024d)
                 self.typing = None
                 return
             if e.key == pygame.K_BACKSPACE:
@@ -222,17 +231,8 @@ class SetupSide(Dialog):
     def update(self, events, dt) -> None:
         if self.typing is not None:
             return self._type(events)
-        for e in events:
-            if e.type == pygame.MOUSEBUTTONDOWN and e.button == 3:
-                b = self.buttons.at(e.pos)
-                if b:
-                    registry.right_click_handler("button")(self.host, b.id, e.pos)
-                    return
-            hit = self.buttons.event(e)
-            if hit is not None:
-                self.press(hit)
-                if self.stack is None or self.typing is not None:
-                    return
+        popup_input(self, events, self.buttons, self.kit.exe,
+                    lambda id: self.press(id) or self.typing is not None)
 
     def draw(self, fb: pygame.Surface) -> None:
         k, exe, p = self.kit, self.kit.exe, self.p

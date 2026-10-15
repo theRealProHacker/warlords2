@@ -1,34 +1,283 @@
 {
- "args": ["--scenario", "ERYTHEA", "--seed", "5"],
+ "args": [
+  "--scenario",
+  "ERYTHEA",
+  "--seed",
+  "5"
+ ],
  "steps": [
-  [2, {"wait_dialog": "progress", "frames": 5}],
-  [70, {"assert_state": {"state": "game", "dialog": null}}],
-  [71, {"shot": "01_start"}],
-  [72, {"drag": [[116, 290], [116, 290]], "button": 3, "frames": 8}],
-  [73, {"wait_dialog": "info/sign", "frames": 2}],
-  [74, {"shot": "02_rclick_sign"}],
-  [84, {"drag": [[196, 210], [196, 210]], "button": 3, "frames": 8}],
-  [85, {"wait_dialog": "info/army", "frames": 2}],
-  [86, {"shot": "03_rclick_army"}],
-  [96, {"drag": [[560, 100], [560, 100]], "button": 3, "frames": 8}],
-  [97, {"wait_dialog": "info/minimap", "frames": 2}],
-  [98, {"shot": "04_rclick_minimap"}],
-  [108, {"drag": [[420, 378], [420, 378]], "button": 3, "frames": 8}],
-  [110, {"shot": "05_rclick_button_help"}],
-  [120, {"press_button": 174}],
-  [123, {"shot": "06_next_selects"}],
-  [125, {"click": [276, 330]}],
-  [128, {"shot": "07_moving_click"}],
-  [175, {"shot": "08_moved"}],
-  [177, {"press_button": 327}],
-  [178, {"press_button": 327}],
-  [180, {"shot": "09_scroll_pad"}],
-  [182, {"press_button": 177}],
-  [184, {"shot": "10_centre"}],
-  [186, {"key": "space"}],
-  [188, {"shot": "11_group_all"}],
-  [190, {"key": "delete"}],
-  [192, {"shot": "12_deselected"}],
-  [195, {"assert_state": {"state": "game", "dialog": null}}]
+  [
+   2,
+   {
+    "wait_dialog": "progress",
+    "frames": 5
+   }
+  ],
+  [
+   69,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 4
+   }
+  ],
+  [
+   71,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   73,
+   {
+    "wait_dialog": "hero_offer",
+    "frames": 4
+   }
+  ],
+  [
+   75,
+   {
+    "press_button": 287
+   }
+  ],
+  [
+   77,
+   {
+    "wait_dialog": "production",
+    "frames": 4
+   }
+  ],
+  [
+   79,
+   {
+    "press_button": 192
+   }
+  ],
+  [
+   83,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   84,
+   {
+    "shot": "01_start"
+   }
+  ],
+  [
+   85,
+   {
+    "drag": [
+     [
+      116,
+      290
+     ],
+     [
+      116,
+      290
+     ]
+    ],
+    "button": 3,
+    "frames": 8
+   }
+  ],
+  [
+   86,
+   {
+    "wait_dialog": "info/sign",
+    "frames": 2
+   }
+  ],
+  [
+   87,
+   {
+    "shot": "02_rclick_sign"
+   }
+  ],
+  [
+   97,
+   {
+    "drag": [
+     [
+      196,
+      210
+     ],
+     [
+      196,
+      210
+     ]
+    ],
+    "button": 3,
+    "frames": 8
+   }
+  ],
+  [
+   98,
+   {
+    "wait_dialog": "info/army",
+    "frames": 2
+   }
+  ],
+  [
+   99,
+   {
+    "shot": "03_rclick_army"
+   }
+  ],
+  [
+   109,
+   {
+    "drag": [
+     [
+      560,
+      100
+     ],
+     [
+      560,
+      100
+     ]
+    ],
+    "button": 3,
+    "frames": 8
+   }
+  ],
+  [
+   110,
+   {
+    "wait_dialog": "info/city",
+    "frames": 2
+   }
+  ],
+  [
+   111,
+   {
+    "shot": "04_rclick_minimap"
+   }
+  ],
+  [
+   121,
+   {
+    "drag": [
+     [
+      420,
+      378
+     ],
+     [
+      420,
+      378
+     ]
+    ],
+    "button": 3,
+    "frames": 8
+   }
+  ],
+  [
+   123,
+   {
+    "shot": "05_rclick_button_help"
+   }
+  ],
+  [
+   133,
+   {
+    "press_button": 174
+   }
+  ],
+  [
+   136,
+   {
+    "shot": "06_next_selects"
+   }
+  ],
+  [
+   138,
+   {
+    "click": [
+     276,
+     330
+    ]
+   }
+  ],
+  [
+   141,
+   {
+    "shot": "07_moving_click"
+   }
+  ],
+  [
+   188,
+   {
+    "shot": "08_moved"
+   }
+  ],
+  [
+   190,
+   {
+    "press_button": 327
+   }
+  ],
+  [
+   191,
+   {
+    "press_button": 327
+   }
+  ],
+  [
+   193,
+   {
+    "shot": "09_scroll_pad"
+   }
+  ],
+  [
+   195,
+   {
+    "press_button": 177
+   }
+  ],
+  [
+   197,
+   {
+    "shot": "10_centre"
+   }
+  ],
+  [
+   199,
+   {
+    "key": "space"
+   }
+  ],
+  [
+   201,
+   {
+    "shot": "11_group_all"
+   }
+  ],
+  [
+   203,
+   {
+    "key": "delete"
+   }
+  ],
+  [
+   205,
+   {
+    "shot": "12_deselected"
+   }
+  ],
+  [
+   208,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ]
  ]
 }

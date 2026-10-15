@@ -169,11 +169,23 @@ def test_name_hero_answers_with_name_and_sex():
     st.players[0].capital = (10, 20)
     dice(st, [1])
     H.human_offer(st)
-    for bad in ("", "x" * 16):
+    for bad in ("x" * 16, "a\0b"):
         with pytest.raises(IllegalCommand):
             engine.apply(st, C.NameHero(bad, True))
     engine.apply(st, C.NameHero("Kim", True))
     assert st.heroes[0].name == "Kim" and st.heroes[0].female == 1 and st.pending is None
+
+
+def test_name_hero_accepts_the_empty_name():
+    """ovl56:0575 copies the editor buffer on Return even when it is empty; accept (ovl47:127e)
+    then creates a hero named ""."""
+    st = mk()
+    add_city(st, 10, 20, 0)
+    st.players[0].capital = (10, 20)
+    dice(st, [1])
+    H.human_offer(st)
+    engine.apply(st, C.NameHero("", False))
+    assert st.heroes[0].used and st.heroes[0].name == "" and st.pending is None
 
 
 def test_parse_hero_names_follows_the_byte_scan():
@@ -367,14 +379,14 @@ def test_medal_chance_max_12_40_minus_5m(m, chance):
     """ovl36:2274: rnd(1,100,0) < max(12, 40 - 5m)."""
     for roll, awarded in ((chance - 1, True), (chance, False)):
         st, h, u = _medal_state(m)
-        dice(st, [roll, 1])
+        dice(st, [roll, 1, 1, 1])
         ev = H.award_medal(st, _battle(st, [h.id] + u, [90, 91]))
         assert bool([e for e in ev if isinstance(e, E.MedalAwarded)]) == awarded
 
 
 def test_medal_needs_win_real_battle_hero_and_no_ship():
     st, h, u = _medal_state()
-    dice(st, [1, 1])
+    dice(st, [1, 1, 1, 1])
     assert H.award_medal(st, _battle(st, [h.id] + u, [90, 91], won=False)) == []
     assert st.rng.src.sides == []
     assert H.award_medal(st, _battle(st, [h.id] + u, [90])) == []      # 1 defender, turn 30
@@ -395,7 +407,7 @@ def test_medal_needs_win_real_battle_hero_and_no_ship():
 def test_medal_gain_and_cap():
     """< 4 medals: +1 and strength + 1 (cap 9), or allowance + 1 from strength 15."""
     st, h, u = _medal_state()
-    dice(st, [1, 2])                                     # second eligible
+    dice(st, [1, 2, 1, 1])                               # second eligible
     H.award_medal(st, _battle(st, [h.id] + u, [90, 91]))
     a = st.armies[u[1]]
     assert (a.medals, a.strength) == (1, 6)
@@ -403,6 +415,44 @@ def test_medal_gain_and_cap():
     dice(st, [1, 2])
     assert not [e for e in H.award_medal(st, _battle(st, [h.id] + u, [90, 91]))
                 if isinstance(e, E.MedalAwarded)]
+
+
+def test_medal_text_rolls_for_a_human_attacker_after_the_award():
+    """ovl36:24a5: SCN 0xd0 + 2 * DS:41fa == 0 -> (158, -1) at 2524, then (160, -1) at 2581,
+    rnd(1, 7, -1) and rnd(1, 4, -1), after the chance roll and the pick."""
+    st, h, u = _medal_state()
+    st.battle_work.attacker = 0
+    src = dice(st, [1, 1, 6, 3])
+    ev = H.award_medal(st, _battle(st, [h.id] + u, [90, 91]))
+    m = [e for e in ev if isinstance(e, E.MedalAwarded)][0]
+    assert m.info["text_rolls"] == (5, 2)
+    assert src.sides == [100, 2, 7, 4]
+
+
+def test_medal_of_a_computer_attacker_draws_no_text_rolls():
+    """The gate reads the battle's attacking side DS:41fa, not SCN 0x110."""
+    from warlords2.model.ids import Control
+    st, h, u = _medal_state()
+    st.players[1].control = Control.COMPUTER
+    st.battle_work.attacker = 1
+    src = dice(st, [1, 1])
+    ev = H.award_medal(st, _battle(st, [h.id] + u, [90, 91]))
+    m = [e for e in ev if isinstance(e, E.MedalAwarded)][0]
+    assert "text_rolls" not in m.info and src.sides == [100, 2]
+
+
+def test_medal_after_the_hero_died_still_draws_the_pick():
+    """ovl36:23e3 tests DS:5e5e for null only: after a battle the stack's hero died in (the
+    computer path keeps the pointer), the pick rnd(1, eligible, -1) is drawn and the medal given."""
+    from warlords2.rules.movement import remove_army
+    st, h, u = _medal_state()
+    remove_army(st, st.armies[h.id])
+    st.selection.moving = list(u)
+    st.selection.selected = u[0]
+    assert st.selection.hero == h.id
+    src = dice(st, [1, 1, 1, 1])
+    ev = H.award_medal(st, _battle(st, list(u), [90, 91]))
+    assert [e for e in ev if isinstance(e, E.MedalAwarded)] and src.sides[:2] == [100, 2]
 
 
 # ----------------------------------------------------------------------------- strict paths

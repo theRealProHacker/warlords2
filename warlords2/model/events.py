@@ -57,10 +57,11 @@ class Treachery(Event): pass
 class PlayerEliminated(Event): pass
 class NoHumansLeft(Event): pass
 class NoPlayersLeft(Event): pass
-class Victory(Event): pass
+class Victory(Event): pass                    # pending (the victory screen, button 483)
 class SurrenderOffered(Event): pass           # pending
 class Resigned(Event): pass
 class DisbandPrompt(Event): pass              # pending (Disband yes/no, 0b62:06bf)
+class Advised(Event): pass                    # the Military Advisor's answer (rules/advisor.py)
 class TurnCue(Event): pass                    # a presentation step of the turn sequence (rules/turn.py)
 
 
@@ -80,6 +81,7 @@ EVENTS = (
     ItemDropped, ItemTaken, Blessed, SageOffered, QuestAssigned, QuestCompleted, QuestFailed,
     RelationChanged, TreacheryPrompt, Treachery, PlayerEliminated, NoHumansLeft, NoPlayersLeft,
     Victory, SurrenderOffered, Resigned, DisbandPrompt, TurnCue, Msg,
+    Advised,
 )
 PENDING = (HeroOffered, CityCaptured, SageOffered, TreacheryPrompt, SurrenderOffered,
-           DisbandPrompt)
+           DisbandPrompt, Victory)

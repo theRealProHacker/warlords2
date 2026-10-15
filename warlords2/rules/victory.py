@@ -6,6 +6,7 @@ Sources (re-read by M9a from out/asm/; EL = docs/research/exe_logic.md):
 * elimination        ovl61:18ab (round end, ovl61:1825)
 * end states         ovl61:1aed (round end, ovl61:182a)
 * victory screen     ovl61:1fbd (from ovl68:04e3 and ovl61:1e4e), its button 0x1e3 -> ovl61:2004
+                     (command CloseVictory; the screen is the pending `Victory`)
 * surrender offer    ovl61:1f68 (from ovl68:0502), buttons 0x1e5 -> ovl61:1e4e (accept) and
                      0x1e6 -> ovl61:1ecd (decline, its screen's button 0x1e4 -> ovl61:2046)
 * Resign             ovl49:150d (Order > Resign), buttons 0x1e7 -> ovl49:1608(0) (graciously),
@@ -13,8 +14,10 @@ Sources (re-read by M9a from out/asm/; EL = docs/research/exe_logic.md):
 
 The button ids come from the button dispatcher res_07be:04d9 (id - 100 indexes the jump table
 07be:0b0c).  The victory and decline screens have a single button, so the engine runs its
-handler at once: `Victory` / `TurnCue{"kind": "surrender_declined"}` mark the screen for the
-presentation, and the events after them are the handler's continuation (ovl68:04bd(0)).
+handler at once, except the victory screen, whose button writes state (Hidden Map off, ovl61:2026):
+`Victory` is pending until CloseVictory (button 0x1e3).  `TurnCue{"kind": "surrender_declined"}`
+marks the decline screen for the presentation, and the events after it are its button's
+continuation (ovl61:2046 -> ovl68:04bd(0)).  End-state messages are present points of `check`.
 Not modelled (presentation only): music ovl58:0000, pictures ovl53:056a, message boxes
 ovl61:10fb / 11d1 / 1160 (their texts are events), redraws ovl61:011f, ovl64:15da, ovl63:2200.
 """
@@ -34,6 +37,8 @@ from .constants import diplomacy as K
 from .constants import turn as KT
 from .engine import IllegalCommand
 from .mapwords import refresh_map
+from .present import present
+from .setup import SCN_WORD_10F3
 
 N_SIDES = 8
 
@@ -75,20 +80,25 @@ def eliminate(state) -> list:
     0..7 with 0x137[p] and DS:5dea[p] == 0: armies 0x181-1..0 with owner p: type 0x1c ->
     ovl36:16cd(army, x, y) with 0x110 = p, then 0b62:03be; ovl41:1244(p, 4, p, 0, ""); the text
     ovl59:04f0(11, -1) (rnd(1, n, -1)) formatted with p's name, shown timed (ovl61:11d1) for a
-    computer side when no human lives, else waiting (ovl61:10fb); 0x137[p] = 0, gold 0
+    computer side when no human lives, else waiting (ovl61:10fb) (present point "eliminated");
+    0x137[p] = 0, gold 0
     (1a5f / 1a71); [p][q] and [q][p] for q in 0..7: proposal 1, current 1 (1a89..1ad1)."""
     events = []
+    EC.refresh_cities(state)                     # asm ovl61:18b3 (ovl62:03f9)
     live_human = any(pl.alive and pl.control == HUMAN for pl in state.players)
     group, n = K.ELIMINATED_MSG.value
     for p in range(N_SIDES):
         pl = state.players[p]
-        if not pl.alive or EC.city_count(state, p) != 0:
+        if not pl.alive or EC.cached_cities(state, p) != 0:
             continue
         events += _remove_side_armies(state, p)
         H.news(state, p, K.NEWS_ELIMINATED.value, p, 0, "")
         index = state.rng.rnd(1, n, -1)
-        events.append(E.PlayerEliminated({"player": p, "timed": pl.control == COMPUTER and not live_human}))
+        timed = pl.control == COMPUTER and not live_human
+        events.append(E.PlayerEliminated({"player": p, "timed": timed}))
         events.append(_msg((group, index), pl.name))
+        present("eliminated", group=group, index=index, args=(pl.name,), timed=timed,
+                wait=K.ELIMINATED_WAIT.value)
         pl.alive = 0
         pl.gold = 0
         for q in range(N_SIDES):
@@ -104,7 +114,7 @@ def check(state) -> list:
     than half of the intact cities -> victory; no human and one computer -> that computer wins
     and becomes a human side; one human against computers, no offer yet, more than half of
     all city records and more than the best computer + records / 8 -> surrender offer.
-    Evidence: asm ovl61:1aed..1e4d: n = cities with terrain 10 at x, y (1aff..1b52); sides 7..0
+    Evidence: asm ovl61:1aed..1e4d: ovl62:03f9 (1afa); n = cities with terrain 10 at x, y (1aff..1b52); sides 7..0
     (1b60..1c03): live -> not "none alive"; human and dead -> d0 = 1, di = 1; live human -> di
     = 1, humans += 1, h = side; live computer -> computers += 1.  None alive: STRING 12 and exit
     0a4c:02b5 (1c06..1c55).  Not 0x15b, no live human, di: STRING 13 (1c5a..1cb7).  Not 0x15b,
@@ -112,8 +122,14 @@ def check(state) -> list:
     Not 0x15b, humans 0, computers 1: 0x15b = 1, w = the first live side, STRING (15, 0) with its
     name, d0[w] = 0, ovl41:1244(w, 7, w, 0, "") (1d07..1d96).  Not 0x15b, humans 1, computers >= 1,
     not 0x15d: best = largest DS:5dea of a live computer; DS:5dea[h] > records / 2 and > best +
-    records / 8 -> 0x15d = 1 (1d99..1e43); records = city count word 2c04:157b."""
+    records / 8 -> 0x15d = 1 (1d99..1e43); records = city count word 2c04:157b.
+    Present points (rules.present): "no_players" with group 12, index 0 then 2 (each one
+    two-line message S(group, index) / S(group, index + 1) that waits for a key, ovl61:1160 at
+    1c28 / 1c4f), then "quit" (the program ends, 0a4c:02b5 at 1c55); "no_humans" with group 13,
+    index 0 then 2 (1160 at 1c8d / 1cb4); "winner" with S(15, 0) and args (the winner's name),
+    one line that waits (ovl61:10fb at 1d71, before d0[w] = 0 at 1d80)."""
     f = state.flags
+    EC.refresh_cities(state)                     # asm ovl61:1afa (ovl62:03f9)
     n_intact = sum(1 for c in state.cities if state.world.terrain(c.x, c.y) == Terrain.CITY)
     none_alive, seen, humans, h, computers = True, False, 0, -1, 0
     switched = []
@@ -132,18 +148,28 @@ def check(state) -> list:
         if pl.alive and pl.control == COMPUTER:
             computers += 1
     if none_alive:
+        g = K.MSG_NO_PLAYERS.value                   # two-line waits ovl61:1160, then the exit
+        present("no_players", group=g, index=0, at="ovl61:1c28")
+        present("no_players", group=g, index=2, at="ovl61:1c4f")
+        present("quit", at="ovl61:1c55")             # 0a4c:02b5
         return [E.NoPlayersLeft({"msg": K.MSG_NO_PLAYERS.value})]
     events = []
     if not f.get(SCN_VICTORY, 0) and humans == 0 and seen:
         events.append(E.NoHumansLeft({"switched": switched, "msg": K.MSG_NO_HUMANS.value}))
+        g = K.MSG_NO_HUMANS.value                    # two-line waits ovl61:1160
+        present("no_humans", group=g, index=0, at="ovl61:1c8d")
+        present("no_humans", group=g, index=2, at="ovl61:1cb4")
     if not f.get(SCN_VICTORY, 0) and humans == 1 and computers == 0 \
-            and EC.city_count(state, h) > n_intact // K.WIN_SHARE_DIV.value:
+            and EC.cached_cities(state, h) > n_intact // K.WIN_SHARE_DIV.value:
         f[SCN_VICTORY] = 1
         H.news(state, h, K.NEWS_VICTORY.value, h, 0, "")
     if not f.get(SCN_VICTORY, 0) and humans == 0 and computers == 1:
         f[SCN_VICTORY] = 1
         w = next((p for p in range(N_SIDES) if state.players[p].alive), N_SIDES)
         events.append(_msg(K.MSG_WINNER.value, state.players[w].name))
+        group, index = K.MSG_WINNER.value
+        present("winner", group=group, index=index, args=(state.players[w].name,),
+                at="ovl61:1d71")                     # one-line wait ovl61:10fb
         state.players[w].control = HUMAN
         H.news(state, w, K.NEWS_VICTORY.value, w, 0, "")
     if not f.get(SCN_VICTORY, 0) and humans == 1 and computers >= 1 \
@@ -152,9 +178,9 @@ def check(state) -> list:
         for p in range(N_SIDES):
             pl = state.players[p]
             if pl.alive and pl.control == COMPUTER:
-                best = max(best, EC.city_count(state, p))
+                best = max(best, EC.cached_cities(state, p))
         records = len(state.cities)
-        mine = EC.city_count(state, h)
+        mine = EC.cached_cities(state, h)
         if mine > records // K.SURRENDER_SHARE_DIV.value \
                 and mine > best + records // K.SURRENDER_MARGIN_DIV.value:
             f[SCN_SURRENDER_OFFERED] = 1
@@ -166,15 +192,25 @@ def check(state) -> list:
 
 def victory_screen(state) -> list:
     """The victory screen of the side on turn (ovl68:04bd when 0x15b is set and 0x157 not):
-    0x157 = 1; its button switches Hidden Map off and the turn start goes on.
-    Evidence: asm ovl61:1fbd..2003 (music 3, picture 0x20, button 0x1e3, 0x157 = 1 at 1ff6);
-    button 0x1e3 -> ovl61:2004..2045: 0x124 = 0 (2026), redraw ovl61:011f(1, 1, 1),
-    ovl68:04bd(0) (203e)."""
-    from . import turn
+    0x157 = 1 and the screen waits for its button (CloseVictory answers the pending `Victory`).
+    Evidence: asm ovl61:1fbd..2003 (music 3, picture 0x20, button 0x1e3, 0x157 = 1 at 1ff6) and
+    returns to the main loop with the screen up; nothing else changes until the button."""
     state.flags[KT.SCN_ACK_VICTORY.value] = 1
-    events = [E.Victory({"player": state.current})]
+    ev = E.Victory({"player": state.current})
+    state.pending = ev
+    return [ev]
+
+
+def close_victory(state, cmd: C.CloseVictory) -> list:
+    """The victory screen's button: Hidden Map off, then the turn start goes on.
+    Evidence: button 0x1e3 -> 07be:0abf -> asm ovl61:2004..2045: ovl17:069c, DS:166a = 0, ovl64:15da
+    (display table DS:5ed4), 0x124 = 0 (2026), redraw ovl61:011f(1, 1, 1), ovl68:04bd(0) (203e)."""
+    from . import turn
+    if not isinstance(state.pending, E.Victory):
+        raise IllegalCommand("no victory screen up")
+    state.pending = None
     state.options = dataclasses.replace(state.options, hidden_map=0)
-    return events + turn.resume(state, 0)
+    return turn.resume(state, 0)
 
 
 def surrender_offer(state) -> list:
@@ -191,8 +227,8 @@ def surrender_offer(state) -> list:
 def accept_surrender(state, cmd: C.AcceptSurrender) -> list:
     """Answer to the surrender offer.  Accept: every live computer side is out of the game (its
     cities and armies stay on the map), the side on turn has won (news kind 7) and the victory
-    screen follows.  Decline: every live side's word 0x10f3 becomes the side on turn (read by the
-    computer players; meaning in docs/research/ai.md), a screen with one button, and the turn
+    screen follows.  Decline: every live side's word 0x10f3 becomes the side on turn (meaning [U],
+    rules.setup.SCN_WORD_10F3), a screen with one button, and the turn
     start goes on.
     Evidence: accept, button 0x1e5 -> asm ovl61:1e4e..1ecc: 0x137[d] = 0 for live d with d0 == 1
     (1e55..1e8b); 0x15b = 1 (1e92); ovl41:1244(0x110, 7, 0x110, 0, "") (1eaf); ovl61:1fbd (1ec3).
@@ -214,7 +250,7 @@ def accept_surrender(state, cmd: C.AcceptSurrender) -> list:
     if any(pl.alive and pl.control == HUMAN for pl in state.players):
         for c in range(N_SIDES):
             if state.players[c].alive:
-                state.flags[K.SCN_ENEMY.value + 2 * c] = p
+                state.flags[SCN_WORD_10F3 + 2 * c] = p   # asm ovl61:1f54
     return [E.TurnCue({"kind": "surrender_declined"})] + turn.resume(state, 0)
 
 
@@ -225,7 +261,10 @@ def resign(state, cmd: C.Resign) -> list:
     """Resign the side on turn (graciously or not, the result is the same): every own city is
     razed, every own army deleted (heroes through the hero-death step), with Hidden Map the
     whole map becomes seen, the selection is cleared.  The side stays alive until the round end
-    finds it without cities (`eliminate`).  Nothing happens for a side without cities.
+    finds it without cities (`eliminate`).  Nothing happens for a side whose stored city count
+    DS:5dea is 0; the burning does not rewrite it (ovl32:016b, no ovl62:03f9 in ovl49:1608), so
+    until the next 03f9 (at the latest the round end's 18b3) a second Resign is accepted and
+    razes nothing.
     Evidence: asm ovl49:150d..1607: DS:5dea[0x110] == 0 -> return (151c); else the STRING 165
     dialog with buttons 0x1e7 / 0x1e8 / 0x1e9.  ovl49:1608(di): di == 0 -> STRING 165 entries 6-10
     (1619..168f); cities 0..records-1 with owner byte == 0x110: ovl32:016b(x, y, 0) (1694..16e7);
@@ -237,7 +276,7 @@ def resign(state, cmd: C.Resign) -> list:
     pl = state.players[p]
     if pl.control != HUMAN or not pl.alive:
         raise IllegalCommand("Resign: side %d is not a human side on turn" % p)
-    if EC.city_count(state, p) == 0:
+    if EC.cached_cities(state, p) == 0:             # DS:5dea (151c): stale after a burning
         return []
     events = [E.Resigned({"player": p, "graceful": bool(cmd.graceful)})]
     for ci, c in enumerate(state.cities):

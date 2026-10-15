@@ -18,19 +18,18 @@ Evidence (EL = docs/research/exe_logic.md):
   0x137 = 0 renamed "Not used" (DS:256f) with level 3 (EL §9.1).  The bitmap goes to the
   game with Begin (`overview=`), as DS:581d stays filled in the EXE;
 * dice: ovl59:02bf is the one roller of the EXE (seeded once, ovl59:0356), so its stream
-  runs through the loader's 256 rnd(1,3,1) (ovl63:2479), the quotation (ovl57:0fe8) and
-  Random Characters (ovl57:20af) and Begin's talking face into Begin.  Each entry here
-  starts an `Rng` from the seed with the die source Begin passes (`rng_source`), draws
-  the loader's rolls, and hands its later rolls to Begin as `NewGameConfig.setup_rolls`,
-  which `new_game` repeats.  The face ovl58:026f rolls rnd(1, 30, 10) exactly once per
-  call whatever the speech length (ovl58:094c; later blinks reset the counter to 0 at
-  ovl58:097d without a roll; the only early exits are the talking advisor off at
-  ovl58:0293 and a failed screen-save allocation at ovl58:075e), so Begin's face (talking
-  advisor on, `audio.voice.talking`) adds one (1, 30, 10).  Not modelled: the Game Start
-  faces' rolls (ovl60:0000 -> ovl58:026f(2), ovl60:0621 -> ovl58:026f(0); `states.menu`)
-  and an earlier visit's rolls, which in the EXE come before the loader's in the one
-  stream (here each entry starts at the seed); with the talking advisor off the stream
-  is exact;
+  runs from the Game Start faces (`states.menu`) and earlier visits here through the
+  loader's 256 rnd(1,3,1) (ovl63:2479), the quotation (ovl57:0fe8) and Random Characters
+  (ovl57:20af) and Begin's talking face into Begin.  This screen draws from the run's one
+  `Rng` (`states.menu.session_dice`): each entry hands its state before the loader's rolls
+  to Begin as `NewGameConfig.rng_state` and its later rolls as `NewGameConfig.setup_rolls`,
+  which `new_game` repeats after the loader's.  The face ovl58:026f rolls rnd(1, 30, 10)
+  exactly once per call whatever the speech length (ovl58:094c; later blinks reset the
+  counter to 0 at ovl58:097d without a roll; the only early exits are the talking advisor
+  off at ovl58:0293 and a failed screen-save allocation at ovl58:075e), so Begin's face
+  (talking advisor on, `audio.voice.talking`) adds one (1, 30, 10).  The music at the entry
+  (ovl57:003c, mode 0) and at Begin (ovl57:0e26, mode 11) plays fixed entries and draws no
+  die (register X32);
 * with the tutorial flag (SCN 0x12E) the ten option words become preset row 0 (DS:2378,
   ovl57:00a4), the tutorial page FILE.DAT (25, 8) is shown (ovl61:168d) and Begin follows
   at once; otherwise OPTIONS.DAT (FILE.DAT (67, 0)) is read into DS:23b4 (ovl57:223b),
@@ -104,6 +103,7 @@ from ..ui.dialogs.setup_side import (OFF_A0, OFF_ALIVE, OFF_B0, OFF_CARD, OFF_CO
 from ..ui.layout import DISABLED, NORMAL, PRESSED
 from ..ui.widgets import blit_opaque, kit, text_centred, tick_frames
 from .host import ScreenHost
+from .menu import session_dice
 
 SCREEN_SETUP = 3
 SCREEN_PIC, MARBLE, SETUPBU, SSG = 3, 25, 31, 52
@@ -221,8 +221,7 @@ class Setup(ScreenHost):
 
     def __init__(self, app):
         super().__init__(app)
-        self.rng: Rng | None = None
-        self.rng_source = NewGameConfig.rng      # the die source Begin passes (X06)
+        self.rng_state: dict | None = None       # the stream before the loader's rolls
         self.rolls: list[tuple[int, int, int]] = []       # ovl59:02bf calls after the loader's
         self.overview = None
         self.scenario: str | None = None
@@ -239,7 +238,7 @@ class Setup(ScreenHost):
             raise NotImplementedError("random maps are M11's (ovl57:10e8)")
         super().on_enter(frm)
         self.scenario, self.sides, self.ready, self.anim = scenario, None, False, None
-        self.rng, self.rolls, self.overview = Rng(self.app.cfg.seed, self.rng_source), [], None
+        self.rng_state, self.rolls, self.overview = None, [], None
 
     # ------------------------------------------------------------------ load
 
@@ -247,12 +246,14 @@ class Setup(ScreenHost):
         self.bar.repaint()                                   # 1372:132f(0)
 
     def start_screen(self, k) -> None:
-        load_scroll(self, self.scenario.upper(), self.rng, lambda sc, px: self._loaded(k, px))
+        dice = session_dice(self.app)
+        self.rng_state = dice.state()                        # before ovl63:2479
+        load_scroll(self, self.scenario.upper(), dice, lambda sc, px: self._loaded(k, px))
 
     def roll(self, dice: int, sides: int, add: int) -> int:
         """ovl59:02bf, recorded for `NewGameConfig.setup_rolls`."""
         self.rolls.append((dice, sides, add))
-        return self.rng.rnd(dice, sides, add)
+        return session_dice(self.app).rnd(dice, sides, add)
 
     def _loaded(self, k, pixels) -> None:
         name = self.scenario.upper()
@@ -365,8 +366,8 @@ class Setup(ScreenHost):
                              cards=per(OFF_CARD), enhanced=per(OFF_ENH),
                              names=tuple(s.name(p) for p in range(N_SIDES)),
                              options=GameOptions.from_words(self.words), army_set=int(cfg.alt_names),
-                             seed=cfg.seed, rng=self.rng_source, greatest=s.get(TOP_LEVEL),
-                             setup_rolls=tuple(self.rolls))
+                             seed=cfg.seed, rng=self.rng_state["source"], greatest=s.get(TOP_LEVEL),
+                             setup_rolls=tuple(self.rolls), rng_state=self.rng_state)
 
     def begin(self) -> None:
         """ovl57:0cfe."""

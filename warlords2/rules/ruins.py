@@ -23,7 +23,7 @@ import logging
 
 from ..model import commands as C
 from ..model import events as E
-from ..model.ids import (HERO_TYPE, MAP_EXPLORED, MAP_H, MAP_W, ItemState, SiteKind, Terrain)
+from ..model.ids import (HERO_TYPE, MAP_EXPLORED, MAP_H, MAP_W, Control, ItemState, SiteKind, Terrain)
 from .bonuses import battle_items, s8
 from .constants import heroes as K
 from .constants import unverified_allowed
@@ -36,7 +36,7 @@ log = logging.getLogger(__name__)
 
 # name -> (milestone, "module:function", what it must do, EXE address)
 HOOKS = {
-    "ai_sage": ("M8b3", "warlords2.ai.phases.search:sage",
+    "ai_sage": ("M8b4", "warlords2.ai.phases.quick_attack:sage",
                 "f(state, site) -> list[Event]: the computer side's choice at a sage (gem, or the "
                 "map view of an area chosen from its AI tables)", "ovl26:0080 from ovl34:015a"),
 }
@@ -73,25 +73,34 @@ def _call(name, default, *args):
 
 
 def _select(state, group) -> tuple:
-    """Make `group` the selection (rules.selection.adopt) and set its hero as 0c8c:0529 does;
-    returns (leader, hero or None)."""
+    """Make `group` the selection (rules.selection.adopt); returns (leader, DS:5e5e's record or
+    None).  The key 07be:0279 runs ovl34:0000 on DS:5e5e as stored, so a group that already
+    is the selection keeps it (after a map select that is ovl67:0955's hero of the lowest
+    slot, after a palette apply 0529's); a group that is not stands for a new select and gets
+    the hero as 0c8c:0529 sets it (the leader if a hero, else the first hero in slot order).
+    Evidence: asm 07be:0279 (no 0529 before ovl34:0000), ovl34:009b (DS:5e5e read),
+    0c8c:0566..0604, ovl67:096c..09e0 (slots 8..0, the last hero found wins)."""
+    from .movement import _record
     from .selection import _check_group, adopt
     members = _check_group(state, tuple(group))
-    adopt(state, [a.id for a in members])
     sel = state.selection
+    before = (sel.selected, list(sel.moving))
+    adopt(state, [a.id for a in members])
     lead = H.live(state, sel.selected)
-    ids = sel.moving if len(sel.moving) > 1 else [sel.selected]
-    group_ = [a for a in (H.live(state, i) for i in ids) if a is not None]
-    hero = lead if lead is not None and lead.type_id == HERO_TYPE else \
-        next((a for a in group_ if a.type_id == HERO_TYPE), None)
-    sel.hero = hero.id if hero is not None else -1
-    return lead, hero
+    if (sel.selected, sel.moving) != before:
+        ids = sel.moving if sel.group else [sel.selected]          # DS:2bda as stored
+        group_ = [a for a in (H.live(state, i) for i in ids) if a is not None]
+        hero = lead if lead is not None and lead.type_id == HERO_TYPE else \
+            next((a for a in group_ if a.type_id == HERO_TYPE), None)
+        sel.hero = hero.id if hero is not None else -1
+    return lead, _record(state, sel.hero)
 
 
 def _members(state) -> list:
-    """The stack the blessing walks: 5e3e[0..7] when DS:2bda is set, else 5e62 alone."""
+    """The stack the blessing walks: 5e3e[0..7] when DS:2bda (the stored word) is set, else
+    5e62 alone."""
     sel = state.selection
-    ids = sel.moving if len(sel.moving) > 1 else [sel.selected]
+    ids = sel.moving if sel.group else [sel.selected]
     return [a for a in (H.live(state, i) for i in ids) if a is not None]
 
 
@@ -107,7 +116,7 @@ def _reselect(state, x: int, y: int) -> list:
 
 
 def _site_here(state, x: int, y: int) -> int:
-    """ovl34:0000: terrain 11 and a site record at (x, y) (ovl62:04b5), else -1."""
+    """ovl34:0000 (0021..0081): terrain 11 and a site record at (x, y) (ovl62:04b5), else -1."""
     if state.world.terrain(x, y) != Terrain.SITE:
         return -1
     return state.site_at(x, y)
@@ -117,46 +126,86 @@ def _site_here(state, x: int, y: int) -> int:
 
 
 def search(state, cmd: C.Search) -> list:
-    """Search with the selected stack on a site square.
-    Evidence: asm ovl34:0000..01aa: the leader needs moves > 0 and must stand on terrain 11 with a
-    site record (ovl62:04b5).  Without a hero only a temple does something (the blessing).  With
-    a hero nothing happens when the square's explored bit (map 0x4000) is set; a sage gives the
-    hero +3 exp, a news entry (6, 0x65) and the sage dialog (human, SageOffered pending) or the
-    AI's choice (ovl26:0080), then the explored bit; a temple opens the temple menu for a human
-    (TempleChoice answers it) and blesses for the computer; any other kind is a ruin search.
-    Refused (IllegalCommand) where the original does nothing."""
+    """Search with the selected stack on a site square: the group is made the selection, then
+    ovl34:0000 (`search_selection`).  Refused (IllegalCommand) where the original does
+    nothing: no moves left, no site record on a terrain 11 square, no hero away from a temple,
+    a hero on a searched site.
+    Evidence: asm ovl34:0017 (moves), 0073..0081 (site record), 00b3..00ce (no hero), 00ef..00fc
+    (searched bit); key 07be:0279 -> ovl34:0000."""
     lead, hero = _select(state, cmd.group)
     if lead is None or s8(lead.moves_left) < K.SITE_MOVES_NEEDED.value:
         raise IllegalCommand("the stack has no movement left")
-    x, y = lead.x, lead.y
-    si = _site_here(state, x, y)
+    si = _site_here(state, lead.x, lead.y)
     if si < 0:
         raise IllegalCommand("nothing to search here")
-    site = state.sites[si]
-    human = not H.is_computer(state)
+    if hero is None and state.sites[si].kind != SiteKind.TEMPLE:
+        raise IllegalCommand("only a hero can search here")
+    if hero is not None and state.world.flags[lead.y * MAP_W + lead.x] & MAP_EXPLORED:
+        raise IllegalCommand("this site has been searched")
+    return search_selection(state, C.Search)
+
+
+def _computer_now(state) -> bool:
+    """ovl25:09ab(): SCN 0x0d0[0x110] == 1 or DS:0836 != 0 (`ai.state.is_computer_now`)."""
+    return state.players[state.current].control == Control.COMPUTER or state.ai.turn_active != 0
+
+
+def search_selection(state, cmd_cls=C.Search) -> list:
+    """ovl34:0000, the Search command, on the current selection as it is (DS:5e62 leader, DS:5e5e
+    hero, read as the pointers they are: a freed record is not null): no leader, or its moves
+    left (signed) <= 0 -> nothing.  Terrain 11 with a site record on the leader's square
+    (ovl62:04b5) -> that site; terrain 11 without one counts as not a site.  Without a hero: a
+    temple blesses the stack (ovl34:08a1), anything else nothing.  With a hero: not a site, or
+    the map's searched bit 0x4000 set -> nothing; a sage: hero + 3 exp (ovl47:04f1), news (6,
+    0x65), the computer's sage choice ovl26:0080 (HOOKS ai_sage; a human side the sage dialog,
+    SageOffered pending), searched bit; a temple: the blessing for a computer side (ovl25:09ab),
+    the temple menu for a human (TempleChoice answers it); any other kind: the ruin search
+    ovl34:01ab.  Used by `search` (the player's command) and the AI (ovl22:15c3, ovl20:12eb).
+    The sage hook is required for a computer side (NotImplementedCommand of `cmd_cls` in strict
+    mode before anything changes, logged and skipped with --allow-unverified).  Not written:
+    DS:412a / 4128, the leader's square that 0000 stores at 002a / 0033; their readers are human
+    paths only (ovl34:1610 from the human sage dialog 0aa0, ovl34:1964 from res_07be:08ec, and
+    ovl34:0e85 at 0f73..10c9, which no call in the listing reaches).
+    Evidence: asm ovl34:0000..01aa (0008 DS:5e62, 0017 +7 jg 0, 0021..005f square / terrain,
+    006b terrain 0xb, 0073 ovl62:04b5, 0081 none -> 7, 009b DS:5e5e, 00b3..00ce no hero:
+    terrain / kind 1 / 08a1, 00d5 terrain, 00ef..00fc 0x40, 0104 kind 3: 0112 ovl47:04f1(hero,
+    3), 013c ovl41:1244, 0144 ovl25:09ab, 0152 0aa0 / 015a ovl26:0080, 0171 |= 0x40; 017c kind 1:
+    0183 09ab -> 00c9 08a1, else ovl01:0000; 01a1 01ab(site, x, y))."""
+    from .movement import _record
+    sel = state.selection
+    lead = _record(state, sel.selected)
+    if lead is None or s8(lead.moves_left) < K.SITE_MOVES_NEEDED.value:
+        return []
+    x, y = lead.x, lead.y
+    si = _site_here(state, x, y)
+    hero = _record(state, sel.hero)
     if hero is None:
-        if site.kind != SiteKind.TEMPLE:
-            raise IllegalCommand("only a hero can search here")
+        if si < 0 or state.sites[si].kind != SiteKind.TEMPLE:
+            return []
         return bless(state, si)
+    if si < 0:
+        return []
     idx = y * MAP_W + x
     if state.world.flags[idx] & MAP_EXPLORED:
-        raise IllegalCommand("this site has been searched")
+        return []
+    site = state.sites[si]
+    computer = _computer_now(state)
     if site.kind == SiteKind.SAGE:
-        if not human:
-            _require(C.Search, "ai_sage")
+        if computer:
+            _require(cmd_cls, "ai_sage")                 # strict: before anything changes
         events = H.add_exp(state, hero.id, K.EXP_SAGE.value)
         H.news(state, state.current, K.NEWS_SITE.value, K.NEWS_SAGE.value, 0, H.hero_name(state, hero))
-        if human:
-            events += sage(state, si, x, y)
-        else:
+        if computer:
             events += _call("ai_sage", [], state, si)
+        else:
+            events += sage(state, si, x, y)
         state.world.flags[idx] |= MAP_EXPLORED
         return [E.SiteSearched({"site": si, "kind": int(site.kind), "hero": hero.id})] + events
-    if site.kind != SiteKind.TEMPLE:
-        return ruin_search(state, si, x, y)
-    if human:
+    if site.kind == SiteKind.TEMPLE:
+        if computer:
+            return bless(state, si)
         return [E.SiteSearched({"site": si, "kind": int(site.kind), "hero": hero.id, "temple_menu": True})]
-    return bless(state, si)
+    return ruin_search(state, si, x, y)
 
 
 def guardian_kills(state, site, hero) -> bool:
@@ -287,7 +336,8 @@ def temple_choice(state, cmd: C.TempleChoice) -> list:
     on, no active quest and a hero in the stack).
     Evidence: ovl01:0000 (menu; 0x149 enabled iff SCN 0x11e, 2c04:1103 + 0xc*p == 0 and DS:5e5e);
     bless ovl01:0132 -> ovl34:08a1(site at DS:5e62); quest ovl01:011b -> ovl01:0d7a(0), then the
-    quest page ovl01:0167.  The menu is opened by Search with a hero on a temple (ovl34:018f),
+    quest page ovl01:0167 (`rules.quests.quest_page`: for quest types 2 / 3 the army bits of
+    ovl63:158d).  The menu is opened by Search with a hero on a temple (ovl34:018f),
     so the same conditions as Search apply."""
     if cmd.choice not in ("bless", "quest"):
         raise IllegalCommand("unknown temple choice %r" % (cmd.choice,))
@@ -307,7 +357,8 @@ def temple_choice(state, cmd: C.TempleChoice) -> list:
     if not state.options.quests or state.players[state.current].quest.active != 0:
         raise IllegalCommand("no quest can be given now")
     from . import quests
-    return quests.assign(state, computer=False)
+    events = quests.assign(state, computer=False)
+    return events + quests.quest_page(state)              # ovl01:011b: 0d7a(0), then 0167
 
 
 # ------------------------------------------------------------------------------- sages

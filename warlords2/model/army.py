@@ -43,6 +43,24 @@ class ArmyType:
         return cls(rec["type_id"], rec["name"], *(rec[w] for w in WORDS))
 
 
+# Army type byte 0xff on a live army: a city producing "nothing" (+0x2c = 0xff after
+# ChooseProduction(city, -1), ovl44:00ff) still counts down in ovl43:0000 (no +0x2c test at
+# 04c8..068b) and ovl43:0dd7 makes a unit whose +4 is that byte, with the statistics of the slot
+# ovl44:0000(city, -1) returns (no type record is read).  Its readers (register X36):
+# * DS:45c4 + 6 * type: every reader sign-extends the byte (cwde) before the imul, so it reads
+#   DS:45be..45c3, the six bytes below the table: entries 18..20 of the word array DS:459a
+#   (21 words up to 45c3), written only by res_077b:0079 / 00c1, which nothing calls (no
+#   resolved call in out/asm/, no near call in res_077b).  They keep the EXE image's zeros, so
+#   flies / w17 / w18 / w19 / w13 / w15 are all 0.
+# * ovl44:14ac(type, buf): no record has id 0xffff, so nothing is copied and `buf` keeps what it
+#   held (the previous fetch of that buffer, or stack contents): the words other than the six
+#   flags are not determined by the type.  This record gives 0 for them (and an empty name).
+NO_TYPE_ID = 0xFF
+NO_TYPE_FLAGS = (0, 0, 0, 0, 0, 0)       # DS:45be..45c3 = [w16, w17, w18, w19, w13, w15] of type -1
+NO_TYPE = ArmyType(-1, "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   NO_TYPE_FLAGS[4], 0, NO_TYPE_FLAGS[5], *NO_TYPE_FLAGS[:4])
+
+
 @dataclass
 class Army:
     id: int
@@ -62,3 +80,5 @@ class Army:
     transit: int             # +0x10 (0x65, 0x66, 0xff)
     group: int               # +0x11
     goto: tuple[int, int]    # +0x12 / +0x14, (-1, -1) = none
+    order: int = 0           # +0xe: AI order kind (bits 0-3), task-force group (bits 4-6), bit 7
+    #                          (ai.md §6.5, §7a.1); 0b62:0309 clears bits 0-3, 0b62:03be keeps bit 7

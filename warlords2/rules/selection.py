@@ -25,18 +25,24 @@ the selection first, standing for the player having selected it; the palette com
 the palette of the current selection and refuse a palette that no longer matches the map
 (armies moved or died since it was built).
 
-Not modelled (presentation only): redraws and sounds (ovl61:0174, ovl66:0356, ovl62:0af3,
+The palette draw ovl66:0356 writes DS:5dfe / 5e3e[0] / 5e00 (0c8c:0912): `redraw_palette`, at
+the draws that end the selection commands.  Not modelled (presentation only): the rest of the
+redraws and sounds (ovl61:0174, ovl66:0356's pictures, ovl62:0af3,
 ovl64:006c / 0238, ovl58:0b5f "no army left", 0b79), the path display words DS:2eaa / 2ea6 /
 2ea8, the view centring of computer stacks (ovl67:08a4..08ef), the palette bracket marks
-DS:6832; the tutorial pop-ups of ovl67:01ea..0337 and 0b62:04f7..063f (SCN 0x134 bits 3, 4, 7;
-plan X09, M8a); the large-stack dialog (buttons 332-351: ovl66:16c5 / 1704 / 157d / 166f edit
-the palette without the apply step, OK / Cancel not traced); the upkeep recount ovl62:02bf after
-Disband (DGROUP cache, rules/economy.py).
+DS:6832; the large-stack dialog (buttons 332-351: ovl66:16c5 / 1704 / 157d / 166f edit
+the palette without the apply step, OK / Cancel not traced).  Disband refreshes the upkeep cache
+(ovl62:02bf, rules/economy.py).
 
 Events: Disband returns DisbandPrompt (pending; info armies, heroes) and ConfirmDisband the
 hero-death events plus nothing else; Move All returns the Moved/Embarked/... events of each
 move; selecting a stack on water may return Sunk (ovl67:0728); fortify_marks returns Fortified
 (info squares).  The selection itself is read from `state.selection`.
+
+Tutorial (SCN 0x12e set; plan X09, added by M8a): SelectStack (0b62:04f7..063f) and Next /
+Quit & Next / Defend (all through ovl67:019b, 01ea..0337) set SCN byte 0x134 bits 3, 4, 7 and
+return one `TurnCue {"kind": "tutorial", "file": (25, n)}` per page, in the EXE's order
+(`tutorial_pages`); `tutorial_after_move` is the same for the tail of 0c8c:01fd.
 """
 from __future__ import annotations
 
@@ -48,8 +54,11 @@ from ..model import events as E
 from ..model.ids import HERO_TYPE, MAP_FORTIFIED, MAP_H, MAP_W, ROAD_PIECE_MASK, Control
 from .bonuses import s8
 from .constants import selection as K
+from .constants import turn as KT
 from .constants import unverified_allowed
+from .economy import refresh_upkeep
 from .engine import IllegalCommand, NotImplementedCommand
+from .present import present
 from .mapwords import refresh_map
 from . import movement as M
 from . import pathfinding as P
@@ -111,9 +120,9 @@ def _leader(state):
 
 def _members(state) -> list:
     """The stack the order routines act on: 5e3e[0..7] when DS:2bda is set, else 5e62 alone
-    (asm ovl67:03ba / 090a, 0b62:06d3 / 076f)."""
+    (asm ovl67:03ba / 090a, 0b62:06d3 / 076f: cmp word [0x2bda], the stored word `Selection.group`)."""
     sel = state.selection
-    ids = sel.moving if len(sel.moving) > 1 else [sel.selected]
+    ids = sel.moving if sel.group else [sel.selected]
     return [a for a in (_live(state, i) for i in ids) if a is not None]
 
 
@@ -122,8 +131,11 @@ def _row(owner: int) -> int:
 
 
 def _fo(state, row: int, a) -> int:
-    """Fight-order byte SCN 0x60b + row*0x1d + type, compared signed (asm 0b62:0b68, ovl67:083f)."""
-    return s8(state.fight_order[row][a.type_id])
+    """Fight-order byte SCN 0x60b + row*0x1d + type, the type byte sign-extended (cwde), compared
+    signed: `GameState.fight_order_byte` (type 0xff reads the byte before the row, X36).
+    Evidence: asm 0b62:0b56..0b68 / 0b7c..0b8f (sort 0a03), ovl67:0834..083f / 0851..085c
+    (leader of 06eb through the 0b62:0024 row pointer), ovl66 palette rows (see callers)."""
+    return s8(state.fight_order_byte(row, a.type_id))
 
 
 def _scan(state):
@@ -179,14 +191,23 @@ def selection_step(state) -> None:
     Evidence: asm 0c8c:0529..07f9 (5e5e 0566..0604, goto copy 0723..0766, search 0768..07e9
     with 0555:1868 = leader square, goto, DS:5dfc / 5dfa; ovl25:09ab-style test SCN 0x0D0)."""
     sel = state.selection
+    M.store_selection_words(state)                       # DS:5dfe / 5e00 / 2bda / 5dfc / 5dfa
     lead = _live(state, sel.selected)
-    if lead is None:
-        return
     group = [a for a in (_live(state, i) for i in sel.moving) if a is not None]
-    sel.hero = lead.id if lead.type_id == HERO_TYPE else -1
+    if lead is None and sel.selected != -1:
+        return
+    sel.hero = lead.id if lead is not None and lead.type_id == HERO_TYPE else -1
     for a in group:
         if sel.hero < 0 and a.type_id == HERO_TYPE:
             sel.hero = a.id
+    if lead is None:
+        # Null DS:5e62 (ovl29:14d3 with slot 0 empty, ovl22:0c5b at 0e81): 0566 reads the type
+        # byte at 0000:0004 and copies the null pointer or 0, both null, so DS:5e5e is the first
+        # hero by slot; the goto copy 0723..0766 writes the words 0000:0012 / 0000:0014 (int 4
+        # segment, int 5 offset) into every member's goto.  Not modelled: the only such caller,
+        # ovl22:0c5b, overwrites every member's goto in 0ae7 (0f0c, kind 1 -> 0c7e) or deletes
+        # them all (ovl24:00ca at 0f30) before anything reads it.
+        return
     for a in group:
         a.goto = lead.goto
     if (state.players[state.current].control == Control.HUMAN
@@ -196,24 +217,30 @@ def selection_step(state) -> None:
 
 
 def build_palette(state) -> None:
-    """ovl66:0d30: the palette of the leader's square: armies in square-list order, the
-    members of the moving group marked selected, and a palette group index that grows except
-    between neighbours with the same nonzero +0x11.  Without DS:2bda the moving group becomes
-    the leader alone.
-    Evidence: asm ovl66:0d30..0e84 (0d40 2bda, 0d65 0b62:007d, 0d72 sort, 0dcb..0df3 index)."""
+    """ovl66:0d30: the palette of the leader's square: armies in square-list order, those in
+    DS:5e3e[0..DS:5dfe-1] marked selected, and a palette group index that grows except
+    between neighbours with the same nonzero +0x11.  With DS:2bda (the stored word) clear,
+    DS:5dfe = 1 and DS:5e3e[0] = DS:5e62 first (slots 1..7 stay), as the palette draw does.
+    Evidence: asm ovl66:0d30..0e84 (0d40 2bda, 0d47 5dfe = 1, 0d4d..0d51 5e3e[0], 0d65
+    0b62:007d, 0d72 sort, 0d85..0db8 membership over slots 0..5dfe-1 (jl), 0dcb..0df3 index)."""
     sel = state.selection
     lead = _live(state, sel.selected)
     if lead is None:
         return
-    if len(sel.moving) <= 1:
-        sel.moving = [lead.id]
+    if not sel.group:
+        sel.count = 1
+        if sel.moving:
+            sel.moving[0] = sel.selected
+        else:
+            sel.moving = [sel.selected]
+    members = sel.moving[:max(sel.count, 0)]
     sel.palette, sel.palette_selected, sel.palette_group = [], [], []
     prev, idx = -1, -1
     for a in square_list(state, lead.x, lead.y):
         if not (prev == a.group and a.group != 0 and idx >= 0):
             idx += 1
         sel.palette.append(a.id)
-        sel.palette_selected.append(int(a.id in sel.moving))
+        sel.palette_selected.append(int(a.id in members))
         sel.palette_group.append(idx)
         prev = a.group
 
@@ -265,7 +292,7 @@ def select_army_stack(state, p) -> list:
                 best, leader = _fo(state, row, a), a.id
     sel.selected, sel.moving = leader, members
     selection_step(state)
-    if len(sel.moving) > 1:                                  # 0b62:09ce
+    if sel.group:                                            # 0b62:09ce (09d1 DS:2bda)
         group = [state.armies[i] for i in sel.moving]
         sort_stack(state, group)
         sel.moving = [a.id for a in group]
@@ -278,14 +305,17 @@ def adopt(state, ids) -> None:
     """Make the armies `ids` (checked by the caller) the selected stack, as the original has
     them when the player acts on a stack: unchanged when it already is the selection, else
     leader = the first id and moving group = `ids` in that order.
-    Evidence: every order routine reads DS:5e62 / 5e3e / 2bda (ovl67:03a6, 08fb, 0b62:06bf,
-    0a8b:0c4f); no game rule of its own."""
+    The current stack is the one those routines act on: the non-null DS:5e3e slots when the
+    stored DS:2bda is set, else DS:5e62 alone.
+    Evidence: every order routine reads DS:5e62 / 5e3e / 2bda (ovl67:03a6 at 03ba, 08fb at 090a,
+    0b62:06bf at 06d3 / 076f, 0a8b:0c4f -> 07f9 at 0820); no game rule of its own."""
     sel = state.selection
-    current = sel.moving if len(sel.moving) > 1 else [sel.selected]
+    current = [i for i in sel.moving if i != -1] if sel.group else [sel.selected]
     if sel.selected in ids and sorted(current) == sorted(ids):
         return
     sel.selected = ids[0]
     sel.moving = list(ids)
+    M.store_selection_words(state)          # the select that made them ran 0c8c:0529
 
 
 def _check_group(state, group) -> list:
@@ -313,17 +343,64 @@ def select_stack(state, cmd: C.SelectStack) -> list:
     lst = square_list(state, cmd.x, cmd.y)
     if not lst or lst[0].owner != state.current:
         raise IllegalCommand("no army of the current side on %r" % ((cmd.x, cmd.y),))
-    return select_army_stack(state, lst[0])
+    events = select_army_stack(state, lst[0])
+    redraw_palette(state)                                # asm 0b62:04e8
+    return events + tutorial_pages(state, select=True)
 
 
 def deselect(state, cmd: C.Deselect) -> list:
     """Deselect: DS:5e62 = null; the moving group, the palette and every army byte stay.
-    Evidence: asm 0b62:08b3..0904 (key Del / button 178 via 07be:02f1 and ovl61:0f26)."""
-    state.selection.selected = -1
+    Evidence: asm 0b62:08b3..0904 (key Del / button 178 via 07be:02f1 and ovl61:0f26):
+    nothing when DS:5e62 is null (08bc); else DS:5e62 = 0 and, for a human side (0x0d0[0x110]
+    == 0, 08f2), the palette draw ovl66:0356 (08fa; without DS:5e62 it writes nothing)."""
+    sel = state.selection
+    had = sel.selected >= 0
+    sel.selected = -1
+    if had and state.players[state.current].control == Control.HUMAN:
+        redraw_palette(state)                    # asm 0b62:08fa
     return []
 
 
 # ------------------------------------------------------------------------------- palette
+
+
+def palette_moves(state) -> int:
+    """0c8c:0912(DS:6862, DS:6842, DS:30f6): the lowest signed +7 of the palette entries whose
+    selected word is nonzero, from 100 (strict <).  The pointer is read as it is: an entry
+    whose record was freed since the palette was built gives that record's +7 (0: a freed
+    record has 0 moves, `movement.remove_army`; a record above the table's end the same).
+    Evidence: asm 0c8c:0915 (100), 091f..095f (0928 6842[i] != 0, 0938..0958 +7 cwde, jge)."""
+    sel, low = state.selection, K.PALETTE_MOVES_START.value
+    for aid, chosen in zip(sel.palette, sel.palette_selected):
+        if chosen:
+            v = s8(state.armies[aid].moves_left) if 0 <= aid < len(state.armies) else 0
+            if v < low:
+                low = v
+    return low
+
+
+def redraw_palette(state) -> None:
+    """The state writes of the palette draw ovl66:0356, which the original runs at the end of
+    the selection commands (Select Stack 0b62:04e8, Next / Quit & Next / Defend ovl67:01e0,
+    the palette buttons ovl66:0959 / 0a4a / 0a8f / 0acf / 14f3, Move All 0c8c:04fb, the human
+    move 0a8b:0d0f, Disband "no" 0b62:075a -> ovl61:0000(0, 0)): without DS:5e62 nothing
+    (the info area ovl66:05a3; DS:30f8 = 1 is display only); else with DS:2bda clear DS:5dfe = 1
+    and DS:5e3e[0] = DS:5e62 (slot 0 only), and DS:5e00 = `palette_moves` (ovl66:055c ->
+    070d -> 0750 0c8c:0912; 070d's DS:30f8 gate never blocks there, 0356 cleared it at 03a0).
+    Each call counts in `GameState.palette_draws` (the user interface redraws its info area).
+    Evidence: asm ovl66:035d..0391 (null -> 05a3, exit 0564), 0394..03a0, 03ab..03bc, 055c;
+    ovl66:070d 0721 / 0750."""
+    state.palette_draws += 1
+    sel = state.selection
+    if sel.selected < 0:
+        return
+    if not sel.group:
+        sel.count = 1
+        if sel.moving:
+            sel.moving[0] = sel.selected
+        else:
+            sel.moving = [sel.selected]
+    sel.moves = palette_moves(state)
 
 
 def _palette(state) -> list:
@@ -400,6 +477,36 @@ def apply_palette(state) -> None:
     selection_step(state)
 
 
+def set_palette(state, cmd: C.SetPalette) -> list:
+    """SetPalette(armies, group, selected): the Stack dialog's OK.  The dialog (ovl66:0c9c) edits
+    the live palette arrays DS:6862 (army pointers), 6852 (palette index), 6842 (selected) - each
+    button sorts them itself (ovl66:157d / 166f -> 17e7) - and OK hands them unchanged to the
+    apply step: ovl66:14d3 -> ovl66:000a(0) (`apply_palette`), then ovl66:0356 (palette redraw;
+    with DS:2bda clear it sets DS:5dfe = 1 and 5e3e = 5e62, which `apply_palette` already
+    leaves).  So the command carries the three arrays in palette order and the engine applies
+    them as they are, without a sort.  Refused: a palette that is out of date (`_palette`),
+    `armies` not a permutation of the current palette, indices outside 0..7 (the dialog counts
+    them in 8 words, ovl66:15d6..1633), flags other than 0 / 1, or no army selected (the dialog
+    always keeps one: 157d leaves a selected army alone in its index selected; 000a would then
+    run with DS:5e62 null).  Cancel (ovl66:14fd) restores the backup arrays: no command.
+    Evidence: asm ovl66:14d3..14fc (14ee call 000a with 0, 14f3 call 0356), 000a 02e8 (the
+    argument only picks the redraw), 0356 03ab..03bc, 14fd..157c (Cancel)."""
+    sel = state.selection
+    _palette(state)
+    armies, group, selected = tuple(cmd.armies), tuple(cmd.group), tuple(cmd.selected)
+    if not (len(armies) == len(group) == len(selected) == len(sel.palette)) \
+            or sorted(armies) != sorted(sel.palette):
+        raise IllegalCommand("the arrays are not a permutation of the stack palette")
+    if any(not isinstance(g, int) or not 0 <= g < K.PALETTE_INDICES.value for g in group):
+        raise IllegalCommand("palette index outside 0..%d" % (K.PALETTE_INDICES.value - 1))
+    if any(f not in (0, 1) for f in selected) or not any(selected):
+        raise IllegalCommand("selected flags must be 0 / 1 with at least one army selected")
+    sel.palette, sel.palette_group, sel.palette_selected = list(armies), list(group), [int(f) for f in selected]
+    apply_palette(state)
+    redraw_palette(state)                        # asm ovl66:14f3
+    return []
+
+
 def sort_palette(state) -> None:
     """Insertion sort of the stack palette (armies, selected flags and index move together):
     an entry moves up while its palette index is lower than the one before it, or equal with a
@@ -455,6 +562,7 @@ def _toggle(state, c: int) -> None:
             sel.palette_group[c] = free
     sort_palette(state)
     apply_palette(state)
+    redraw_palette(state)                        # asm ovl66:0a4a
 
 
 def group(state, cmd: C.Group) -> list:
@@ -495,6 +603,7 @@ def select_group(state, cmd: C.SelectGroup) -> list:
     g = sel.palette_group[c]
     sel.palette_selected = [int(x == g) for x in sel.palette_group]
     apply_palette(state)
+    redraw_palette(state)                        # asm ovl66:0959
     return []
 
 
@@ -515,6 +624,7 @@ def group_all(state, cmd: C.GroupAll) -> list:
     sel.palette_selected = [1] * len(sel.palette)
     sort_palette(state)                          # asm ovl66:0a7f
     apply_palette(state)
+    redraw_palette(state)                        # asm ovl66:0a8f
     return []
 
 
@@ -528,6 +638,7 @@ def ungroup_all(state, cmd: C.UngroupAll) -> list:
     sel.palette_selected = [1] + [0] * (len(sel.palette) - 1)
     sort_palette(state)                          # asm ovl66:0abf
     apply_palette(state)
+    redraw_palette(state)                        # asm ovl66:0acf
     return []
 
 
@@ -568,9 +679,11 @@ def _next(state) -> list:
     """ovl67:019b: search; none -> DS:5e62 = null; else select that army's stack."""
     p = _search_next(state)
     if p is None:
-        state.selection.selected = -1
-        return []
-    return select_army_stack(state, p)
+        state.selection.selected = -1                # 01bf; the draw 01e0 then writes nothing
+        return tutorial_pages(state, select=True)
+    events = select_army_stack(state, p)
+    redraw_palette(state)                            # asm ovl67:01e0
+    return events + tutorial_pages(state, select=True)
 
 
 def next_stack(state, cmd: C.Next) -> list:
@@ -595,12 +708,14 @@ def leave_group(state, cmd: C.LeaveGroup) -> list:
 
 
 def mark_done(state) -> None:
-    """ovl67:08fb: flag 0x40 on the selected stack (the leader alone without DS:2bda).
-    Evidence: asm ovl67:08fb..0953."""
+    """ovl67:08fb: flag 0x40 on the selected stack (the leader alone without DS:2bda), then
+    DS:2ea6 = 0 (path marks off) and the map draw ovl64:006c (present point "map").
+    Evidence: asm ovl67:08fb..0953 (0945 DS:2ea6, 094b ovl64:006c)."""
     if _live(state, state.selection.selected) is None:
         return
     for a in _members(state):
         a.flags |= K.DONE.value
+    present("map", at="ovl67:094b")
 
 
 def defend(state, cmd: C.Defend) -> list:
@@ -618,8 +733,11 @@ def defend(state, cmd: C.Defend) -> list:
 # ------------------------------------------------------------------------------- Move All
 
 
-def _search_move_all(state):
-    """ovl67:05c4: like 040e but only armies without 0x200, and no cycle reset."""
+def search_move_all(state):
+    """ovl67:05c4: like 040e but only armies without 0x200, and no cycle reset; the nearest
+    becomes the reference square.  Callers: Move All 0c8c:0513, the AI's ovl22:026c.
+    Evidence: asm ovl67:05c4 (as 040e: |dx| + |dy| to DS:3250 / 3252, 0 -> 9000, from the top
+    index down, strict <)."""
     sel = state.selection
     best, dbest = None, K.NEXT_NONE.value
     for a in _scan(state):
@@ -663,13 +781,14 @@ def move_all(state, cmd: C.MoveAll) -> list:
     if lead is not None and lead.goto[0] >= 0:
         events += goto_selected(state)
     while True:
-        p = _search_move_all(state)
+        p = search_move_all(state)
         if p is None:
             return events
         p.flags |= K.VISITED.value
         if p.goto[0] < 0:
             continue
         events += select_army_stack(state, p)
+        redraw_palette(state)                        # asm 0c8c:04fb
         events += goto_selected(state)
 
 
@@ -697,16 +816,20 @@ def confirm_disband(state, cmd: C.ConfirmDisband) -> list:
     """ConfirmDisband(yes): no -> nothing.  Yes -> every member is removed (0b62:03be), a hero
     first through the hero-death step (ovl36:16cd, `HOOKS["hero_died"]`); in a group a
     disbanded hero that is the side's active quest hero (2c04:1103 + 0xc*p, +4) ends the
-    quest (+0 = 0; the single-army path does not check); then no selection, the map bits are
-    rebuilt (ovl62:0000).
+    quest (+0 = 0; the single-army path does not check); then DS:5e62 / 5e5e null and DS:2bda
+    0 (DS:5e3e is left as it was, freed records included), the map bits are rebuilt
+    (ovl62:0000).
     Evidence: asm 0b62:076a..08b2 (076f 2bda, 0781..079b single, 07a4..0878 group, 07f9..085c
-    quest, 087d..088f 5e62 / 5e5e / 2bda = 0, 0895 ovl62:0000); 0b62:075a (no)."""
+    quest, 087d..088f 5e62 / 5e5e / 2bda = 0, 0895 ovl62:0000, 089a ovl62:02bf: the upkeep cache,
+    not the income one), 0b62:08a7 ovl61:0000(0, 0) (its palette draw ovl66:0356 at 008f); 0b62:075a
+    (no: ovl61:0000(0, 0))."""
     state.pending = None
     if not cmd.yes:
+        redraw_palette(state)                    # asm 0b62:075a -> ovl61:0000(0, 0) -> 0356
         return []
     events: list = []
     members = _members(state)
-    grouped = len(state.selection.moving) > 1
+    grouped = bool(state.selection.group)                    # 0b62:076f DS:2bda
     if any(a.type_id == HERO_TYPE for a in members):
         _require(C.ConfirmDisband, "hero_died")
     quest = state.players[state.current].quest
@@ -716,9 +839,11 @@ def confirm_disband(state, cmd: C.ConfirmDisband) -> list:
             if grouped and quest.active != 0 and quest.hero == a.id:
                 quest.active = 0
         M.remove_army(state, a)
-    sel = state.selection
-    sel.selected, sel.hero, sel.moving = -1, -1, []
+    sel = state.selection                        # asm 0b62:087d..088f: DS:5e3e keeps the freed ids
+    sel.selected, sel.hero, sel.group = -1, -1, 0
     refresh_map(state)
+    refresh_upkeep(state)                        # asm 0b62:089a (ovl62:02bf only)
+    redraw_palette(state)                        # asm 0b62:08a7 -> ovl61:0000(0, 0) -> 0356 (no DS:5e62)
     return events
 
 
@@ -780,3 +905,82 @@ def group_cleanup(state) -> None:
             for a in _scan(state):
                 if a.owner == state.current and a.x >= 0 and a.group == g:
                     a.group = K.GROUP_ALONE.value
+
+
+# ------------------------------------------------------------------------------- tutorial
+
+
+def _tutorial_page(state, bit: int, file) -> list:
+    b = KT.SCN_TUTORIAL_BYTE.value
+    state.flags[b] = state.flags.get(b, 0) | bit
+    return [E.TurnCue({"kind": "tutorial", "file": file})]
+
+
+def tutorial_pages(state, select: bool) -> list:
+    """The tutorial pages after a select (`select`: also the first-select page (25, 3)) or a
+    move: (25, 4) when a square around the selected army holds a city of another owner, (25, 5)
+    when the selected army is a hero on a site square; each once a game (SCN byte 0x134).
+    Without a selection (Next found nothing) only (25, 3): there the EXE reads the army words
+    through the null DS:5e62 (0000:0000, the interrupt table), which is not reproducible.
+    Evidence: asm 0b62:04f2..063f (select), ovl67:01ea..0337 (Next, also from Quit & Next
+    ovl67:0393 and Defend ovl67:0409), 0c8c:02f0..0415 (move, without the (25, 3) part)."""
+    if not state.flags.get(KT.SCN_TUTORIAL_FLAG.value, 0):
+        return []
+    b = KT.SCN_TUTORIAL_BYTE.value
+    events = []
+    if select and not state.flags.get(b, 0) & KT.TUT_SELECT_BIT.value:
+        events += _tutorial_page(state, KT.TUT_SELECT_BIT.value, KT.TUT_SELECT_FILE.value)
+    a = _live(state, state.selection.selected)
+    if a is None:
+        return events
+    if not state.flags.get(b, 0) & KT.TUT_CITY_BIT.value:
+        for dx, dy in KT.TUT_NEIGHBOURS.value:
+            ci = state.city_at(a.x + dx, a.y + dy)
+            if ci >= 0 and s8(state.cities[ci].owner) != state.current:
+                events += _tutorial_page(state, KT.TUT_CITY_BIT.value, KT.TUT_CITY_FILE.value)
+                break
+    if not state.flags.get(b, 0) & KT.TUT_SITE_BIT.value \
+            and state.world.terrain(a.x, a.y) == KT.TERRAIN_SITE.value and a.type_id == HERO_TYPE:
+        events += _tutorial_page(state, KT.TUT_SITE_BIT.value, KT.TUT_SITE_FILE.value)
+    return events
+
+
+def screen_tutorial(state, cmd: C.ScreenTutorial) -> list:
+    """ScreenTutorial(close): the tutorial tail of the city / site screen ovl45:0000 (every mode;
+    the site screen M7b is mode 4 of the same routine).  Open (close False, ovl45:025d..02da):
+    with SCN 0x12e set, byte 0x134 bit 0x02 clear -> set, page (25, 1); then bit 0x20 clear and
+    the side's city count DS:5dea[SCN 0x110] >= 2 -> set, page (25, 6).  Close (close True,
+    ovl45:02e1 after ovl61:011f, 02f9..0336): bit 0x04 clear -> set, page (25, 2).  One
+    `TurnCue {"kind": "tutorial", "file": (25, n)}` per page in this order; the EXE shows each
+    through ovl61:168d before it tests the next, which changes no state the next test reads.
+    Evidence: asm ovl45:025d..02da, 02f9..0336; DS:5dea = rules.economy.cached_cities."""
+    from .economy import cached_cities
+    if not state.flags.get(KT.SCN_TUTORIAL_FLAG.value, 0):
+        return []
+    b = KT.SCN_TUTORIAL_BYTE.value
+    if cmd.close:
+        if state.flags.get(b, 0) & KT.TUT_SCREEN_CLOSE_BIT.value:
+            return []
+        return _tutorial_page(state, KT.TUT_SCREEN_CLOSE_BIT.value, KT.TUT_SCREEN_CLOSE_FILE.value)
+    events = []
+    if not state.flags.get(b, 0) & KT.TUT_SCREEN_OPEN_BIT.value:
+        events += _tutorial_page(state, KT.TUT_SCREEN_OPEN_BIT.value, KT.TUT_SCREEN_OPEN_FILE.value)
+    if not state.flags.get(b, 0) & KT.TUT_SCREEN_CITIES_BIT.value \
+            and cached_cities(state, state.current) >= KT.TUT_SCREEN_CITIES_MIN.value:
+        events += _tutorial_page(state, KT.TUT_SCREEN_CITIES_BIT.value, KT.TUT_SCREEN_CITIES_FILE.value)
+    return events
+
+
+def tutorial_after_move(state, status: int) -> list:
+    """The tutorial step of 0c8c:01fd after a human move: status 2 (the stack is done and
+    deselected) on turn 1 -> page (25, 9) every time; any other status -> the (25, 4) / (25, 5)
+    checks of `tutorial_pages` for the selected army.
+    Evidence: asm 0c8c:02a1..02db (status 2), 0c8c:02e9..0415 (else).  Not wired yet: the move
+    tail lives in rules/movement.py (`_tail_01fd`), whose owner calls this."""
+    if not state.flags.get(KT.SCN_TUTORIAL_FLAG.value, 0):
+        return []
+    if status == KT.MOVE_DONE.value:
+        if max(state.turn, 1) == 1:
+            return [E.TurnCue({"kind": "tutorial", "file": KT.TUT_DONE_FILE.value})]
+        return []
+    return tutorial_pages(state, select=False)

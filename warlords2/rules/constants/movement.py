@@ -84,6 +84,9 @@ MODE_SHIP, MODE_LAND, MODE_FLY = (Const(0, "EL §4.2 0c8c:0529"), Const(1, "EL �
 MASK_HILLS = Const(1, "EL §4.2: any member with w18")
 MASK_WOODS = Const(2, "EL §4.2: any member with w17")
 MASK_ABOARD = Const(8, "EL §4.2: any member aboard")
+MASK_DISTANCE_MAP = Const(0x10, "asm 0555:1af6 (1ab9 ors it in); tested at 0555:007f (no cache / adjacent "
+                                  "step), 0190 (no backtrace / store), 0373:03c0 (R = DS:3f70, r = 0), "
+                                  "04ee (stop at r == R), 086e (no start stop)")
 ABOARD = Const(0x1000, "EL §7 army +0xc flag")
 BOAT_EMBARKED = Const(1, "asm 0a8b:078b: DS:5dc4 = 1 when the move put armies aboard")
 BOAT_LANDED = Const(2, "asm 0a8b:06e2: DS:5dc4 = 2 when the move took the stack off its boats")
@@ -96,12 +99,29 @@ SINK_TERRAIN = Const(2, "decomp 01c4c0 (0b62:0ea0): Water, or any square with th
 STOP_NONE, STOP_MOVES, STOP_STACK, STOP_EDGE, STOP_CITY = (
     Const(0, "0a8b:07f9"), Const(2, "0a8b:0a79.."), Const(3, "0a8b:0955"),
     Const(4, "0a8b:08a3"), Const(5, "0a8b:08fd"))
+STATUS_NO_PATH = Const(1, "asm 0a8b:0cb1: 0a8b:0c4f returns 1 when 0555:000a found no path")
+STATUS_ARRIVED = Const(4, "asm 0a8b:0096: 0a8b:0001 sets 4 when the leader stands on its goto after "
+                          "0c4f (and clears the goto, 009b..00a2)")
 
 # ---------------------------------------------------------------- army table (0b62:0309, 03be)
 ARMY_TABLE = Const(1000, "asm 0b62:0346: the allocator scans records 0..999 (cmp cx, 0x3e8); none "
                          "free -> NULL")
 ALLOC_FLAGS = Const(1, "asm 0b62:0386..038c: +0xc = 0, then |= 1")
 ALLOC_TRANSIT = Const(0xFF, "asm 0b62:03a0: +0x10 = 0xff")
+ALLOC_ORDER_KEEP = Const(0xF0, "asm 0b62:0396..039b: +0xe &= 0xf0, |= 0 (order kind cleared)")
+FREE_ORDER_KEEP = Const(0x80, "asm 0b62:03d9 (+0xe &= 0x8f) and 03f0..03f5 (&= 0xf0, | 0): bit 7 kept")
+
+# ---------------------------------------------------------------- move executor (0a8b:0001, 0254)
+SELECT_MOVES_START = Const(100, "asm 0c8c:0560: DS:5e00 = 0x64 before the signed min over DS:5e3e (05d3..05db)")
+ORDER_KIND_MASK = Const(0x0F, "asm 0a8b:0020..0027: k = army +0xe & 0xf")
+ORDER_CITY_MASK = Const(0x7F, "asm 0a8b:0014..001d / 0141..014a: c = (+0xf >> 1) & 0x7f; 034c..0351 "
+                              "(t & 0x7f) << 1")
+ORDER_SITE = Const(3, "asm 0a8b:0150..0156: status 4 searches a site only with k == 3")
+ORDER_CITY = Const(1, "asm 0a8b:0363..0368: redirect sets +0xe = (+0xe & 0xf0) | 1")
+ARRIVED_ORDER_KEEP = Const(0x80, "asm 0a8b:01ec / 01f5: +0xe &= 0xf0, then &= 0x8f")
+ORDER_CLEAR_KEEP = Const(0xF0, "asm 0a8b:0457 / 0363: +0xe &= 0xf0 (and +0xf &= 1 at 0460 / 0371)")
+NEUTRAL_OWNER = Const(0x0F, "asm 0a8b:0285: cmp byte city +0x15, 0xf")
+ROLE_NEW_CITY = Const(1, "asm 0a8b:02fe: AI +0x56 + c = 1 after a neutral order city is taken")
 
 # ---------------------------------------------------------------- per-turn points (ovl68:05fb)
 CARRY_MAX = Const(2, "EL §4.4 ovl68:05fb (moves_left < 3 ? moves_left : 2)")

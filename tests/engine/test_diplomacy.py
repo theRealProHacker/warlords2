@@ -8,7 +8,8 @@ import pytest
 from warlords2.model import commands as C
 from warlords2.model import events as E
 from warlords2.model.ids import Control, Relation
-from warlords2.rules import combat, diplomacy as D, engine
+from warlords2.model import serialize
+from warlords2.rules import city as CT, combat, diplomacy as D, engine, heroes as H
 from warlords2.rules.constants import turn as KT
 from warlords2.rules.engine import IllegalCommand
 
@@ -250,6 +251,34 @@ def test_treachery_then_the_real_battle(monkeypatch):
     assert isinstance(ev[0], E.Treachery) and D.current(st, 0, 1) == W
 
 
+@pytest.mark.parametrize("roundtrip", [False, True])
+def test_treachery_news_comes_after_the_capture_answer(monkeypatch, roundtrip):
+    """ovl36:21e5 runs ovl36:0000(x, y) again; its capture dialog (ovl31:0000) is modal there,
+    so a quest entry written by the answer (ovl01:1ded -> news kind 2, rules.quests) precedes
+    the kind-8 entry of ovl36:2257.  The entry waits in the pending CityCaptured, also across a
+    save (rules.model.serialize)."""
+    st = state()
+    city(st, 30, 30, 2, 1)
+    ci = city(st, 10, 10, 1, 1)
+    _prompted(st, (10, 10), (9, 10))
+    real = combat._hook
+    monkeypatch.setattr(combat, "_hook", lambda n: (lambda *a: (0, [])) if n == "quest_check"
+                        else (lambda *a: None) if n == "ai_memory" else real(n))
+    engine.apply(st, C.ConfirmTreachery(True))
+    assert isinstance(st.pending, E.CityCaptured) and st.pending.info["city"] == ci
+    assert st.news[0] == []
+    if roundtrip:
+        st = serialize.load(serialize.dump(st), rng=st.rng)
+
+    def quest_done(state, words):           # stand-in for the done entry of ovl01:1ded
+        H.news(state, state.current, 2, 0, 0, "hero")
+        return 1, []
+    real_city = CT._hook
+    monkeypatch.setattr(CT, "_hook", lambda n: quest_done if n == "quest_event" else real_city(n))
+    engine.apply(st, C.CaptureChoice("occupy"))
+    assert st.news[0] == [[2, 0, 0, "hero"], [8, 0, 1, ""]] and st.pending is None
+
+
 def test_treachery_declined_changes_nothing():
     """ovl36:2262: redraw only (no roll, no relation, the stack stays)."""
     st = state()
@@ -313,3 +342,14 @@ def test_rating_ties_keep_side_order_and_skip_the_dead():
         p.infamy = infamy[p.index]
     st.players[2].alive = st.players[6].alive = 0
     assert D.rating(st) == [(5, 0), (7, 1), (0, 3), (1, 5), (4, 6), (3, 7)]
+
+
+def test_rating_sorts_infamy_signed():
+    """ovl00:0aed compares the words 2c04:10e3 with a signed jge (0b92..0b97): a negative
+    infamy ranks before 0."""
+    st = state()
+    infamy = [3, -5, 0, 0x7FFF, -0x8000, 1, 0, 0]
+    for p in st.players:
+        p.infamy = infamy[p.index]
+        p.alive = int(p.index < 6)
+    assert [s for s, _ in D.rating(st)] == [4, 1, 2, 5, 0, 3]

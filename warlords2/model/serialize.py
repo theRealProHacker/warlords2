@@ -11,6 +11,7 @@ import importlib
 from dataclasses import fields, is_dataclass
 from typing import Any
 
+from .ai import AiState
 from .army import Army, ArmyType
 from .city import City, Slot
 from .hero import HeroSlot
@@ -21,8 +22,21 @@ from .site import Site
 from .state import BattleWork, GameState, Monster, PathSlot, Selection
 from .world import Sign, World
 
-FORMAT = 6                        # 3: GameState.selection; 4: hero_names, news, battle_work;
-#                                   5: battle_work zero start, d_types 32 bytes; 6: advisor_*
+FORMAT = 10                       # 3: GameState.selection; 4: hero_names, news, battle_work;
+#                                   5: battle_work zero start, d_types 32 bytes; 6: advisor_*;
+#                                   7: ai blocks, Army.order, BattleWork.attack_cost,
+#                                   Selection count / moves / group / mode / mask (DS:4160 and
+#                                   the selection words are not among the EXE save's blocks, ovl49:0a46
+#                                   writes (and 0414 reads): DS:5d64[0x54], SCN, map + armies, roads,
+#                                   explored layer, text files, AI; this format is a snapshot and keeps
+#                                   them - the save file is rules.saveload.saved_part); 8: the whole AI state (model/ai.py
+#                                   AiState: blocks of ai.md §3.1, neighbour table, DS:0832 /
+#                                   0836 / 40f2 words); 9: the AI's process words (DS:0832,
+#                                   0836, 40f2, 40ee, the raze result: model.ai.AiProcess) are
+#                                   no longer saved - ovl29:0da9 saves only the blocks and the
+#                                   neighbour table, so a load starts a fresh AiProcess;
+#                                   10: GameState.dist_table (the search field DS:3f86, a heap
+#                                   buffer like the cost map and the path cache)
 
 
 def _plain(v: Any) -> Any:
@@ -35,6 +49,9 @@ def _plain(v: Any) -> Any:
     if isinstance(v, dict):
         return {str(k): _plain(x) for k, x in v.items()}
     return v
+
+
+plain = _plain                    # the dump's form of one value (rules.saveload)
 
 
 def _rng_dump(rng) -> dict:
@@ -96,6 +113,7 @@ def load(d: dict, rng: Any = None) -> GameState:
         overview_mountain_rolls=list(d["overview_mountain_rolls"]),
         cost_map=list(d["cost_map"]),
         path_cache=[PathSlot(**_tuples(p, "src", "dst")) for p in d["path_cache"]],
+        dist_table=list(d["dist_table"]),
         selection=Selection(**{k: list(v) if isinstance(v, list) else v
                                for k, v in _tuples(d["selection"], "next_ref").items()}),
         hero_names=[[list(e) for e in side] for side in d["hero_names"]],
@@ -104,6 +122,9 @@ def load(d: dict, rng: Any = None) -> GameState:
                                   for k, v in d["battle_work"].items()}),
         advisor_talking=d["advisor_talking"], advisor_digital=d["advisor_digital"],
         advisor_groups={int(k): v for k, v in d["advisor_groups"].items()},
+        ai=AiState.from_dict(d["ai"]),
+        income_cache=list(d["income_cache"]), upkeep_cache=list(d["upkeep_cache"]),
+        city_counts=list(d["city_counts"]),
     )
 
 
@@ -128,16 +149,22 @@ def _assign(dst: Any, src: Any) -> Any:
 
 
 def snapshot(state: GameState) -> tuple:
-    """A copy of `state` for `restore`.  An RNG that cannot be serialised (a test stand-in die
-    source) is deep-copied instead."""
+    """A copy of `state` and its AI process words (model.ai.AiProcess) for `restore`.  An RNG
+    that cannot be serialised (a test stand-in die source) is deep-copied instead."""
+    words = state.ai.proc.dump()
     try:
-        return dump(state), None
+        return dump(state), None, words
     except AttributeError:
-        return dump(state, rng=False), copy.deepcopy(state.rng)
+        return dump(state, rng=False), copy.deepcopy(state.rng), words
 
 
 def restore(state: GameState, snap: tuple) -> None:
     """Put `state` back to `snap` (from `snapshot`), in place: the GameState, its lists and the
-    records in them keep their identity, so references held into the state stay valid."""
-    d, rng = snap
+    records in them keep their identity, so references held into the state stay valid; the
+    AI process object stays the same one, its words are put back."""
+    d, rng, words = snap
+    proc = state.ai.proc
     _assign(state, load(d, rng=rng))
+    for k, v in words.items():
+        setattr(proc, k, list(v) if isinstance(v, list) else v)
+    proc.blocks = state.ai.blocks

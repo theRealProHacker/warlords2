@@ -43,3 +43,7 @@ FORTIFY_TERRAIN = Const((7, 4, 5, 1, 8, 9),
 
 # ---------------------------------------------------------------- palette (ovl66:0963)
 PALETTE_SLOTS = Const(8, "asm ovl66:0049 / 09cb / 0a16 / 0e6e: 8 palette slots and index counters")
+PALETTE_MOVES_START = Const(100, "asm 0c8c:0915: DS:5e00 = 0x64 before the signed min over the "
+                                 "selected palette entries (0940 jge / 0958)")
+PALETTE_INDICES = Const(8, "asm ovl66:15d6..15e8 / 1620..1633: the Stack dialog counts palette indices "
+                          "in 8 words (bp-0x10), so an index is 0..7")

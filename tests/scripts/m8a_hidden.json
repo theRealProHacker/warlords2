@@ -1,0 +1,32 @@
+{
+ "note": "Hidden Map with two humans (Knights 0, Darklords 7) on TUTORIA (ovl68:0259 di = 0).  Begin: ovl61:0000(0, 1) draws neither the map nor (Hidden Map) the overview and calls no ovl61:0a6e, so the Turn pop-up shows over the game frame's backdrop, the info bar the marble cell ovl61:0aeb (shot 01); after the pop-up the map and the overview are drawn (ovl68:0449..0484) and the info bar stays the marble cell until the hero offer's accept (ovl61:011f(1, 0, 1) -> ovl66:0356, shot 03).  End Turn (Alt+E): ovl61:0a6e fills map and overview black, the info bar the marble cell (ovl61:20cb, ovl68:034c) during the Darklords' pop-up (shot 04).",
+ "args": ["--scenario", "TUTORIA", "--seed", "3", "--controls", "HCCCCCCH", "--no-voice", "--options", "0,0,0,1,0,0,0,0,0,0"],
+ "steps": [
+  [2, {"wait_dialog": "progress", "frames": 5}],
+  [50, {"wait_dialog": "turn_start", "frames": 30}],
+  [82, {"shot": "01_begin_popup_backdrop"}],
+  [84, {"click": [320, 240]}],
+  [86, {"wait_dialog": "tutorial_page", "frames": 6}],
+  [94, {"click": [320, 240]}],
+  [96, {"wait_dialog": "hero_offer", "frames": 2}],
+  [97, {"move": [600, 470]}],
+  [98, {"shot": "02_offer_info_bar_marble"}],
+  [100, {"press_button": 287}],
+  [102, {"wait_dialog": "tutorial_page", "frames": 6}],
+  [108, {"click": [320, 240]}],
+  [110, {"wait_dialog": "production", "frames": 2}],
+  [112, {"press_button": 192}],
+  [114, {"wait_dialog": "tutorial_page", "frames": 6}],
+  [120, {"click": [320, 240]}],
+  [124, {"assert_state": {"state": "game", "dialog": null}}],
+  [125, {"shot": "03_knights_map"}],
+  [126, {"key": "left alt", "hold": true}],
+  [127, {"key": "e"}],
+  [128, {"keyup": "left alt"}],
+  [130, {"wait_dialog": "turn_start", "frames": 20}],
+  [152, {"shot": "04_end_turn_popup_black"}],
+  [154, {"click": [320, 240]}],
+  [156, {"wait_dialog": "hero_offer", "frames": 6}],
+  [162, {"shot": "05_darklords_offer"}]
+ ]
+}

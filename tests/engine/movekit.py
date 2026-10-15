@@ -7,6 +7,9 @@ part of the state is genuine.  `scenario_state` ends like the top of a main-loop
 cost map after each change, standing in for that rebuild.  A test that edits the map by hand
 calls `ready(st)`.
 """
+import contextlib
+import hashlib
+import json
 from functools import lru_cache
 
 from warlords2.formats.gamedir import EXE_NAME, GameDir
@@ -37,15 +40,31 @@ def _inputs(root, name):
     return sc, tuple(parse_armytypes(gd.read("TERRAIN0/ARMYTYPE.DAT"))), kw
 
 
-def scenario_state(root, name, seed=1, options=GameOptions(), controls=None):
+@lru_cache(maxsize=None)
+def _cards(root):
+    from warlords2.ai.cards import card_reader
+    return card_reader(GameDir(root))
+
+
+@lru_cache(maxsize=64)
+def _scenario_state(root, name, seed, options, controls, cards):
     sc, at, kw = _inputs(root, name)
     cfg = NewGameConfig(name, controls or (Control.HUMAN,) + (Control.COMPUTER,) * 7, (1,) * 8,
                         (0,) * 8, (0,) * 8, None, options, 0, seed)
     with allowing_unverified():
-        st = S.new_game(sc, cfg, list(at), **kw)
+        st = S.new_game(sc, cfg, list(at), cards=_cards(root) if cards else None, **kw)
     refresh_map(st)
     P.rebuild_cost_map(st)
     return st
+
+
+def scenario_state(root, name, seed=1, options=GameOptions(), controls=None, cards=True):
+    """A new game as the app starts it (the AI blocks set up from the card files at Begin,
+    ovl25:0519, with their dice); `cards=False`: without (DS:0832 stays 0, no dice).  The
+    built games are cached (the neighbour table takes seconds); each call gets a copy (game
+    and AI process words, its own RNG)."""
+    controls = tuple(controls) if controls is not None else None
+    return _scenario_state(root, name, seed, options, controls, cards).copy()
 
 
 def ready(st):
@@ -55,7 +74,7 @@ def ready(st):
 
 
 def flat_state(root, terrain=Terrain.PLAIN, options=GameOptions(), controls=None):
-    st = scenario_state(root, "TUTORIA", options=options, controls=controls)
+    st = scenario_state(root, "TUTORIA", options=options, controls=controls, cards=False)
     w = st.world
     w.terrain_of_tile = list(range(12)) + [int(Terrain.PLAIN)] * 244
     w.tiles = [int(terrain)] * (MAP_W * MAP_H)
@@ -112,3 +131,51 @@ def corridor(st, y, x0, x1):
     for x in range(x0 - 1, x1 + 2):
         paint(st, x, y - 1, Terrain.MOUNTAINS)
         paint(st, x, y + 1, Terrain.MOUNTAINS)
+
+
+# ----------------------------------------------------------------- neighbour-table memo (tests only)
+_NB_MEMO = {}
+_NB_READ_BITS = 0x0F | 0x80                       # owner nibble | port bit (MAP_OWNER_MASK | MAP_PORT)
+
+
+def _nb_key(state) -> str:
+    """Everything ovl29:0398 reads through 0555:0d9e, 1ab9 and ovl21:0a85: tiles, roads, the
+    terrain table, the owner nibble and port bit of the map words, the city corners and owner
+    bytes, the Hidden Map option and side 0's control word (0555:08bf with SCN 0x110 = 0)."""
+    w = state.world
+    blob = json.dumps([w.tiles, [f & _NB_READ_BITS for f in w.flags], w.roads, w.terrain_of_tile,
+                       [(c.x, c.y, c.owner) for c in state.cities],
+                       bool(state.options.hidden_map), int(state.players[0].control)],
+                      separators=(",", ":"))
+    return hashlib.sha256(blob.encode()).hexdigest()
+
+
+@contextlib.contextmanager
+def neighbour_memo():
+    """Within the block, ai.tables.build_neighbours (rules.setup HOOKS ai_neighbours) reuses the
+    result of an earlier build with the same inputs: for tests that make hundreds of games of
+    one map.  The result (table, cost map, owner nibbles) is what the full build leaves."""
+    from warlords2.ai import tables as AT
+    from warlords2.model.ids import MAP_OWNER_MASK, MAP_PORT
+    assert _NB_READ_BITS == MAP_OWNER_MASK | MAP_PORT
+    real = AT.build_neighbours
+
+    def memo(state):
+        key = _nb_key(state)
+        hit = _NB_MEMO.get(key)
+        if hit is None:
+            real(state)
+            nb = state.ai.neighbours
+            _NB_MEMO[key] = (tuple(nb.ids), tuple(nb.dists), tuple(state.cost_map))
+            return
+        nb = state.ai.neighbours
+        nb.ids[:], nb.dists[:] = hit[0], hit[1]
+        state.cost_map = list(hit[2])
+        for city in state.cities:                     # the final owner-nibble writes of 062b..071b
+            AT._own(state.world.flags, city, city.owner & 0xFF)
+
+    AT.build_neighbours = memo
+    try:
+        yield
+    finally:
+        AT.build_neighbours = real

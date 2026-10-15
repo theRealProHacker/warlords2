@@ -23,6 +23,7 @@ from warlords2.model.ids import Control, Terrain
 from warlords2.model.options import GameOptions
 from warlords2.model.state import SCN_ROUND_COMPLETE, SCN_TURN_ORDER, SCN_TURN_POS
 from warlords2.rules import city as CT
+from warlords2.rules import diplomacy as D
 from warlords2.rules import economy as EC
 from warlords2.rules import engine
 from warlords2.rules import heroes as H
@@ -33,6 +34,7 @@ from warlords2.rules import ruins as RU
 from warlords2.rules import selection as S
 from warlords2.rules import turn as T
 from warlords2.rules import visibility as V
+from warlords2.rules.mapwords import refresh_map
 from warlords2.rules.engine import IllegalCommand, NotImplementedCommand
 
 pytestmark = pytest.mark.gamedata
@@ -58,8 +60,16 @@ def _penalty(state):
 
 def _ai(state):
     """Random moves for the computer side (stand-in for ovl25:0000), on a die of its own so the
-    game's dice see only the engine's rolls."""
+    game's dice see only the engine's rolls; it ends, as ovl25:0000 does, with the refused-proposal
+    infamy of the computer side (ovl00:1063 at ovl25:0379)."""
     CALLS.append("ovl25:0000")
+    try:
+        return _ai_moves(state)
+    finally:
+        D.penalty(state)
+
+
+def _ai_moves(state):
     r = random.Random(state.turn * 8 + state.current)
     for ci, c in enumerate(state.cities):
         if c.owner == state.current and c.turns_left == 0:
@@ -83,9 +93,12 @@ def _eliminate(state):
     return []
 
 
+STUB_EVENTS = {}
+
+
 def _end_check(state):
     CALLS.append("ovl61:1aed")
-    return []
+    return list(STUB_EVENTS.get("end_check", []))
 
 
 def _history(state):
@@ -172,13 +185,22 @@ def test_hook_signature(name):
     assert list(inspect.signature(f).parameters) == params
 
 
-def test_strict_end_turn_raises_before_any_change(game):
+def _one_phase_missing(monkeypatch, name="production"):
+    """ai.base.PHASES with phase `name` pointing at a function that does not exist (a phase
+    not written yet)."""
+    from warlords2.ai import base as AB
+    monkeypatch.setattr(AB, "PHASES", tuple((n, ms, "test_turn:not_written" if n == name else t, a)
+                                            for n, ms, t, a in AB.PHASES))
+
+
+def test_strict_end_turn_raises_before_any_change(game, monkeypatch):
     """Without --allow-unverified a missing M8b1 / M9a step refuses End Turn, state untouched."""
+    _one_phase_missing(monkeypatch)
     st = two_humans(game)
     h = st.hash()
     with pytest.raises(NotImplementedCommand) as e:
         engine.apply(st, C.EndTurn())
-    assert e.value.milestone in ("M8b1", "M9a")
+    assert e.value.milestone in ("M8b1", "M8b2", "M8b3", "M8b4", "M9a")
     with pytest.raises(NotImplementedCommand):
         T.run(st)
     assert st.hash() == h
@@ -271,6 +293,28 @@ def test_human_turn_order_turn_2(game, stubs, monkeypatch):
     assert st.flags[0x159] == 1 and st.pending is None
 
 
+@pytest.mark.parametrize("hidden, humans, draws", [(0, 2, 2), (1, 2, 1), (1, 1, 2)])
+def test_human_turn_palette_draws(game, stubs, monkeypatch, hidden, humans, draws):
+    """ovl68:03a4 draws the palette (ovl66:0356) after the centring 039c unless Hidden Map is on
+    with more than one live human (di = 0 at 02e6); ovl68:05a8 always, after production.  A
+    selection left over (DS:5e62 set) gets 0356's words: DS:2bda clear -> DS:5dfe = 1."""
+    ctl = [COMP] * 8
+    ctl[0] = HUMAN
+    if humans == 2:
+        ctl[2] = HUMAN
+    st = scenario_state(game, "DRAGON", seed=3, options=GameOptions(hidden_map=hidden), controls=tuple(ctl))
+    st.turn, st.players[0].gold = 2, 0
+    a = next(a for a in st.armies if a.owner == 0 and a.x >= 0)
+    sel = st.selection
+    sel.selected, sel.moving, sel.group, sel.count, sel.moves = a.id, [a.id], 0, 5, 0
+    trace(monkeypatch, *HUMAN_STEPS, (S, "redraw_palette", "ovl66:0356"))
+    T.human_turn(st)
+    calls = [c for c in CALLS if c in ("ovl64:0629", "ovl66:0356", "0b62:0ea0", "ovl43:06bd")]
+    first = ["ovl64:0629", "ovl66:0356"] if draws == 2 else ["ovl64:0629"]
+    assert calls == first + ["0b62:0ea0", "ovl43:06bd", "ovl66:0356"]
+    assert sel.count == 1 and sel.moves == S.palette_moves(st)
+
+
 def test_human_turn_1_offer_then_city_screen(game, stubs, monkeypatch):
     """Turn 1: the free hero's dialog stops the sequence (ovl68:0531 return); its answer runs
     ovl68:04bd(1), which on turn 1 opens the capital's production screen and returns before
@@ -292,7 +336,57 @@ def test_tutorial_page_on_turn_2_once(game, stubs):
     st.flags[0x12E], st.turn, st.players[0].gold = 1, 2, 0
     ev = T.resume(st, 2)
     assert ev[-1].info == {"kind": "tutorial", "file": (25, 7)} and st.flags[0x134] & 0x40
-    assert not any(isinstance(e, E.TurnCue) for e in T.resume(st, 2))
+    assert ev[-2].info == {"kind": "info_bar"}                  # ovl68:05a8 before the page
+    assert [e.info for e in T.resume(st, 2) if isinstance(e, E.TurnCue)] == [{"kind": "info_bar"}]
+
+
+def test_info_bar_cue_only_where_ovl68_05a8_is_reached(game, stubs):
+    """ovl68:04bd: the hero offer (0531 -> 05f7) and the turn-1 production screen (0588 -> 05f7)
+    return before ovl66:0356 at 05a8; later turns reach it after production."""
+    st = two_humans(game)
+    ev = T.human_turn(st)                                       # turn 1: the offer is pending
+    assert not any(isinstance(e, E.TurnCue) and e.info["kind"] == "info_bar" for e in ev)
+    ev = engine.apply(st, C.AcceptHero(True))                   # 04bd(1) on turn 1: production screen
+    assert [e.info["kind"] for e in ev if isinstance(e, E.TurnCue)] == ["city_screen"]
+
+
+def test_run_one_computer_side_per_call_is_one_run(game, stubs):
+    """max_sides=1 stops before the next computer side's pass top, so runs continued call by
+    call give the state and the events of one uninterrupted run (DRAGON: computers 0, 2, 3,
+    then the human 6)."""
+    ctl = [COMP] * 8
+    ctl[6] = HUMAN
+    a = scenario_state(game, "DRAGON", seed=3, controls=tuple(ctl))
+    b = scenario_state(game, "DRAGON", seed=3, controls=tuple(ctl))
+    whole = T.run(a)
+    assert a.current == 6
+    parts, runs = [], 0
+    while runs < 10 and not any(isinstance(e, E.TurnStarted) and e.info["human"] for e in parts):
+        ev = T.run(b, max_sides=1)
+        assert sum(isinstance(e, E.TurnEnded) for e in ev) <= 1
+        parts += ev
+        runs += 1
+    assert runs == 3 and a.hash() == b.hash() and [type(e) for e in parts] == [type(e) for e in whole]
+
+
+def test_speech_and_view_commands(game):
+    """SetSpeech: ovl33:0576(2) (DS:26c8); SetView: the view words of ovl65:0227; both legal
+    with a question pending (engine.ANYTIME)."""
+    st = two_humans(game)
+    engine.apply(st, C.SetSpeech(True))
+    assert st.advisor_talking == 1
+    engine.apply(st, C.SetSpeech(False))
+    assert st.advisor_talking == 0
+    engine.apply(st, C.SetView(2, 155))                         # top 151 capped at 0x93
+    assert [st.flags[o] for o in (0x17D, 0x17F, 0x177, 0x175, 0x17B, 0x179)] == [2, 155, 0, 0x93, 8, 0x93 + 8]
+    engine.apply(st, C.SetView(110, 10))
+    assert [st.flags[o] for o in (0x177, 0x175, 0x17B, 0x179)] == [0x67, 6, 0x67 + 8, 14]
+    with pytest.raises(IllegalCommand):
+        engine.apply(st, C.SetView(112, 0))
+    T.human_turn(st)
+    assert st.pending is not None
+    engine.apply(st, C.SetView(50, 50))
+    assert st.flags[0x17D] == 50
 
 
 def test_computer_turn_order(game, stubs, monkeypatch):
@@ -436,15 +530,89 @@ def test_end_turn_runs_computers_until_the_next_human(game, stubs):
         engine.apply(st, C.EndTurn())                        # the offer is pending
 
 
-def test_end_turn_refused_for_a_computer_side_and_noop_after_victory(game, stubs):
+def test_end_turn_refused_for_a_dead_side_and_noop_after_victory(game, stubs):
     st = two_humans(game)
-    st.current = 3
+    st.current = 1                                           # not alive in DRAGON
     with pytest.raises(IllegalCommand):
         engine.apply(st, C.EndTurn())
     st.current = 0
     st.flags[0x15B] = 1
     h = st.hash()
     assert engine.apply(st, C.EndTurn()) == [] and st.hash() == h
+
+
+def test_end_turn_of_a_side_made_computer_in_its_turn(game, stubs):
+    """ovl61:2074 does not test SCN 0x0D0: a side switched to computer by Settings (ovl33:04cc)
+    during its own turn still ends it; from the next round its turn is a computer turn."""
+    st = two_humans(game)
+    T.run(st)
+    engine.apply(st, C.AcceptHero(True))
+    engine.apply(st, C.SetControl(0, int(COMP)))
+    ev = engine.apply(st, C.EndTurn())
+    assert st.current == 2 and [e.info["player"] for e in ev if isinstance(e, E.TurnEnded)][0] == 0
+
+
+def test_settings_commands_toggle_live_sides_only(game):
+    """ovl33:04cc / 0508 / 053f write SCN 0x0d0 / 0x0f0 / 0x147 of a live side; a dead side has
+    no buttons (ovl33:0067 -> 08a9:03b3)."""
+    st = two_humans(game)
+    assert engine.apply(st, C.SetControl(3, int(HUMAN))) == [] and st.players[3].control == HUMAN
+    engine.apply(st, C.SetEnhance(3, True))
+    engine.apply(st, C.SetObserve(0, True))                   # live for a human too (ovl33:00ec)
+    assert st.players[3].enhanced == 1 and st.players[0].shown == 1
+    for cmd in (C.SetControl(1, int(COMP)), C.SetEnhance(1, True), C.SetObserve(8, True),
+                C.SetControl(0, 5)):
+        with pytest.raises(IllegalCommand):
+            engine.apply(st, cmd)
+
+
+def test_strict_mode_runs_a_game_without_computer_sides(game, monkeypatch):
+    """The AI hook (ovl68:01e3) is only reachable with a live computer side: two humans and no
+    computer play in strict mode, even with a phase not written; making a side computer makes
+    the loop refuse again."""
+    _one_phase_missing(monkeypatch)
+    ctl = [COMP] * 8
+    ctl[0] = ctl[2] = ctl[3] = ctl[6] = ctl[7] = HUMAN
+    st = scenario_state(game, "DRAGON", seed=3, controls=tuple(ctl))
+    T.run(st)
+    engine.apply(st, C.AcceptHero(True))
+    engine.apply(st, C.EndTurn())
+    assert st.current == 2
+    engine.apply(st, C.AcceptHero(True))
+    engine.apply(st, C.SetControl(3, int(COMP)))
+    h = st.hash()
+    with pytest.raises(NotImplementedCommand) as e:
+        engine.apply(st, C.EndTurn())
+    assert e.value.milestone in ("M8b2", "M8b3", "M8b4") and st.hash() == h
+
+
+def test_computer_turn_ends_with_its_penalty(game, ai_stubs):
+    """ovl25:0379: the computer side's refused de-escalation (peace proposed at war, war proposed
+    back) draws rnd(1, 10, 0) + 10 infamy at the end of its AI turn."""
+    st = two_humans(game)
+    st.current = 3
+    for b in range(8):
+        if b != 3 and st.players[b].alive:
+            D.set_current(st, 3, b, 2)
+            D.set_current(st, b, 3, 2)
+            D.set_proposal(st, 3, b, 0)
+            D.set_proposal(st, b, 3, 2)
+    before = st.players[3].infamy
+    T.computer_turn(st)
+    assert ai_stubs[-1] == "ovl25:0000"
+    assert 4 * 11 <= st.players[3].infamy - before <= 4 * 20       # sides 0, 2, 6, 7
+
+
+def test_round_end_stops_after_no_players_left(game, stubs, monkeypatch):
+    """ovl61:1aed quits the program after the 'no players' message (0a4c:02b5 at ovl61:1c55):
+    neither Active neutrals nor the history follow."""
+    st = two_humans(game)
+    st.flags[SCN_ROUND_COMPLETE] = 1
+    monkeypatch.setitem(STUB_EVENTS, "end_check", [E.NoPlayersLeft({"msg": (12, 2)})])
+    monkeypatch.setattr(T, "active_neutrals", lambda s: CALLS.append("ovl39:025a") or [])
+    CALLS.clear()
+    ev = T.next_side(st)
+    assert isinstance(ev[-1], E.NoPlayersLeft) and "ovl39:025a" not in CALLS and "ovl41:0d60" not in CALLS
 
 
 # ----------------------------------------------------------------------------- embark / land
@@ -487,7 +655,10 @@ def test_sailing_on_keeps_the_moves(game):
 # ----------------------------------------------------------------------------- fuzz
 
 
-def _human_cmd(st, r):
+def _human_cmd(st, r, endings=False):
+    if endings and st.current == 0 and r.random() < (1 if endings == "resign0" else 0.02):
+        return C.Resign(r.random() < 0.5)            # side 0 only: with no human left the
+        #                                              computers play on and run() never returns
     by = collections.defaultdict(list)
     for a in st.armies:
         if a.owner == st.current and a.y >= 0:
@@ -522,7 +693,7 @@ def _human_cmd(st, r):
                         max(0, min(155, pos[1] + r.randint(-12, 12)))))
 
 
-def _answer(st, r):
+def _answer(st, r, endings=False):
     p = st.pending
     if isinstance(p, E.HeroOffered):
         return C.AcceptHero(r.random() < 0.7 or p.info["free"])
@@ -533,32 +704,48 @@ def _answer(st, r):
     if isinstance(p, E.TreacheryPrompt):
         return C.ConfirmTreachery(r.random() < 0.5)
     if isinstance(p, E.SurrenderOffered):
-        return C.AcceptSurrender(False)
+        return C.AcceptSurrender(endings and r.random() < 0.5)
+    if isinstance(p, E.Victory):
+        return C.CloseVictory()                         # button 0x1e3, ovl61:2004
     raise AssertionError("unexpected question %r" % p)
 
 
-def play(game, seed, rounds, opts):
+def _over(st):
+    """The game is over for the fuzz: victory acknowledged or flagged (End Turn does nothing
+    then, ovl61:2074), or no live human left."""
+    return st.flags.get(0x15B, 0) or not any(p.alive and p.control == HUMAN for p in st.players)
+
+
+def play(game, seed, rounds, opts, endings=False, prep=None):
     st = two_humans(game, seed=seed, options=opts)
+    if prep is not None:
+        prep(st)
     r = random.Random(seed)
     log, errs, counts = [], [], collections.Counter()
     log += [type(e).__name__ for e in T.run(st)]
     start = st.turn
-    while st.turn < start + rounds and not errs:
+    while st.turn < start + rounds and not errs and not _over(st):
         for _ in range(r.randint(4, 14)):
-            cmd = _answer(st, r) if st.pending is not None else _human_cmd(st, r)
+            cmd = _answer(st, r, endings) if st.pending is not None else _human_cmd(st, r, endings)
             try:
                 ev = engine.apply(st, cmd)
-                counts[type(cmd).__name__] += 1
+                counts[type(cmd).__name__ + (str(cmd.yes) if isinstance(cmd, C.AcceptSurrender) else "")] += 1
                 log += [type(e).__name__ for e in ev]
             except IllegalCommand:
                 counts["illegal"] += 1
             errs += invariants(st, "%d turn %d p%d %s" % (seed, st.turn, st.current, type(cmd).__name__))
         while st.pending is not None:
-            log += [type(e).__name__ for e in engine.apply(st, _answer(st, r))]
+            cmd = _answer(st, r, endings)
+            counts[type(cmd).__name__ + (str(cmd.yes) if isinstance(cmd, C.AcceptSurrender) else "")] += 1
+            log += [type(e).__name__ for e in engine.apply(st, cmd)]
+        if _over(st):
+            break
         ev = engine.apply(st, C.EndTurn())
         counts["EndTurn"] += 1
         log += [type(e).__name__ for e in ev]
         errs += invariants(st, "%d after EndTurn turn %d" % (seed, st.turn))
+        if _over(st):
+            break
         errs += ["current %d is not a live human" % st.current
                  for _ in [0] if st.players[st.current].control != HUMAN or not st.players[st.current].alive]
         errs += ["moves > 99" for a in st.armies if a.owner != 0xFF and M._s8(a.moves_left) > 99]
@@ -584,3 +771,49 @@ def test_multi_round_fuzz_is_deterministic(game, ai_stubs, seed, opts):
     assert st.hash() == st2.hash() and log == log2
     assert log.count("TurnStarted") >= 6 * 5
     assert len(st.history) == st.turn - 1 and all(len(r["owners"]) == len(st.cities) for r in st.history)
+
+
+# 24 replaced 22 when Begin got its ovl25:0519 card draws (M8b1 review B2): 22 no longer resigns
+@pytest.mark.parametrize("seed", [21, 24, 23])
+def test_fuzz_with_resign_and_surrender_answers(game, ai_stubs, seed):
+    """The same fuzz with Resign sometimes and the surrender offer accepted half the time (strict
+    mode, real M9a steps): deterministic and the invariants hold until the game is over."""
+    logging.disable(logging.WARNING)
+    try:
+        opts = GameOptions(neutral_cities=2, quests=1, diplomacy=1)
+        st, log, errs, counts = play(game, seed, 12, opts, endings=True)
+        st2, log2, _, _ = play(game, seed, 12, opts, endings=True)
+    finally:
+        logging.disable(logging.NOTSET)
+    assert errs == []
+    assert st.hash() == st2.hash() and log == log2
+    assert counts["Resign"] > 0 and "Resigned" in log
+
+
+def _give_side_2_most_cities(st):
+    """Side 2 owns three quarters of the city records: once side 0 has resigned and is out
+    (round end), side 2 is the one human with more than half the cities and well ahead of every
+    computer, so ovl61:1aed offers the surrender (0x15d) and the next turn start asks."""
+    n = len(st.cities)
+    keep = st.city_at(*st.players[0].capital)              # side 0 keeps a city to resign
+    for i in range(n):
+        if i != keep and sum(1 for c in st.cities if c.owner == 2) < n * 3 // 4:
+            st.cities[i].owner = 2
+    refresh_map(st)
+
+
+@pytest.mark.parametrize("seed,yes", [(31, True), (35, False)])
+def test_fuzz_surrender_offer_accepted_or_declined(game, ai_stubs, seed, yes):
+    """Side 0 resigns at once; the surrender offer to side 2 is answered yes or no at random
+    (AcceptSurrender, ovl61:1e4e / 1ecd); deterministic, invariants hold."""
+    logging.disable(logging.WARNING)
+    try:
+        args = (game, seed, 6, GameOptions(diplomacy=1))
+        kw = dict(endings="resign0", prep=_give_side_2_most_cities)
+        st, log, errs, counts = play(*args, **kw)
+        st2, log2, _, _ = play(*args, **kw)
+    finally:
+        logging.disable(logging.NOTSET)
+    assert errs == [] and st.hash() == st2.hash() and log == log2
+    assert "Resigned" in log and "SurrenderOffered" in log
+    assert counts["AcceptSurrender%s" % yes] == 1 and bool(st.flags.get(0x15B, 0)) == yes

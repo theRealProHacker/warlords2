@@ -24,6 +24,7 @@ import numpy as np
 import pygame
 
 from ..formats.tables import parse_mapcolor
+from ..rules.constants import Unverified
 from .exe import ds_bytes, ds_far, ds_words
 from .store import PIC_ENTRY, PIC_TABLE
 from ..ui.screen import IDENTITY
@@ -53,6 +54,25 @@ GHOST_W, GHOST_H, GHOST_AT = 32, 0x1D, (8, 5)        # ovl64:239d..23e3: ashadow
 NAVY_TYPE = 5                                        # ovl64:2985: aboard and not on a port
 PORT = (0, 0, 32, 0x1D)                              # ovl64:1f67: atrans2 (0, 0, 32, 29)
 ITEM = (0x40, 0, 32, 0x1D)                           # ovl64:20b0: atrans2 (64, 0, 32, 29)
+GROUP8_SLOTS = (11, 12)                              # DS:51a9 / 51e4: cache group 8 (picture table +5)
+GROUP8_STANDARD = Unverified(
+    "planted-standard flag of item 11 or 12 (cache group 8's mask / bitmap)", "X44", None,
+    "reachable: ovl47:09f7 sets road bit 0x40 (0b28) with standard p < 8; a computer hero's step "
+    "(0a8b:04c8 -> ovl28:0427) takes every item on the square and never writes 19d9, so the bit "
+    "stays; a later drop (ovl47:0943) or a dead hero's items (ovl36:16cd) leave item 11 / 12 the "
+    "lowest on-map index there, and ovl64:2d7c (items 21..0, 2e66..2eb4) gives it n & 15.  Slots "
+    "DS:4f20 + 0x3b * 11 / 12 = 51a9 / 51e4 are the mask and bitmap records of 15 of the 49 "
+    "pictures with cache group 8 (table byte +5): 45, 46, 50, 54, 62, 69..78.  Loading any group-8 "
+    "picture (0997:00a2 / 0129 / 027e / 034a) first unloads the loaded one (059c; 1012:0975 sets "
+    "+0x34 = 0 at 09bf), the records are zero in the image, and 0f00:0c4d bounds its loops by "
+    "+0x34, so nothing is drawn unless one of the 15 is the occupant.  With one, 0c4d reads rows "
+    "29..57 at x 416 (0c56..0c6a) with no clip to the source (0e68:00f3 loops the passed width / "
+    "height): inside the buffer for scroll / stack / voice / helpgfx / bscroll (deterministic), past "
+    "it into heap memory for movebar0..7 (320x18) and rmapbar (192x21).  Which picture is the "
+    "occupant at an ovl64:1a79 map draw is the EXE's order of ~137 cache calls (0129 x71, 034a x46, "
+    "027e x18, 00a2 x2) against its map draws; this program decodes each picture once and repaints "
+    "every frame in its own order, so it has no load event that matches them.  Provisional: the "
+    "flag is not drawn (the EXE's own result when the occupant is none of the 15)")
 FOG_W, FOG_H, FOG_COLS, FOG_PITCH = 48, 40, 7, 0x29  # ovl64:24e2..251e: hidden mask (v%7*48, v/7*41)
 FOG_FULL = 0x0E                                      # ovl64:1b6e: the black tile, nothing else drawn
 FOG_TABLE_DS = 0x2D56                                # 256 bytes, neighbour mask -> pattern (0xff none)
@@ -177,30 +197,81 @@ class Sprites:
         self.neighbours = tuple(zip(ds_words(exe, FOG_NEIGHBOURS_DS[0], 8), ds_words(exe, FOG_NEIGHBOURS_DS[1], 8)))
         self.city_marks = [ds_words(exe, CITY_MARK_DS + 8 * o, 4) for o in range(9)]
 
-    def standard(self, i: int) -> pygame.Surface:
+    def standard(self, i: int) -> pygame.Surface | None:
         """ovl64:213c: the 32x29 flag of planted item i, (416, 29) of picture slot DS:4f20 +
-        0x3b * (i & 15) through the army mask DS:4ee5 at the same place.  Slots 0-8 are
-        a0..a8; slot 9 is scenery0 (DS:5133), 10 scenery1 (516e), 14 ashadow (525a), each
-        the bitmap slot (+1) of exactly one picture-table entry.  Slots 11 (51a9), 13 (521f)
-        and 15 (5295) are mask slots (+6) and 12 (51e4) the bitmap of cache group 8, which
-        holds whichever of its pictures was loaded last; what the masked blit [DS:69c8]
-        (0f00:0c4d) makes of those is not traced, so they raise."""
+        0x3b * (i & 15) through the army mask DS:4ee5 at the same place, by the masked blit
+        [DS:69c8] = 0f00:0c4d into the OS bitmap DS:6795 (not the screen DS:342a, so the
+        path 0ee6..1121): for each plane p below the source's plane count (+0x34, 1086..109a)
+        0e68:00f3 sets dst = (dst & M) | (src & ~M), M = plane 0 of DS:4ee5, whose bits are 1
+        on the key colour (151d:00cf, 0227..02cd).  Slots 0-8 are a0..a8; slot 9 is scenery0
+        (DS:5133), 10 scenery1 (516e), 14 ashadow (525a), each the bitmap slot (+1) of exactly
+        one picture-table entry: a 4-plane source, the flag cell drawn keyed (`draw_standard`).
+        Slots 13 (521f, ashadow's mask) and 15 (5295, road's mask) are mask records: one plane
+        (1012:0232 passes 1, 151d:00ed) of the picture's size and stride, so only plane 0 of
+        the OS bitmap changes: colour bit 0 becomes 1 where that picture has its key colour at
+        (416..447, 29..57), 0 elsewhere, under the army mask (`standard_bit0`).  Slots 11 (51a9)
+        and 12 (51e4) are the mask and bitmap of 15 of cache group 8's 49 pictures (scroll,
+        stack, voice, rmapbar, helpgfx, scroll2, bscroll, movebar0..7): an item 11 or 12 can lie
+        alone on a flagged square in play; the EXE draws nothing unless the group's occupant at
+        that map draw is one of the 15, and its pixels (heap memory for movebar / rmapbar) when
+        it is (`GROUP8_STANDARD`, register X44): `UnverifiedError`, or None (nothing drawn)
+        with unverified values allowed."""
+        if (i & 0x0F) in GROUP8_SLOTS:
+            return GROUP8_STANDARD.value
         i &= 0x0F
         if i < len(self.armies):
             return self.armies[i].subsurface(STANDARD)
         if i not in self._standards:
-            slot = SLOTS + SLOT_STEP * i
-            owners = self.slot_pictures.get(slot, ())
-            if len(owners) != 1 or owners[0][1] != "bitmap":
-                raise NotImplementedError(f"planted item {i}: picture slot DS:{slot:04x} is {owners or 'unused'} "
-                                          "(ovl64:213c through the masked blit 0f00:0c4d, not traced)")
-            src = self.store.picture(owners[0][0])
+            k = self._slot_owner(i, "bitmap")
+            src = self.store.picture(k)
             x, y, w, h = STANDARD
             cell = pygame.Surface((w, h), depth=8)
             cell.set_palette(IDENTITY)
             cell.blit(src, (0, 0), STANDARD)
             self._standards[i] = _keyed(cell, self.standard_mask)
         return self._standards[i]
+
+    def _slot_owner(self, i: int, kind: str) -> int:
+        slot = SLOTS + SLOT_STEP * i
+        owners = self.slot_pictures.get(slot, ())
+        if len(owners) != 1 or owners[0][1] != kind:
+            raise ValueError(f"planted item {i}: picture slot DS:{slot:04x} is {owners or 'unused'}, "
+                             "not one picture's bitmap or mask")
+        return owners[0][0]
+
+    def is_mask_standard(self, i: int) -> bool:
+        """Slot i & 15 is a picture's mask record (one plane, `standard`)."""
+        owners = self.slot_pictures.get(SLOTS + SLOT_STEP * (i & 0x0F), ())
+        return len(owners) == 1 and owners[0][1] == "mask"
+
+    def standard_bit0(self, i: int) -> np.ndarray:
+        """Plane 0 of mask slot i & 15 over the flag cell ([x, y], True = key colour, 151d:00cf)."""
+        i &= 0x0F
+        k = self._slot_owner(i, "mask")
+        x, y, w, h = STANDARD
+        px = pygame.surfarray.array2d(self.store.picture(k))[x:x + w, y:y + h]
+        return px == self.store.pictures[k].key
+
+    def draw_standard(self, dst: pygame.Surface, i: int, pos: tuple[int, int]) -> None:
+        """ovl64:213c into the 8-bit `dst` at `pos`, clipped (`standard`)."""
+        if not self.is_mask_standard(i):
+            cell = self.standard(i)
+            if cell is not None:                       # None: X44 provisional, nothing drawn
+                dst.blit(cell, pos)
+            return
+        bit = self.standard_bit0(i).astype(np.uint8)
+        put = ~self.standard_mask                      # M = 0: the army sheet's opaque pixels
+        x0, y0 = pos
+        w, h = bit.shape
+        dw, dh = dst.get_size()
+        ax, ay, bx, by = max(0, x0), max(0, y0), min(dw, x0 + w), min(dh, y0 + h)
+        if ax >= bx or ay >= by:
+            return
+        px = pygame.surfarray.pixels2d(dst)
+        area = px[ax:bx, ay:by]
+        sel = put[ax - x0:bx - x0, ay - y0:by - y0]
+        area[sel] = (area[sel] & 0xFE) | bit[ax - x0:bx - x0, ay - y0:by - y0][sel]
+        del area, px
 
     def pennant(self, n: int) -> Rect:
         """Pennant of 1..4 armies (ovl64:0335, DS:2d4e[n-1])."""

@@ -133,6 +133,25 @@ Entry point: attack(x, y) `ovl36:0000` (L 0x67a70), reached from the map click h
   at ovl38:06ed/0712. Counters are not reset between duels: a duel winner carries its
   remaining hits into the next duel.
 
+*(Addition, M5b: the Fight Order dialog.)* [V] ovl38:0de1 (07be:01e8, key of menu 506): popup
+0x0b, DS:0d56 = -1, a 29-byte copy of SCN 0x60b + 29·SCN 0x110 at DS:0d58, DS:166a = 1,
+ovl38:0e4a(0), screen 26 (425 OK, 426 Cancel, 427 Reset, 428 up, 429 down, 430+n slots
+n = 0..26), ovl38:1067. Slot n shows the first type whose row byte equals n (so row values 27,
+28 have no slot: hero and type 5 in every shipped row), ovl64:08be at (n%4·120+88,
+n/4·31+128), ring SCN 0x110+2 when chosen else 1, label "%d." (DS:0d5c) of n+1 at +(40,6).
+Title STRING (0x7f, 0) (font 1) at (320,64), shields ovl64:0bf7 mode 0 at (88,64)/(512,64),
+(0x7f, 1) with the side name at (320,104), (0x7f, 2..4) at y 348/368/388. Buttons: 430+n
+ovl38:1379 (choose / un-choose / swap with the chosen and un-choose), 428 ovl38:11af / 429
+ovl38:1294 (swap with the neighbour, the choice follows), 427 ovl38:116a (row = SCN 0x6f3,
+un-choose), 425 ovl38:10fa (free the copy, ovl17:069c, ovl61:0000(0,0)), 426 ovl38:111c (copy
+back, then as OK). States: 428 disabled when none chosen or at 0, 429 when none or at 26. The
+row is edited in place at every step. HLP word2 45..71 of buttons 430..456: ovl15:01fb ->
+ovl38:1475(n, x, y): with DS:1174 == 0 the type at slot n -> ovl44:14ac record ->
+ovl46:032a(t, w1, w0, w2, w3, x, y), the army-type panel (240x128 at ovl46:1486, POPUP3; name
+at +(112,8), icon ring 1 at +(96,31), Strength/Movement/Time/Cost DS:107c/1089/1096/109f at
++(104,66)r/(120,66)l/(104,86)r/(120,86)l, kind icon DS:45c4 at +(96,103)); ovl15:0189 then
+sets DS:1174.
+
 ### 3.3 Strength pipeline [V]
 
 Notation: terrain class `c` of the battle tile from `ovl38:0000`:
@@ -245,6 +264,86 @@ there in §3.1) and the tile's army-present flag (0x10) is set (ovl36:0472).
   square's first army), ovl67:06eb(DS:5e62); then the medal call ovl36:0498. A stack with < 1
   move is deselected (0b62:08b3 at ovl36:01b1) and the attack ends there, without a message.
 
+### 3.6 Battle display and Military Advisor *(Addition, M5b)* [V]
+
+Human attack, ovl36:0000 (asm 026f..0445; positions are DGROUP words of v1.02):
+
+* ovl36:1836(x, y, 1) before the prelude 0522: ovl65:0227 on the current centre, ovl64:0053;
+  war.pck (picture 11) rectangle DS:0cfa = (0, 0, 128, 120), masked ([DS:69c8], mask DS:56f6),
+  into the map bitmap at ((x - SCN 0x177) * 40 - 40, (y - SCN 0x175) * 40 - 40); view edges
+  (1925..19b1): left column -> source x + 40, width - 48, no - 40; right column (SCN 0x17b) ->
+  width - 48; top row -> source y + 40, height - 40, no - 40; bottom row (SCN 0x179) -> height
+  - 40; the bitmap copied to (16, 30) (14d0:009d); a human side gets war.8SN (ovl58:0206, which
+  waits for the sample to end); pointer hidden 19d7..1a2d. Returns early for a computer side
+  with more than one human and Hidden Map, or with Hidden Map, DS:3254 set and the square
+  unexplored. Nothing redraws the map until ovl61:011f after the medals, so the mark stays.
+* ovl37:0160(0) -> 041c: popup type 8 (DS:06a8: 160, 60, 320, 312, marble); DS:4366 = 0x12a;
+  bshield.pck (picture 38) (32 * o, 0, 32, 0x24) masked at DS:0d3c = (176, 86) for the defending
+  owner nibble and DS:0d40 = (176, 246) for the attacker (0x0f -> column 8). Slots (01a1..02dd):
+  defenders 0..31 in rows of 8 at x = DS:0d1e[i] (216 + 32 i), y = DS:0d14[row] (86, 116, 146,
+  176); the last row of n < 8 centred: x from DS:0d2e (232 + 32 i) for odd n, DS:0d1e for even
+  n, index 4 - (n + 1) / 2 + i; attackers likewise in the row y = DS:0d14[4] = 246. Per unit
+  (02df..0415): aboard (DS:4204 / 41fc) -> war.pck (0, 0xa2, 0x20, 0x12) opaque at (x, y + 10);
+  then ovl64:08be(type DS:4254 / 424c, owner DS:41fb / 41fa, x, y, ring 0, mode 0). DS:42c4 /
+  42c5 are the side counts; 0160(1) (not called by the attack) shows the city defence byte as
+  the defender count with owner 8.
+* ovl37:0094 (00a6..0157): fast = 0; per kill of DS:41b5 (count DS:41b4): one key off the BIOS
+  buffer (0000:38dc / 3708, two getch for an extended key), space bar -> fast for the rest;
+  unless fast ovl58:0181(0) for a dying attacker / (1) for a defender; ovl37:0000(x, y, fast) =
+  atrans2 (picture 9) (0x20, 0, 0x20, 0x1d) masked at the slot, ovl59:0000(fast ? 2 : 5),
+  ovl17:07e4 (the window picture's 32 x 30 at the slot back: the unit is gone); then
+  ovl59:0000(3) and, unless fast, ovl59:0000(5). A kill takes 13 ticks, 5 when fast. Attacker
+  kills explode slot 32 + their count, defender kills slot their count. Then ovl59:01f1.
+* Lines via ovl37:04c5 (SetFont(2, 15, 0, 3), centred at (0x140, DS:4366), + 0x14 each),
+  02f3..042d: won on a city (SCN 0x710 type 10): unopposed (DS:41b2) -> (0x8d, rnd); DS:4148 =
+  hero name of DS:5e5e (2c04:0223 + 0x14 * army +0xa) or the attacker's name, DS:4134 = city
+  name (2c04:1581 + 0x41 * ovl62:044a); hero -> (0x8e, 0) with its name, else (0x8f, 0). Won
+  elsewhere: hero -> (0x90, 0) with its name and (0x90, 1), else (0x91, 0). Lost: (0x92, 0).
+  Then 0a6b, whose loot line (0x93) at 0e18..0e32 is the next line. ovl37:04f6: a human side
+  waits ovl61:10fb(0), then ovl17:069c.
+* ovl59:04f0 with index -1 (ovl59:052f) draws ovl59:02bf(1, n, -1): the line (0x8d, rnd), the
+  capture question's (0x42 / 0x43, rnd) and the advisor's (0x7c / 0x7d, rnd) consume the
+  game's dice. The engine draws the line and the capture question's (rules.combat.attack:
+  BattleEnded "fled_text", CityCaptured "texts").
+* After 0a6b (0445..04f7): ovl37:04f6 closes the window, ovl63:0000(1, 1, NULL) redraws the
+  overview (0453; its box from the view words the prelude 0522 moved), the won square's first
+  army is re-selected (045b..0490), the medals ovl36:2274 (049d), then ovl61:011f(1, 0x10001)
+  redraws map, overview and info area (04a9), then the quest check ovl01:1ded (04bf / 04e2) and
+  the capture question 04f7. Keys typed after the kills' flush ovl59:01f1 (ovl37:0157) stay in
+  the BIOS buffer: the first ends ovl61:10fb's wait at once.
+* Prelude view words (ovl36:0522, 0718..08a2, only when its third argument is not -1, i.e. the
+  human attack, which passes the leader's square before the move): leader not strictly inside
+  (SCN 0x177 < x < 0x17b and 0x175 < y < 0x179) -> centre on it: 0x17d / 0x17f = x / y, 0x175 =
+  max(0, y - 4), 0x177 = max(0, x - 4), 0x17b = min(0x70, x + 4), 0x179 = min(0x9c, y + 4);
+  else one square toward the target per axis: target x > x, 0x17d + 1 < target x and 0x17b <
+  0x6f -> 0x17d, 0x177, 0x17b + 1; target x < x, 0x17d > target x and 0x177 > 0 -> - 1; the same
+  for y with 0x179 < 0x9b / 0x175 > 0. No redraw inside 0522.
+
+Keys and presses of a pop-up screen *(Addition, M5b / M6b)* [V]: 07be:0064 with DS:166a set
+ignores 'A'..'Z' (00bd), presses the first state-1 button of DS:1514 (Esc) / DS:155c (Return)
+(00cc..0122, 08a9:05ab tests byte +4 of the screen's record only); 07be:0444 then returns 0 and
+07be:03ef returns 1 for every code, so the switch cs:0337 (map scrolls, menu letters, the city
+screen's b / c / p / v) is never reached: 0x1b and 0x153 (Del) -> DS:4c3e = 08a9:03f5(1) (no
+BUTTON.DAT record has id 1: index 0) and 07be:0e26(0); 0x181 nothing; every other code the chord
+ovl58:0b5f (0426). Index 0 of every screen table is the group's all-zero first BUTTON.DAT record
+(ovl53:056a copies the records as they are; 08a9:0756 treats 0 as "no button") and ovl53:056a ->
+08a9:0345 clears every state and visibility byte, so 0e26 finds state 0 there and chords
+(0e56..0e7b): Esc without a live listed button and Del chord, they press nothing. 07be:0e26(1)
+(a left press, 08a9:012c) chords on a button of state 0 (pressed) or 2 (disabled). A right press
+(08a9:012c event 3) runs ovl15:0000 for the shown button under the pointer whatever its state
+(08a9:0756 skips only hidden ones, byte +5).
+
+Military Advisor, ovl36:1f19(x, y) (cursor 9, ovl46:0162): nothing with SCN 0x12c == 0; popup
+type 12 (176, 60, 288, 300); SetFont(1) (0x7b, 0) at (0x140, 0x43); screen 25 (424 Done);
+advisor.pck (picture 48) (0, 0, 0x80, 0x82) opaque at (0x100, 0x75); r = ovl36:2065 (19 runs of
+ovl36:124a(x, y, 0), count of signed DS:4132 > 0, / 2 truncating); SetFont(2) (0x7c, rnd) at
+(0x140, 0x102), (0x7d, rnd) at (0x140, 0x116), (0x7e, r) at (0x140, 0x12a). So the verdict is
+the group entry r, 0..9, directly (no thresholds). 424 -> ovl36:2050: ovl17:069c,
+ovl61:0000(0, 0).
+
+BIGARMY.PCK (picture 30) is not drawn by the battle display; its one user is ovl16:0000
+(rectangle DS:05fe, 0997:0129), called from the production screen ovl45:12ac.
+
 ## 4. Movement
 
 ### 4.1 Map words [V]
@@ -344,8 +443,32 @@ DS:6852[i] palette index (count DS:30f6).
   leader's goto copied to all, path search for a human side with a goto), 0b62:09ce (sort the
   moving group), ovl66:0000 -> 0d30 (palette), ovl67:0955(1) (bit 0 on all; 5e5e = the hero in
   the lowest slot).
-* Palette 0d30: square list sorted; index grows except between neighbours with the same
-  nonzero +0x11; selected = in the moving group (2bda clear: the leader alone).
+* Palette draw ovl66:0356 *(Addition, DS:5e00)* [V]: DS:5e62 null -> info area 05a3 (DS:30f8 = 1),
+  no write. Else DS:30f8 = 0 (03a0); DS:2bda clear -> DS:5dfe = 1, DS:5e3e[0] = DS:5e62
+  (03ab..03bc); at the end 070d (055c) -> 0c8c:0912(6862, 6842, 30f6) (0750): DS:5e00 = 100, then
+  the min of cwde(+7) over every entry with 6842[i] != 0 (strict <, no liveness test: a freed
+  record gives its +7 = 0). 070d's other caller 0a8b:0d05 (human move tail, before ovl66:0000
+  and 0356 at 0d0a / 0d0f) is overwritten by those with no reader between. Readers of DS:5e00
+  all test DS:2bda first (0a8b:0839 / 09ff / 0a80, ovl36:0190 / 062d, 0c8c:0158), except the
+  AI's (ovl19:0787 / 0797 / 0ba7 / 0d73, ovl26:0792 / 07a2, ovl29:1a06 / 1526). Engine:
+  `rules.selection.redraw_palette` at the draws commands end in (0b62:04e8, ovl67:01e0,
+  ovl66:0959 / 0a4a / 0a8f / 0acf / 14f3, 0c8c:04fb, 0a8b:0d0f, 0b62:075a); after every command
+  DS:5e00 equals 0912's value whenever DS:5e62 is set, so the dialog redraws (ovl61:0000 /
+  011f) change nothing. Turn start: ovl68:03a4 (after the centring 039c, only while di != 0:
+  di = 0 at 02e6 when Hidden Map is on and more than one live side has 0x0d0 == 0) and
+  ovl68:05a8 (end of 04bd, always reached there) call 0356 too (`rules.turn.human_turn` /
+  `resume`); with the selection cleared at every turn end DS:5e62 is null there in play, so
+  both write nothing. Open: AI turns. 0b62:0ea0 with anything sunk (count [bp-6] > 0, 11ef)
+  nulls DS:5e5e, 5e62, 5e3e[0..7] and zeroes DS:2bda / 5dfe (11f8..1228; DS:5e00 stays), then
+  ovl62:0000 (122b) and, after the message, ovl64:0629(x, y) when x, y >= 0 (127c..128e; only
+  ovl67:0728's call, the turn start passes -1, -1): `rules.movement.sink`.
+* Palette 0d30: DS:2bda (stored) clear -> DS:5dfe = 1, DS:5e3e[0] = DS:5e62 (0d40..0d51, as
+  0356); square list sorted; index grows except between neighbours with the same nonzero
+  +0x11; selected = in DS:5e3e[0..DS:5dfe-1] (0d85..0db8, signed jl). DS:2bda writers: 0c8c:0529
+  (06bd), ovl66:000a (00bd, then 0529), ovl67:0955 (0969), 0b62:06bf (088f, Disband = 0;
+  087d..088f leave DS:5e3e as it was),
+  0b62:0ea0 (1225, sink = 0), ovl29:14d3 (14d6 / 157e); every engine reader takes
+  `Selection.group` as stored (also the UI's command groups and the ants kind ovl64:020a).
 * Apply ovl66:000a (after every palette button): selected armies in palette order become the
   moving group (first = leader), get bit 0 and the leader's goto; ids >= 2 on the palette are
   listed in order of appearance (L); runs of equal palette index: one army -> 0; two or more
@@ -382,6 +505,31 @@ DS:6852[i] palette index (count DS:30f6).
   (fortify, §6.2), ovl67:0113 (0x40 / 0x200 cleared on own armies; DS:3250/3252 = player
   record +4/+6). Call sites ovl68:01b8 / 01c2 / 01cc (computer), 0351 / 035b / 0365 (human),
   0243 / 0252 in ovl68:022c (no fortify there; caller not traced).
+* *(Addition, M5b: View → Stack and View → Army Bonus.)* [V] View → Stack ovl66:0c9c (07be:0235,
+  key of menu 529; nothing without DS:5e62) backs up DS:6862 / 6852 / 6842 / 6832 / 6830 /
+  30f6 into DS:6810 / 6800 / 67f0 / 67e0 / 67de / 3126, popup type 0, screen 18. Its buttons
+  edit the live arrays without the apply step: 336+i -> 157d (as 0963), 344+i -> 166f (as
+  0910), 334 -> 16c5 (as 0a55), 335 -> 1704 (as 0a99), each followed by 17e7 and the redraw
+  0e85; states ovl66:1425 (332 / 333 normal; 334 / 335 only with more than one army; 336+i /
+  344+i for i below the count). OK 332 -> 14d3: close, ovl61:0000(0, 0), then 000a(0), then
+  0356. Cancel 333 -> 14fd restores the backup. A Select Army press on an unselected army with
+  none selected reads an uninitialised register in 157d (si). Drawing 0e85: STACK.PCK DS:30fa
+  masked at DS:3102, the DS:320d format with SCN 0x112 at (480, 66), rows at DS:3106[i] (icon
+  ring (p + index) % 8 + 2, greyed when unselected; medals DS:2fa6 + 8k when w13 == 0; name at
+  x + 48; strength at x + 168; the stack strength for selected armies at x + 184; moves at
+  x + 232; the kind cell at (x + 256, y + 8); the bonus text at x + 304). Stack strengths
+  ovl66:1b9c: over the selected non-aboard armies, heroes add DS:0ce4[min(str + items, 9)] plus
+  command items, the others give a running maximum of w[9+c] (c = ovl38:0000); the sum capped
+  at SCN 0x112; per army 4 when aboard, else min(str (+ battle items for a hero) + w[5+c] for a
+  non-hero, 9) + the sum. The bonus text ovl66:1a07 uses STRING 0xa3 (branch order in
+  `ui/dialogs/stack.py`); 1a07(0x1c, NULL) skips the record fetch and the hero branch and then
+  tests uninitialised stack words. View → Army Bonus ovl66:1e3b (07be:0208, key of menu 522):
+  table[s8(SCN 0x60b + 0x1d p + t)] = t, popup type 0, screen 34 (490 Done, 491 / 492 one row
+  up / down, 493 / 494 six rows, the first row DS:67d8 kept in 0..0x15, so table rows 27 and 28
+  never show; states 1f51), drawn by 1fd2 (title (0xa4, 0), bevel 14d0:02e5((124, 146, 434,
+  186), 4, 2), outline (125, 147, 432, 184), STACK.PCK (188, 0, 216, 22) at (256, 125), six
+  rows: icon ring p + 2 at (128, 148 + 30 i), name (168, 153 + 30 i), w0 at 280, w3 at 328, kind
+  cell at (352, 156 + 30 i), bonus text at (400, 154 + 30 i)). v1.02 has no Bonus detail button.
 
 ## 5. Heroes, sites, quests, items
 
@@ -757,6 +905,48 @@ All [V] from out/asm/ unless tagged.
   battle result (asm ovl36:0498) *(closed, X23: the re-selection runs in ovl36:0000 itself,
   see §3.5)*.
 
+### 5.11 Presentation of heroes and sites *(Addition, M7b)*
+
+All [V] from out/asm/ (positions are DGROUP words read from the user's EXE; implemented in
+`ui/dialogs/{hero_offer,hero_name,hero_inspect,hero_levels,level_up,medal,search_result,sage,
+temple,quest,items,ruins}.py`, `ui/info/site.py`, whose docstrings carry the full lists).
+
+* **Popup type 2** (ovl17:0000(2)): marble with source and destination x shifted by DS:2a8c = 224,
+  the common frame on the whole (80, 60, 480, 312), the overview bitmap in the left 224 px at
+  (ovl17:08c7() = 0x50, 0x3c) (ovl63:04d3; with Hidden Map three colour-3 edge lines on the
+  bitmap first). ovl63:0000(1, ...) adds the city markers, (0, ...) not. Marks on the bitmap:
+  ovl63:1f5f(x, y, k) ATRANS2 DS:2cae + 8k at (max(0, (2x - 2) >> 3 << 3), max(0, 2y - 6));
+  ovl63:05e4 site icons DS:0f28 + 8k (k 2 temple, 1 explored, 3 +0x1b, else 0) at
+  ((2x + 3) >> 3 << 3, 2y - 1), the chosen site boxed in colour 15 (12 x 10); ovl63:158d army
+  marks; ovl62:08cd / 099e / 0a3f the 4x4 mark, 8x8 box and line in colour 8.
+* **Hero offer** ovl47:0d5c is not modal: it draws, activates screen 12 and returns; 287 accept
+  (127e), 288 decline (12af, disabled on turn 1 by 120c), 289 rename (12ce: ovl56:03a6(box, name,
+  15, 176)), 290 / 291 sex (12f9: picture and wording again, the drawn name kept). Lines: STRING
+  97, turn 1 indices 0-3, later 4-7, +8 for a heroine; FHERO / MHERO (pictures 34 / 33).
+* **Promotion** ovl47:0672(army, group, popup 0x10 + level): nothing for a computer side (0723);
+  popups 0x10-0x12 = LEVEL2-4; STRING group 101-103 indices f..f+5 (f = 6 for a heroine), the
+  last with (level + 1, strength, gain, allowance, 2); waits for a release or a key.
+* **Medal** ovl36:24a5: only for a human attacker; popup 0x18 + medals - 1 (MEDAL0-3); the unit at
+  (176, 155); (158, -1), (159, 0) with the type name, (160, -1), (161, m), (162, 0 / 1),
+  (162, 2) "v - 1 to v". The two -1 indices roll the game's dice (ovl59:052f) - not drawn by
+  the engine.
+* **Search** ovl34:0000: every refusal is silent. A human's ruin search: WAR.PCK mark on the
+  square, popup type 4 "Searching" with SEARCH.PCK, lines at (128, 300 / 320 / 340); the waits
+  ovl61:10fb(NULL) only wait (no popup); result buttons screen 13 (292 OK, 293 Take after an
+  item, Return presses Take then). Blessing: ovl61:1160((55, 0) / (56, 0) / (56, 1) n, (56, 2)).
+* **Sage** ovl34:0aa0 / 146f: the visit line (58, 0), 10 ticks, then popup 2 "A Sage!" with
+  (63, 0..4), screen 10 (279 show iff the list, 280 gem, 281 map iff Hidden Map, 282 close after a
+  choice); the place list is the generic ovl51:0000 list (popup 3, screen 2).
+* **Temple** ovl01:0000: popup 9, (19, 0..2) in SetFont(2, 7, 6, 1), screen 15 (328 bless, 329 quest
+  iff Quests, no quest, a hero). **Quest page** ovl01:0167 / 0320 and **reward** ovl01:1520 / 160e:
+  popup 2 with SCROLL.PCK, lines centred at x 440 in SetFont(2, 0, 7, 1), groups 21-27 per type,
+  28-31 for the reward; failures ovl61:1160((g, 0), (g, 1)), g = 32..42.
+* **View > Items** ovl35:0c21: items 8..21 sorted by (type, value), groups 166 / 167.
+  **View > Ruins** = ovl45:0000(4, view centre): the nearest site shown to the side, SPECBITS cell,
+  (113, kind), (114, explored), legend (115, i), three lines of `<scen>\<scen>.SPC` after
+  "#nnn"; close 192 only. **Site right click** ovl46:0fd7: the name in the side's colours,
+  DS:10e5 / 10f9 / 1105 (the last at T + 33).
+
 ## 6. Cities, economy, turn sequence, diplomacy, victory, AI
 
 Evidence is the Ghidra decompilation of the flattened image (`out/rea/decomp/`, viewed with
@@ -879,6 +1069,185 @@ group). ovl58:0000 (music) rolls for a random track only when the mode differs f
 one or the track has ended (ovl58:0011..0020), a wall-clock condition. ovl68:022c has no caller
 in the listing.
 
+*(Addition, engine fidelity round: no pass between two human commands.)* ovl61:2123 returns right
+after ovl68:0259 for a human side (2221..2236). Its callers are ovl61:0118 (Begin, ovl61:0000(x, 1)),
+ovl61:211e (End Turn) and ovl33:0060 (the Settings close of the computer-turn interrupt). The
+event loop 08a9:000e dispatches each event (0726:0009, 07be:0064, 07be:0e26, 07be:04d8) and polls
+again; nothing on that path calls ovl35:09f2, ovl62:0000 or 0555:0d9e. Their other callers are
+commands: ovl62:0000 at ovl24:00c1 / 0155 (AI), ovl34:039b (ruin), ovl36:02ee / 0cf1 / 168a
+(battle), ovl43:0760 (production restart), ovl49:0231 / 0380 / 17e7 (load, Resign), 0b62:0895
+(Disband), 0b62:122b (sinking); ovl35:09f2 at ovl01:1d07 (quest reward), ovl34:11f1 (sage),
+ovl49:037a (load); 0555:0d9e at ovl12:00e3 (road builder), ovl29:0402 (AI), ovl36:0f69
+(take-over), ovl49:0391 / 138a (loads). So a vacated square keeps its owner nibble (0b62:01a7
+clears only bits 0x10 / 0x20), and a city razed during the turn keeps its four cost-map bytes
+(0x99 for an own city: cost 1) until the next side's pass. [V]
+
+*(Addition, same round: DS:5dea is a stored word.)* Only ovl62:03f9 writes it (0404 / 0437), called
+from ovl32:009c (own raze), ovl36:0cb5 (battle), 10c1 (take-over), 1149 (ovl36:10d7, more than one
+live side), ovl41:0efb (history round), ovl42:0343 (every ovl42:02fb: report pages, the history
+scores ovl42:0947), ovl47:007b (hero offer), ovl49:0361 / 136f (loads), ovl61:18b3 (elimination),
+1afa (end states), ovl68:0158 / 01c7 (computer turn), 0234 (ovl68:022c, no caller), 02fe (human
+turn start). The burning of Resign and the raze after a capture call ovl32:016b without it, so
+the word stays stale: Resign's gate ovl49:151c lets the side resign again in the same turn, and
+the menu switches ovl61:0745 / 0886 keep Resign, Build, Production and Vectoring on. [V]
+
+*(Addition, same round: the info area is drawn only by ovl66:0356.)* Its no-selection branch
+ovl66:05a3 prints DS:5dea, gold, DS:5dca, DS:5dda as they are at that moment. The callers are
+0b62:04e8 / 08fa, 0c8c:04fb, 0a8b:0d0f, ovl66:0959 / 0a4a / 0a8f / 0acf / 14f3, ovl67:01e0 /
+0384, ovl36:01b9 / 04cb, ovl68:03a4 / 05a8, ovl61:008f (ovl61:0000(x, 0), 20 callers) and
+ovl61:0168 (ovl61:011f(x, y, z) with z != 0). ovl61:011f(0, 0, 0), the close of the reports,
+history, item, diplomacy, shortcut, hero-level and Settings dialogs, skips it (0140 / 014b /
+0162), so after Report > Gold refreshes DS:5dda the info area keeps the old upkeep until the
+next 0356. [V]
+
+*(Addition, M8a UI pass: presentation and settings around the turn loop, asm re-read.)*
+
+* "Turn %d" pop-up (ovl68:03a9..0444): ovl17:0000(6) = popup type 6, picture 28, whose extra
+  frame (ovl17:0200..04e7) is drawn into the picture: outlines (0, 0, w, h) and (10, 10, w-20,
+  h-20) in SCN 0x0b0[0x110], bands (1, 1, w-2, 9), (1, 1, 9, h-2), (1, h-10, w-2, 9), (w-10, 1,
+  9, h-2) filled with SCN 0x0a0[0x110]; SetFont(1, 15, 0, 3); side name centred at (320, 0x55),
+  "Turn %d" (DS:3263, ovl61:225b) at (320, 0x82); ovl58:0b93; input flushed (ovl59:01f1), DS:166a
+  = 1 during the wait ovl59:0142 (mask 0xd4), close, 155e:0736. With > 1 live human and Hidden
+  Map (di = 0 in ovl68:0259) the overview / view centring / map draw come only after the pop-up,
+  and End Turn blanks map and overview first (ovl61:20fd -> 0a6e: colour 0 over DS:2ab0 =
+  (16, 30, 360, 360) and DS:2aa8 = (400, 30, 224, 312)).
+* ovl61:0000(0, 1) (Begin): ovl61:1732, 17f6, ovl68:0952, ovl53:0000, ...; no live human ->
+  ovl61:1160(STRING (14, 0), STRING (14, 1)); then ovl61:2123.
+* Settings (ovl33): open ovl33:0000(n) (menu 07be:02d9 with 1, ovl25:0479 with 0), popup type 4,
+  screen 9, DS:166a = 1; buttons (jump table 07be:0b0c) 251 close (ovl33:0034: from the menu
+  ovl61:011f(0, 0), else DS:166a = 0, screen 0, ovl61:2123), 252+p -> ovl33:04cc (0x0d0[p] =
+  !0x0d0[p]), 260+p -> 0508 (0x0f0[p]), 268+p -> 053f (0x147[p]), 276 / 277 / 278 ->
+  ovl33:0576(0 / 1 / 2) (music DS:0bee / effects DS:0bec / speech DS:26c8, then OPTIONS.SND).
+  ovl33:0067 disables 276 / 277 without a music / digital driver (DS:37a3 / 37a2) and removes the
+  three side buttons of a dead side; for 268+p it tests `0xd0 | 0x2c04` (a constant, always
+  non-zero) where 0x0d0[p] was meant, so Observe is live for human sides too (no check mark
+  drawn for them, ovl33:039e). Draw ovl33:0137: positions DS:0ae4..0bfc, check box picture 8
+  sources DS:0ad4 (index 0 = ticked), level names DS:0ac4[3 for a human, else 0x0c0[p]].
+  DS:26c8 is the talking advisor's gate too (ovl58:0293), so the speech toggle changes the dice
+  stream of later turn starts; it is DGROUP, not SCN.
+* Tutorial pages (SCN 0x12e set; byte 0x134): 0b62:04f2..063f after a single-click select and
+  ovl67:01ea..0337 after Next (also via Quit & Next ovl67:0393 and Defend ovl67:0409): bit 3
+  clear -> page (25, 3); bit 4 clear and a city (ovl62:044a) on one of the 8 squares DS:2b4c /
+  2b5c around the selected army whose owner byte != 0x110 -> (25, 4); bit 7 clear, terrain
+  SCN 0x710[tile] == 11 under the selected army and its type 0x1c -> (25, 5); each sets its
+  bit; in order, several in one call. In ovl67 a Next that found nothing reads the army words
+  through the null DS:5e62. The move tail 0c8c:01fd: status 2 -> ovl67:08fb, 0b62:08b3, and on
+  turn 1 (25, 9) with no flag (shown at every such move); any other status -> the bit 4 / 7
+  tests. The pages go through ovl61:168d -> 10fb, which waits for mask 0xd4 without a flush
+  before it (the flush ovl59:01f1 comes after), so the release of the click that selected
+  closes the page.
+* 07be:0064 (keys): DS:166c and a key event -> nothing; DS:1174 / 1176 / 1172 / 3700 -> nothing
+  (007d..00a2); the menu keys 1372:0047 only for a key event (second argument 1) with DS:166a
+  clear (00a5..00ba). DS:3700 = a menu is open (1372:0133 / 01da).
+* View words: ovl65:0227 (overview click) stores the centre as given, top / left = centre - 4
+  clamped to 0..0x93 / 0..0x67, bottom / right = top / left + 8; ovl64:0629 clamps the centre to
+  4..0x6b / 4..0x97 first.
+* ovl00:1063 (refused-proposal infamy) has a second caller, ovl25:0379 near the end of the
+  computer turn ovl25:0000 (after DS:0836 = 0 at 0354); after the "no side alive" end state
+  ovl61:1aed exits (0a4c:02b5 at 1c55), so no round-end step follows.
+
+*(Addition, M8b UI: what a computer side's turn shows, asm re-read; `states/phases/computer.py`,
+`ui/turn_bar.py`, `rules/present.py`, `states/runner.py`.  Rewritten for the paused-engine
+design: the screen is drawn from the engine's state at the EXE's draw / wait points, see the
+last item.)*
+
+* Main loop ovl61:2123: per pass ovl59:01f1 (input flush, 2165); a computer side's ovl68:0000 runs
+  between 12bf:07a5 / 0757 (21e8 / 21fd: no pointer during its turn), preceded by the music
+  ovl58:0000(2) (21d4); after ovl61:17f6 and 155e:02ab, DS:166a set (Settings opened by
+  ovl25:045e) ends the loop (220b..2212), also before a human side.
+* ovl61:2074 End Turn: ovl00:1063 (2087), the buttons ovl61:0418 (2092: 0xad..0xb7, 0xba..0xbc,
+  0xf0, 0xf1, 0x140..0x147 to state 2, disabled; 0xb8 / 0xb9 and the army slots 0xe0..0xef are
+  not touched), ovl64:0e68, the selection words cleared, the strip 0aeb (20cb), the map 006c
+  (20c5) and with Hidden Map and more than one live human 0a6e (2110); 17f6, 2123.  Nothing in a
+  computer turn calls ovl61:0174, so the buttons stay disabled until the human turn start's
+  0174 (ovl68:05ad) or ovl61:011f (the hero offer's answer).  Begin (ovl61:0000(0, 1), si = 1):
+  the strip (0076), 0174 (0080), then for si != 0 the same 0418 (009f: the buttons disabled
+  until the first human turn start's 05ad), the overview without Hidden Map (00a7..00b8), no
+  map (005a).
+* ovl68:0000: 0x159 = 0x147[p]; no live human (di) -> 1; > 1 live human, Hidden Map, 0x147[p] == 0
+  -> 0; DS:3254 = exactly one live human and Hidden Map (005b..0074).  Hidden Map: ovl64:0d39 +
+  1558, and for di or (0x159 and !3254) ovl63:2200(p) (00ea); di or (0x159 and !3254):
+  ovl63:0000(1, 1, NULL) (0112, also without Hidden Map); no map draw.  sprintf(DS:3260 = "%s",
+  side name), ovl61:11d1(buf, 0) (013e), ovl61:1291 (0146), ovl61:131b(5) (014d); ovl00:0db3
+  (0153, its messages), ovl62:03f9; no city: ovl68:0952(0, 0), 1291, 131b(25 / 50 / 75 / 100),
+  return (0168..0198).  At the end ovl62:0af3 (0218: the selection frame taken off).
+* ovl61:11d1(msg, t): marble (0, 0x3c, DS:2aa0, DS:2aa6 - DS:2a9e + 0x14) = (0, 60, 360, 32) at
+  DS:2a9c = (16, 403) opaque; SetFont(2, SCN 0x0a0[0x110], 0x0b0[0x110], 3); msg centred at DS:2aa4
+  = (196, 415); t > 0: ovl59:0000(t).  Callers in a computer turn: ovl00:0f65 (t 0x14), ovl36:2238
+  (0x14), ovl36:14db / 16c3 (5), ovl64:18d6 (0x19, only with a live human: 18c3 tests di = live
+  humans, 1769..17a6), ovl61:1a41 (0x64, else ovl61:10fb).
+* ovl61:1291: marble (8, 92, 352, 31) at (24, 435); colour 0 outline (116d:01fd) of (36, 442, 320,
+  22).  ovl61:131b(n): picture 0x47 + SCN 0x110 (MOVEBAR0..7) source (0, 0, (n / 5) * 16, 18)
+  masked (0997:027e) at (32, 444).  ovl25:0000 calls 131b(10) at 00c7 (after ovl25:0386, before
+  Diplomacy) and 131b(15, 20, 25, 30, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95) after the
+  phases move Hero .. vectoring (00f5..0333; none after Diplomacy, quick attack and update hide;
+  20 after move Search also without Hidden Map), 131b(100) after 0a4c:0348 (034e).
+* ovl25:045e: BIOS 0000:0417 & 8 (Alt) or & 3 (Shift) -> ovl33:0000(0) (0479): popup, screen 9,
+  ovl33:0137(-1, 1) (titles in SCN 0x110's colours, the computer side's), DS:166a = 1,
+  DS:0bf0 = 0, return (no modal wait); the side's turn and ovl61:17f6 run on, the loop stops at
+  220b; close ovl33:0034 with DS:0bf0 = 0: DS:166a = 0, screen 0, ovl61:2123 (0060), no 0174.
+  [I] An Alt+E End Turn whose first computer side reaches 045e while Alt is still held opens it
+  too (045e reads the held keys, not the buffer); the scripts end such turns from the menu.
+* Walk 0a8b:04c8 of any stack: per step ovl64:1298 (reveal), on a reveal ovl63:1fed(x, y, 1)
+  (05ea), ovl64:0565 (05f2, not gated: 0629 writes the view words SCN 0x175..0x17f, clamped
+  centre, then 006c), the step wait 05f7..0654 (t - t0 >= 3 ticks, or 10000 polls of
+  151d:008a, or the midnight guard; not gated).  0a8b:0254 / 0476 around the AI's battle: with
+  SCN 0x159, ovl64:0565 before 124a (029a / 03dd / 0489) and after it (02c4 / 0433 when DS:5e62
+  is set, else 006c and 077b:005f, 02cb / 043a).  ovl67:08fb (mark done) ends with 006c (094b);
+  0b62:08b3(1, 1, 1) (deselect, 0a8b:023d): DS:5e62 = 0, ovl62:0af3 (08cd), 006c (08d8).
+  ovl24:10a1 (the AI's redraw, after a delete and after a raze at ovl19:1988): 006c when the
+  side is shown or human and (x, y) is in the view.
+* ovl64:006c: returns for 0x0d0[0x110] == 1 and 0x159 == 0 (0083..0098).  With DS:3254: x, y =
+  DS:5e62's square (00aa..00c6) and then the view centre SCN 0x17d / 0x17f (0106..0128); each is
+  "hidden" when DS:2d56[ovl64:1055(x, y, 1)] == 0x0e, 1055 setting bit k for neighbour k
+  (offsets DS:2efa / 2f0a) off the map (edge argument) or without road bit 7 (bit 5 without
+  DS:3254).  A hidden stack square: return with DS:2eac = 0 unless DS:2eac is set and the square
+  is within 1 (both axes) of DS:2eae / 2eb0 (00c8..00fc); a hidden centre: the same test, and when
+  it passes DS:2eac = 0 and draw (015f); a centre not hidden: DS:2eac = 1 (0169), draw.  Without
+  DS:3254: DS:2eac = 1, draw.  Draw: DS:2eae / 2eb0 = the centre (016f..0184), ovl65:0227(centre)
+  (the words again, the overview box), ovl64:0053 (the view, from road bit 7 with DS:3254:
+  0f76 / 105c / 143f), the copy to the screen, then for DS:5e62 whose cache cell
+  (DS:5ed4[(x - 0x177) * 9 + y - 0x175]) is not 0x0e: ovl62:0afd (single) / 0b27 (DS:2bda) ->
+  077b:0020(x, y, 1 / 2, DS:2b6c[0x110]) and 077b:005f, which draws the frame twice (0161(4) and
+  0161(0): phases DS:124e and DS:124e + 1).  ovl64:0238(x, y) (frame erase, via 077b:003d): in
+  the view, 0x159, with DS:3254 the centre not hidden (1055(.., 0)), the view built and one
+  square copied.
+* ovl63:0000(markers, force, rect): Hidden Map, 0x0d0[0x110] != 0, 0x159 == 0, DS:2d28 == 0 ->
+  return; Hidden Map, computer, 0x159, DS:3254 and a rect -> the box only (0698); markers with
+  DS:2d25 set and force 0 -> nothing; else the bitmap through the fog mask DS:54e3 and either
+  the markers (0ed7, DS:2d25 = 1) or none (DS:2d25 = 0); a rect of at most 8 x 8 squares is
+  widened to the 4-square grid and 4 squares around (1f4a..1f58).  Callers in a computer turn:
+  ovl68:0112, ovl36:1679, ovl26:0360 (sage, (0x159 and !3254) or human), ovl47:020a ((1, 0,
+  NULL): nothing while the markers are on), ovl63:1fed (rect, Hidden Map, (human or 0x159) and
+  !3254: the reveal box, 5 x 5 on a city square, map high byte bit 5 or a flying stack).
+* AI battle ovl36:124a(x, y, 1) display: gates as ai.md §7a.7 (re-read 1281..167e); 1836's war
+  sample only for a human side (1a1a..1a28); ovl65:0227(x, y) at 1474 for show (the view words,
+  a state write, and the box); the result line r == 0 (0x98, side name), hero DS:5e5e (0x8e,
+  hero name 2c04:0223 + 0x14 * record +0xa), else (0x96, side name); show2 / view: 16b3,
+  ovl37:04c5, ovl59:0000(10), ovl37:04f6; show only 16b3 (1621).  ovl37:0094 plays ovl58:0181
+  for any attacker (00d7..010c, unless Space); it takes one key per kill off the BIOS buffer
+  (00ae..00ce) and flushes it after the last (0157).  ovl19:1914 / 19da / 1a5f ("%s is being
+  razed! / sacked! / pillaged!", DS:0788 / 079b / 07af with the city's name) go through ovl36:16b3,
+  which prints with 11d1(.., 5) only when DS:0cf8 (set by the last 124a: show or view).
+* How this is drawn here: the engine calls `rules.present.present(point, **info)` at these
+  places (rules/turn.py, rules/movement.py, rules/selection.py, rules/combat.py,
+  rules/diplomacy.py, rules/victory.py, rules/heroes.py, ai/base.py, ai/phases/assault.py,
+  ai/phases/clean_city.py); without a presenter it is a no-op.  The game runs End Turn and
+  Begin's loop on an engine thread (`states.runner.Runner`, two semaphores: exactly one of the
+  threads runs), one computer side per run (`EndTurn(max_sides=1)`, then `rules.turn.run(state,
+  max_sides=1)`; the same pass sequence as one run); at each point the computer phase draws from
+  the real state (read only) into the pictures it keeps (map, overview, box, info area, battle
+  window) and holds the EXE's wait in frames.  The display words (DS:2eac / 2eae / 2eb0, 0cf8,
+  2d25, the selection frame DS:124c..1254 / 124e, the BIOS key buffer) live in the phase; the
+  state writes of these routines (view words of 0565 / 0629 per computer step and around the
+  AI's battle with 0x159, ovl65:0227 at 124a:1474, DS:3254 in `AiProcess.single_view`) are the
+  engine's; the display words are kept per app (`App.display_words`), so they carry from one
+  End Turn to the next as in the EXE.  An error of any later run point is logged and the state
+  restored to before End Turn / Begin (`Game.run_failed`).  Open: the shield strip ovl68:0952
+  (the menu bar's turn strip, also in human turns, plan M9b) is not drawn; the music
+  ovl58:0000(2) at 21d4 is M10c; the human phase keeps its own selection-frame phase (DS:124e
+  is one word in the EXE).
+
 ### 6.3 Income, upkeep, production  [V]
 
 **Income** ovl62:0372 (L 0x82862): `income[p] = sum(city[+0x2a] for cities owned by p)
@@ -922,6 +1291,93 @@ home city; upkeep = cost/2.
 (ovl43:0e83, ovl29:10a0), not the city owner's. During a turn they are the same side. At
 new game the garrison units of ovl39:00cc are made while 0110 is the first side in turn
 order, so every garrison gets +2 when that side is Enhanced.)*
+
+*(Addition, X36: production of type byte 0xff.)* [V] ovl44:00ff with DS:0e9e = -1 (the city
+screen of a city not producing, an empty slot clicked) writes +0x2c = 0xff and +0x2d = the time
+byte of slot ovl44:0000(city, -1) = the first empty slot. Nothing treats 0xff as "nothing"
+afterwards: the city loop ovl43:04c8..0690 tests owner, +0x2d > 0, gold > 0 and room /
+vectoring only, and ovl43:0dd7 reads no type record: slot = ovl44:0000(city, cwde(+0x2c))
+(0ded..0e02; no empty slot left -> slot 0), +4 = the 0xff byte (0e2e), +6 / +7 = slot moves
+(0e59 / 0e72), +8 = slot strength (+2 cap 9 Enhanced), +0xb = slot cost / 2 (0f08..0f16).
+ovl43:0d4f (the only type-table read of ovl43) runs for transit arrivals only (0156, 0342).
+ovl43:06bd restarts +0x2d with the same slot's time (human sides). So a unit is made exactly
+when the empty slot's time byte is > 0: the scenario file's bytes (0 in most shipped slots,
+non-zero leftovers in ERYTHEA / HADESHA / ISLADIA / RANDOM, e.g. time 5 strength 6 moves 50
+cost 6), or the old statistics of a slot pillaged / sacked (ovl31:0886 / 0941 clear only the
+type byte). Readers of +4 = 0xff:
+* DS:45c4 + 6 t (flies, w17, w18, w19, w13, w15): every reader sign-extends (mov al,[+4]; cwde;
+  imul 6: ovl20, 21, 22, 24, 28, 36, 38, ovl43:0d8a, ovl66, 0a8b:071a / 0763, 0b62:1001 / 11b7,
+  0c8c:05a5 / 085a ...), so it reads DS:45be..45c3, below the table: words 18..20 of the array
+  DS:459a (one of five 21-word arrays 44f2 / 451c / 4546 / 4570 / 459a with count DS:1258),
+  written only by res_077b:0079 / 00c1, which have no caller (no resolved call to either in
+  out/asm/, no near call inside res_077b). They stay the image's zeros: all six flags 0.
+* SCN 0x60b + 29 row + cwde(t) (fight order; ovl38:04c6 / 051a, 0b62:0140 / 0174 / 0b56 /
+  0b7c / 0c8e / 0cb4, ovl64:2b1e, ovl67:0834 / 0851 and ovl66:183f / 1856 through the
+  0b62:0024 row pointer, likewise ovl29:0b93 / 0bae, the leader of 0ae7): the byte before the row, i.e. row - 1's
+  type-28 entry, for row 0 SCN 0x60a = hero slot 39's level/exp byte (2c04:05e3 + 39).
+  0b62:0a03 reads it in the first test (0b56 / 0b7c) and in the swap loop's test (0c8e / 0cb4).
+  0b62:007d (0140 / 0174) compares the best army so far by its byte in the *new* army's row
+  against the value it kept from its own row: equal on a square of one owner, so 007d returns
+  the first army found from the top index. ovl64:2985: the cell's side of the compare
+  (2b42..2b72) uses the cell's 5-bit type field (+0x17 bits 2-6) in the cell's owner row;
+  after a 0xff army won the cell it holds 31 (2b83..2ba6, `+4 & 0x1f`), so the next army is
+  compared with row + 1's byte 2, or for row 8 with SCN 0x712 (the terrain table SCN 0x710
+  follows the fight order); 29 / 30 likewise. The other readers of SCN 0x60b (ovl38 fight-order
+  dialog 0e19..149b, ovl64:2608, ovl66:1e73) index by a loop counter 0..28.
+* ovl44:14ac(cwde(t), buf): no record id equals 0xffff, nothing is copied, `buf` keeps its
+  contents (14b7..14e9: 29 records of 0x3e bytes, id word first, copied by 0000:1d02 on a
+  match). In ovl38:008b the one buffer [bp-0x70..-0x33] serves the four loops in this order:
+  side A bonuses 073b, side B bonuses 0876, side A strengths 0a9d, side B strengths 0bdc; each
+  fetches once per unit as the first statement of its body, before the hero test (type byte
+  DS:424c / 4254 == 0x1c, not the record) and before the aboard test (0abe / 0bfd), so an
+  aboard unit still replaces the record. A 0xff unit therefore uses the record fetched last in
+  that call: its own side's previous unit, at the start of side B side A's last unit, at the
+  start of the strength loops side B's last unit (side A's when B is empty). Words read from
+  the buffer: w5..w8 (strength loops, bytes [bp-0x50..-0x4a]), w9..w12, w14, w15 (bonus loops,
+  [bp-0x48..-0x42], [bp-0x3e], [bp-0x3c]). Before the first fetch of a call it is the caller's
+  stack contents (not determined); the engine uses zeros (`rules.bonuses.RecordBuffer`, X36).
+* ovl64:2b83 (map sprite) `+4 & 0x1f` = 31; 0b62:0966 / 0980 sort with a signed byte compare.
+* UI readers: ovl44:14f4(cwde(t)) leaves DS:4468 unchanged for -1 (no id 0xffff; nothing else
+  writes DS:4468, image zeros), so a type-0xff name is the last name any 14f4 caller looked up.
+  ovl64:08be(t < 0) skips the icon (0b39..0b3f); all army-icon callers sign-extend +4
+  (ovl66:0450 / 102f, ovl46:0c58, ovl40:02bd, ovl37:0401, ovl43:094b, ovl45). ovl46:0626
+  returns for -1 at 0634..0639 before the pointer hide, the screen save and the drawing; its
+  callers set DS:1174 anyway; ovl46:11cf then blits the save bitmap DS:4494 that the last panel
+  freed (1012:0975 zeroes +0x34 only) and shows the pointer unpaired: the contents are not
+  determinable. ovl66:1b9c shares [bp-0x50] between 1c1a (selected, not aboard, non-hero) and
+  1d5d (selected non-hero, before the aboard test); ovl66:1a07 has its own [bp-0x40]. Path ghost
+  ovl64:239d: (-1 % 16) * 32 = -32, (-1 / 16) * 29 = 0; 0f00:0c4d addresses
+  y * stride + (x >> shift), so ghost rows 1..28 are ashadow row j-1 at x 480..511 (type 15's
+  ghost one line lower) and row 0 the bytes before each plane buffer (not determinable).
+
+*(Addition, M9b: the production report list, asm ovl43 re-read.)* [V] ovl43:0000 keeps a list of
+what this start-of-turn production did in the far block DS:4464 (ovl43:076d allocates 0x321
+bytes once per program run, handle DS:0e4c, count byte +0x320 zeroed only at the allocation):
+100 slots of +0x000 kind, +0x064 type, +0x0c8 city, +0x12c dest (signed bytes), +0x190 a far
+pointer to the army record (written, never read).  Each run sets count = 0 (0016), then appends
+in this order: (a) the army loop from the top record down, every vectored army that arrives
+(city 01ee, standard 03aa): kind 0, type +4, city = its home +9, dest = (+0xf >> 1) & 0x7f read
+before 047f clears it (the destination city, or 100 + side); (b) cities 0..count-1, every unit
+made (068b): kind 1 when the city vectors (word +0x31, 05dd; dest = ovl62:044a of the target, or
+SCN 0x110 + 100 without a city there), else kind 2 (dest -1, 0609); type = the new record's +4
+(0653), city = the producing city.  No bound check at 100 slots: every field write re-reads
+the signed count byte, so the 101st entry writes its kind over type[0] and its far pointer's
+offset word over the count byte (the count becomes the low byte of the record offset; the other
+pointer bytes and every later pointer land past the block, on other heap memory) and its type /
+city / dest at that new count; ovl43:06bd then restarts the cities the aliased bytes name
+(plan X40: the block is modelled byte for byte, writes outside it are dropped, a restart of a
+city byte outside the city table is Unverified).  Stalled cities (gold <= 0,
+no room without vectoring) and the neutral production add nothing.  ovl43:0000 runs on every
+side's turn start (human ovl68:0597 only for stage <= 2, computer ovl68:01b3), so the block
+holds the last run's list, whichever side made it; ovl43:06bd (human) restarts the timers of
+the kind 1 / 2 entries.  ovl43:07e5 returns the count (Report > Production, ovl42:02fb case 3);
+only ovl43 touches DS:4464 / 0e4c, so no save or load writes or reads the list: after a load
+in the same program run the report shows the previous list until the next ovl43:0000, after a
+load in a fresh run it is empty (07e5 allocates, count 0).  ovl43:06bd is called when
+ovl43:0000 returned a nonzero signed count (ovl68:059c) and ends with ovl62:0000 (0760) also
+for a negative one.  Engine: `GameState.production_report` (`model.state.ProductionReport`, the
+0x321 bytes; not saved, not hashed; a load starts empty), `rules.reports.production_list`,
+`rules.city.restart_production` (reads the block).
 
 ### 6.4 Vectoring  [V]
 
@@ -967,6 +1423,31 @@ pillage and sack buttons disabled when they would yield 0). The computer chooses
   `loot = gold[d]` if `d` owns fewer than 2 cities, else `gold[d] / cities[d]`; then
   `loot = max(loot/2, 0)`; `gold[attacker] += loot; gold[d] -= loot`. The square's fortify bit
   0x2000 is cleared. [V]
+
+*(Addition, M5b: the capture question ovl31:0000.)* [V] Called as ovl31:0000(DS:4148, DS:4134,
+DS:41fb, city) from ovl36:04f7 when the quest check at ovl36:04e2 returned 0. Lines (0x42, rnd)
+with DS:4148 and (0x43, rnd) with DS:4134 (0x42 drawn first); popup 7 (160, 90, 320, 200,
+victory.pck); SetFont(1) (0x41, 0) at DS:0a40 = (320, 93); SetFont(2) the two lines at
+(320, 140) / (320, 160), (0x41, 1) / (0x41, 2) at (320, 180) / (320, 200); screen 11: 285
+Occupy (07be:08a6 -> 03fe), 283 Pillage (08b6 -> 046b), 286 Sack (08ae -> 035e), 284 Raze
+(08be -> 029f). 07be:0001(old, new) replaces the first `old` in the Return list DS:155c: 284,
+283, 286 -> 285; with Quests on and an active quest whose hero (+0x1107) is DS:5e5e: type 5 on
+this city -> 285 -> 284; type 6 -> 285 -> 286 when 07d0 != 0, else 285 -> 283 when 0834 != 0;
+Esc (DS:1514) holds 285. States: 283 normal iff 0834 != 0, 286 iff 07d0 != 0, else disabled.
+Tutorial: SCN 0x12e and DS:0a54 == 0 -> DS:0a54 = 1, page FILE.DAT (25, 10) (ovl59:0505,
+ovl61:168d), once per program run. Occupy: ovl17:069c, ovl61:011f(0, 0, 1), 1ded(4, ...); 0 ->
+ovl31:043a = ovl45:0000(2, x, y) (production screen). Pillage / Sack for a human: the result
+popup ovl31:0508(0 / 1): popup 12 (176, 60, 288, 300); SetFont(1) (0x44, kind) at (320, 64);
+SetFont(2) (0x45, kind) with the city at (320, 115), (0x46, 0) with DS:4114 (gold) at (320,
+135), (0x47, DS:4118 != 1) with DS:4118 (emptied slots) at (320, 165), (0x48, DS:4116 != 1)
+with DS:4116 (pillage: filled - 1; sack: 1) at (320, 185); 14d0:02e5((184, 220, 272, 130), 4,
+2) and ((185, 221, 270, 128), 2, 4) (top / left in the first colour, right / bottom in the
+second, drawn in the order that gives the corners the later one); (0x44, 2) / (0x44, 3) left at
+(192, 230) / (368, 230); per emptied slot i: ovl64:08be(type DS:411a[i], SCN 0x110, 208,
+250 + 30 i, ring 1), the type name (ovl44:14ac) at (248, 256 + 30 i), DS:0a66 with DS:410e[i]
+(|w4| / 2) at (368, 256 + 30 i); empty icons (type -1, ring 1) up to row 2; ovl61:10fb(0); two
+ovl17:069c. Raze: the message DS:0a56 with the city name through ovl61:10fb (popup 5),
+ovl64:006c, ovl32:016b, ovl17:069c, ovl61:011f(1, 1, 0).
 
 ### 6.6 Diplomacy  [V] unless noted
 
@@ -1097,6 +1578,36 @@ not traced (the button handlers live outside these functions). [U]
   diagonal = all of a side's losses; words: unit, w13 unit, hero, aboard, standard; ovl36:1aff).
   [V]*
 
+*(Addition, M9b: the victory button, the end-state waits, the shield-strip calls, signposts.)*
+* *The victory screen ovl61:1fbd only sets 0x157 (1ff6) and returns with the screen up; Hidden
+  Map goes off when its button 0x1e3 is pressed (07be:0abf -> ovl61:2004: 0x124 = 0 at 2026,
+  then ovl61:011f(1, 1, 1), ovl68:04bd(0) at 203e).  Engine: `Victory` is a pending question,
+  answered by the command `CloseVictory`.  [V]*
+* *End-state waits in ovl61:1aed: no side alive -> ovl61:1160(S(12, 0), S(12, 1)) at 1c28,
+  1160(S(12, 2), S(12, 3)) at 1c4f, each a two-line popup 5 waiting for a key, then 0a4c:02b5
+  (1c55) ends the program; no human left -> 1160 (13, 0 / 1) at 1c8d and (13, 2 / 3) at 1cb4;
+  the lone computer -> S(15, 0) with its name through ovl61:10fb at 1d71, before d0 = 0
+  (1d80).  Engine: present points "no_players", "quit", "no_humans", "winner".  [V]*
+* *The shield strip ovl68:0952(full, quiet) is called at ovl61:0034 (1, 1, Begin: after 1732 /
+  17f6, before ovl53:0000), ovl61:183f (1, 0, after ovl41:0d60 in the round end), ovl68:0374
+  (0, 0, human turn start, after ovl62:0af3 at 036a, before ovl64:0629 at 039c), ovl25:0064
+  (0, 0, computer turn), ovl68:016d (0, 0, a computer side without cities) and ovl49:03b0 (1, 0)
+  / 03bb (0, 0) (load).  Engine: present point "strip" with `at` = the call address at 183f,
+  0374 and ovl25:0064 (016d is inside "no_cities"); Begin runs in `rules.setup.new_game`, which
+  has no presenter, and load is M10b.  [V]*
+* *Signpost ovl13:01a4: DS:5e62 set, terrain SCN 0x710[tile of its square] == 9, the first
+  CURRENT.SGN record with its x, y (DS:3f9a = index); else nothing.  The line editors (buttons
+  422 / 423, ovl56:03a6(rect, record +4 / +0x36, 0x1e, 0xd8)) start from an empty field
+  (03d2..03eb: strcpy of DS:2374 = "", si = 0 at 043b), not from the record: Return (0575)
+  copies the typed text over the line, also an empty one; Esc (045b) copies the record into the
+  buffer first, so the line stays as it was.  A key is typed only when 0x20 <= key <= 0x7a
+  (047f..048e), fewer than 0x1e - 1 = 29 characters are typed (04c1..04c7) and the width of the
+  text typed so far is < 0xd8 = 216 px (04b6..04cf, 11e2:0a8e in font slot 2).  So a line is
+  the old one or at most 29 typed characters in 0x20..0x7a.  OK 421 (ovl13:0486) writes the
+  whole buffer back to CURRENT.SGN.  Engine: `rules.signs.sign_at`, command `EditSign`
+  (`World.signs`, saved with the game) with the character rules; the width rule is the UI
+  editor's.  [V]*
+
 ### 6.8 Computer players  
 
 Levels [V]: three, selected per side by 2c04:00c0 = 0/1/2 and mapped to the card letter
@@ -1180,6 +1691,45 @@ The signs of ViewEnemies/ViewProduction are as coded. [V]
   *(M9a: surrender, rating table and history traced, §6.6 / §6.7 additions; 0x116 is left to
   the AI research.)*
 * City income for scenario maps comes from the scenario files (+0x2a), not from a formula.
+
+### 6.11 The city screen (Addition, M6b)  [V]
+
+Re-read from out/asm/ (ovl45, ovl44, ovl63, ovl62, ovl46, ovl32, ovl56, ovl16, ovl17, 07be, 0726,
+1133); the drawing details are in the docstrings of `ui/dialogs/production.py`, `city_info.py`,
+`raze_confirm.py`, `rename_city.py` and `ui/info/city.py`.
+
+* Entry ovl45:0000(mode, x, y), modes 0 City Info (any owner, ovl62:04fa(x, y, 0x0e, 1)), 1 Build,
+  2 Production, 3 Vectoring (own city, ovl62:04fa(x, y, SCN 0x110, 1)), 4 a site (ovl62:06fd, M7b).
+  Callers: the tower cursor ovl46:011c (2 own / 0 other), the site cursor ovl46:0106 (0 / 4), the
+  keys b / c / p / v / '.' (07be:019a / 01b5 / 0210 / 024d / 0281, at the view centre SCN
+  0x17d / 0x17f; the menu entries 524-528 carry those keys; only from the main map: while
+  the screen is up (DS:166a) 07be:03ef chords them, see "Keys and presses of a pop-up screen",
+  §3.6), the turn-1 screen ovl68:0588 (2),
+  Occupy ovl31:0461 (2), the tabs 193-196 (ovl45:033b / 0393 / 0367 / 037d) and the screen's own
+  map clicks.  DS:0e94 = 0 at every call; the same mode and city while DS:166a is set refresh the
+  buttons only (ovl45:03a9), except mode 1; DS:0e9e (chosen type) is set from +0x2c / +0x2d in
+  modes 1-3 only.
+* ovl62:04fa(x, y, owner, hidden): best = 1000, scan in table order, with Hidden Map and `hidden`
+  only cities with one of their four squares passing ovl64:15ff(1); strictly nearest by 0a8b:0acc;
+  owner filter unless 0x0e.  ovl62:0651(x, y): ovl62:04fa(x, y, SCN 0x110, 0), replaced by SCN
+  0x110 + 100 when the standard (ovl47:0b47) is strictly nearer.
+* Popup type 2: marble from source x DS:2a8c = 224 at (304, 60), the frame of the full
+  (80, 60, 480, 312); the map at (ovl17:08c7() = 0x50 while popup 2 is the top popup, else 0x20,
+  0x3c).  ovl63:0000(a, b, rect): with a = 0 no city markers (the popup's own call at ovl17:067d).
+* Pages, buttons, map pictures, the ovl44 production / vector actions and the Build Production
+  dialog: `ui/dialogs/production.py`.  The screen draws pages and map only at these calls; e.g.
+  ovl44:072e ends with ovl45:0000(3) on the same city, which only refreshes the buttons, so the
+  page (in-transit and incoming armies) keeps what it showed before the click.
+* ovl44:1544 (slot sort by |w4|) runs when the Build Production dialog closes (ovl44:0eca), not
+  after each purchase; ovl44:0ee3 advances DS:0e86 to the next slot when it is empty.
+* Rename ovl56:0000 is the input variant of the confirmation box (popup 1, screen 5, 191 = the
+  field, DS:58d0 = 0); its editor ovl56:03a6 starts empty and takes at most 14 characters (limit
+  15 - 1) while the text before the new character is narrower than 0x80 px.
+* Raze from the screen ovl32:0000 -> ovl56:0088 (four lines) -> ovl32:0061 (infamy
+  rnd(1, 25, 0) + 25, `rules.city.raze_own`) -> ovl45:0000(0) of the razed city; no ->
+  ovl45:0000(1).
+* Right-click city panel ovl46:0c73(city) after ovl46:1201 (map square or overview pointer).
+* Tutorial pages (25, 1), (25, 6) at open and (25, 2) at close: plan register X09.
 
 ## 7. Structures established in sections 2-4
 
@@ -1408,6 +1958,10 @@ for every city, slot s in 0..3, stopping at the first type < 0:
 ```
 So a new game always discards the scenario file's per-city slot statistics and Navy slots:
 it keeps only the slot types, re-reads the statistics from ARMYTYPE and perturbs them at random.
+*Correction (M6b review): the statistics of empty slots (type 0xff, also Navy slots cleared here)
+are not rewritten - they keep the scenario file's bytes at their position (the compaction moves
+type bytes only) - and they are read: ovl44:00ff with DS:0e9e = -1 sets +0x2d to the time byte of
+the first slot of type 0xff (ovl44:0000).*
 
 ### 9.5 Explored map, AI territories, garrisons
 
@@ -1524,3 +2078,163 @@ territory split (ovl29:024d, 02d6); garrison n (ovl39:0174); infamy (ovl53:0275)
 Open: what 2c04:0116 and 0x10f3 mean; the 9×9 tables of ovl64:1931/113b; the file reads
 of ovl57:0323 in detail; the details of the Active rule (ovl29:0fd5); where starting items
 0..7 lie before turn 1 (§5.5).
+
+*(Addition, Game Start face roll [V].)* The stream does not start at the loader. ovl59:02bf
+seeds itself on its first call only (DS:2678 -> ovl59:0356), and no roller lies on the start-up
+path (08a9:0219..024c: ovl14:02fb, ovl53:056a, ovl54:0341, ovl59:0a1b; none is a caller of
+02bf, and ovl59:052f rolls rnd(1, n, -1) only for a negative STRING, FILE or ERROR.DAT entry, at 058b..0595). So the
+first rolls of a run are the talking faces of Game Start. ovl60:0000 with `draw` (08a9:024c
+start-up, ovl57:0ee0 the setup screen's Main Menu) calls ovl58:026f(2) at 0109; jump table
+0b17 sends 2 to 0838, and both branches (no digital driver 0845 -> 0854 -> 0944, digital
+085d -> 0939 -> 0854 -> 0944) reach rnd(1, 30, 10) at 094c, the blink counter (si, 0954).
+The speech files are FILE.DAT (0x3b, 1) (caption, 083f) and (0x3b, 0) (sample, 085a), fixed
+entries, so 052f adds no die (it rolls rnd(1, n, -1) only for a negative entry of STRING,
+FILE or ERROR.DAT, 04f0 / 0505 / 051a). ovl60:060f with DS:28c8 (random map) calls 026f(0) at 0621
+(087b: (0x3c, 1) / (0x3c, 0) -> 0944), also one roll. The
+only exit before 094c is DS:26c8 != 0 (talking advisor off, 0293); 071b..0826 has no roller.
+Then ovl57:0000 loads and ovl63:232b draws its 256 rnd(1,3,1) at 2479..2492 (si < 0x100).
+Order with the talking advisor on: face(2) [, Begin random map face(0)], 256 loader rolls,
+quotation (ovl57:0fe8), Random Characters, Begin face(1) (ovl57:0e2c); each Main Menu ->
+Begin adds another face(2), 256, quotation, and so on. The music on this way draws no die:
+ovl58:0000(0) before the face (ovl60:00fb / 00fd) and at the setup entry (ovl57:003a / 003c)
+reads FILE.DAT (8, 0) / (7, 0), Begin's ovl58:0000(11) (ovl57:0e24 / 0e26) (19, 0) / (7, 0);
+the modes that roll (1, 2, 3, 5, 6) are listed in register X32. Modelled by `states.menu.session_dice` and
+`NewGameConfig.rng_state`.
+
+*(Addition, planted-standard slots 11 / 12, register X44.)* ovl64:2d7c scans items 21..0;
+an item on a square with road bit 0x40 (2e66..2e78) writes (n & 15) << 1 into the cell
+(2e90..2ead), so the lowest such index wins. An item 11 or 12 can be the lowest one on a
+flagged square in play: Plant (ovl47:09f7) sets the bit with standard p < 8 on the square;
+a computer hero's step (0a8b:04c8 -> ovl28:0427) takes every item there and writes only
+the item records (0511 +0x16 = 3, 055a +0x17), so the bit stays; a later drop (ovl47:0943)
+or a dead hero's items (ovl36:16cd) put item 11 / 12 there. Slots DS:51a9 / 51e4 are the
+mask and bitmap records of 15 of the 49 pictures whose table byte +5 (DS:1f5b) is 8 (45, 46,
+50, 54, 62, 69..78, all with a mask, movebar0..7 in TERRAIN<n>; the other 34 have records of
+their own). Drawing or loading any group-8 picture through the cache (0997:00a2 / 0129 /
+027e / 034a, 0158..0171) first unloads the group's loaded picture (059c: flags &= ~4,
+1012:0975 frees bitmap and mask and sets +0x34 = 0 at 09bf..09c2), then loads (03a9);
+0997:0066 (ovl57:0014, ovl49:0449) unloads the pictures of directory != 0 (the movebars).
+Both records are zero in the image, and 0f00:0c4d bounds its lock, plane and unlock loops by
+the source's +0x34 (0ce9..0d25, 0f8e..109a), so with none of the 15 loaded (before the first
+load, after any other group-8 load, after 0066) nothing is drawn. With one of them loaded,
+0c4d reads rows 29..57 from x 416 (offset sy * stride * 2 + (sx >> shift), 0c56..0c6a); it
+does not clip to the source (it compares the record's +4 / +6 with DS:34e7 only to choose the
+path, 0ca1..0cc8), and 0e68:00f3 is a word loop bounded by the width and height passed to it.
+The read stays inside the planes for scroll (256x252), stack (400x112), voice (352x442),
+helpgfx (512x110) and bscroll (336x347), rows wrapping where the width is below 448, so it
+depends only on the picture; for movebar0..7 (320x18) and rmapbar (192x21) it runs past the
+plane buffers into heap memory (scroll2 is missing from the game copy used here). Which
+picture is the occupant at a map draw is the order of the EXE's 137 cache call sites
+(0129 x71, 034a x46, 027e x18, 00a2 x2) against its map draws.
+
+## 10. Save / Load / New Game / Quit (ovl49) *(Addition, M10b)*
+
+Read from `out/asm/ovl49.asm` (019d..0e5f), `ovl29.asm` 0da9 / 0dff, `ovl25.asm` 04c5..05b9,
+`ovl60.asm` 0000, `ovl61.asm` 0000, `ovl64.asm` 1927 / 1931 / 113b, `res_070b.asm`,
+`res_0555.asm` 0350 [V unless noted].  Engine: `rules/saveload.py`.  File I/O of res_070b:
+0006 open / create, 003a close, **004e write (ah = 40h)**, **006d read (ah = 3Fh)**, 00a9 lseek.
+
+### 10.1 Entry points
+
+ovl49 stub 307f: 2f -> 019d (New Game, menu 500, Alt+N 0x131), 7f -> 0203 (its *yes*
+callback), 25 -> 093b (Save Game 501, Alt+S), 2a -> 026b (Load Game 502, Alt+L; Game Start
+button 101 through ovl60:05e3), 34 -> 0000 (Quit 505, Ctrl+Q), 89 -> 0a46 (the save
+writer), 98 -> 0414 (the load), 8e -> 0995 / 93 -> 02d3 (the list callbacks), 4d -> 0e25 (any
+game slot used), 52 -> 0e42 (any map slot used), 39 -> 0e5f (slot table read at start-up,
+res_0a4c:0250).  0a09 (stub 66) has no caller and no pushed pointer in any listing.
+
+### 10.2 Save, ovl49:0a46(desc, map_flag, path)
+
+The slot table first (0a64 strcpy, 0a70 DS:4712[DS:128c] = 1, 0f4c writes FILE.DAT (4, 0)),
+then the file FILE.DAT (28, DS:128c) is opened (0ab9; failure: nothing more, the slot stays
+marked used).  Writes in order: DS:5d64 0x54 (0ad1, the SCENARIO.DAT record copy: +0x3c the
+directory DS:5da0, +0x44 the compare field DS:5da8), 2c04:0000 0x2ee1 (SCN, 0ae3), 1e1d:0000
+0xde70 (map words 0x8880 + 1000 army records x 0x16, 0af5), 19d9:0000 0x4440 (roads, 0b07),
+the buffer of handle DS:1270 0x4440 (explored layer, 0b29); CURRENT.SGN, [RANDOM.SPC,
+RANDOM.CTY when SCN 0x120], CURRENT.HST as a 4-byte length and the bytes (0b46..0d3c); unless
+`map_flag`, ovl29:0da9 (0d4b): the 8 AI blocks (0x42c each) and the neighbour table (0x4b0).
+No game state and no run word changes besides DS:128c / 128e and the slot table.
+
+### 10.3 Load, ovl49:0414(slot, game, rebuild) and ovl49:02d3
+
+0414: (0424..0441) compare string = "" (DS:129f) when DS:28c6 or not DS:2a86, else DS:5da8;
+0997:0066, ovl64:1927 (DS:6469 bit 0 off), ovl64:1931 (DS:2f1a = 1, 9x9 tables DS:61e7 / 5f41
+&= 0x1f); (0458..04d7) army records 0..9: owner 0x0f, x = y = -1; DS:5e5e, 5e62, 5e3e[0..7]
+= 0; progress scroll (popup 0x17, STRING 133 / 134); ovl64:113b (explored layer and road bits,
+§9.5); open FILE.DAT (28 / 26, slot) mode 2 (0612), **failure jumps to 08b1**; reads (006d)
+in the save's order with the progress at 20 / 30 / 40 / 50 / 60 / 70; **SCN 0x130 = 1**
+(0891); `game`: **ovl29:0dff** (08a4): its first ovl25:056c runs 04c5(1) -> 0519 (the AI dice,
+on the loaded SCN) when DS:0832 == 0, then reads the blocks and the neighbour table and calls
+**0555:0350** (path cache clear, only when allocated, DS:00de); close; 80; SCN 0x124 ->
+ovl63:2200 (fog); 0997:034a(7); 90; `rebuild` or strcmp(compare, DS:5da8) != 0 ->
+**ovl63:232b** (256 rnd(1, 3, 1)), return 1; SCN 0x120 -> ovl45:1de4; 100; close the scroll;
+ovl55:0000(1).  So the dice of a fresh-run load are the 0519 draws, then the 256.
+
+A failed open leaves the wipe on the live game (records 0..9, the selection pointers, 113b),
+skips SCN 0x130, the AI read and the path-cache clear, compares DS:5da8 with itself (in a
+game: no rebuild; from the Game Start / Setup screens: rebuild unless the field is "") and
+02d3's sequence runs on that game.
+
+02d3 after 0414 (0332..040c): ovl48:0000; DS:2a86 and rebuilt -> ovl61:0a6e, ovl65:0698;
+DS:28c6 or not DS:2a86 -> ovl65:0000; **ovl62:03f9, 02bf, 0372**; **ovl35:09f2(SCN 0x110),
+ovl62:0000, 0555:0d9e(SCN 0x110, 1)**; ovl61:0000(DS:28c6, 0) (DS:2a86 = 1, the game screen,
+ovl66:0356 at 008f; with new-game 0 it returns before 0118: no main-loop pass); DS:28c6 = 0;
+ovl68:0952(1, 0), (0, 0); STRING (47, 1) with the side's name -> ovl61:10fb; ovl64:006c;
+ovl62:0af3; ovl58:0000(1).  The game resumes mid-turn in the human phase of SCN 0x110: no
+turn start.  Cancel of the list: DS:28c6 ? ovl60:0000(0) : DS:2a86 ? ovl61:0000(0, 0) :
+ovl57:0000(0, 0, 0, 1).
+
+The list quirks [V asm, not run]: 026b lists only the used slots, compacted, and 02d3 passes
+the *entry index* to 0414 as the slot (DS:4bfc, the entry's slot, is not read in ovl49 /
+ovl51); the preselected row DS:128e is shared with the Save list, and ovl51:0000 shifts every
+row (also the -1 ones) while the chosen row is >= 5, so rows past the count show the name
+buffer DS:483c as an earlier list left it and are loadable.
+
+### 10.4 What a load keeps from the running program
+
+Not in the file, so a load leaves them as the run has them: the dice stream DS:3d84 / 2678;
+the AI process words DS:0832 / 0836 / 40f2 / 40ee / 40c0 / 07c6 / 3254 and the raze result;
+the search field DS:3f86; the battle arrays DS:41fa..436a and DS:4160; the production report
+block DS:4464; the army type table (loaded once per run); DS:16a6; the selection words
+DS:5dfe / 5e00 / 2bda / 5dfc / 5dfa / 3250 / 3252 / 6862 / 6842 / 6852 (only the pointers
+DS:5e62 / 5e5e / 5e3e are nulled); the overview bitmap (unless 232b runs); DS:0a54, DS:5c38;
+DS:128c / 128e / 1290 and DS:483c.  Recomputed: DS:5dca / 5dda / 5dea, the cost map, the map
+words.  Cleared (game load only): the path cache.
+
+### 10.5 New Game, ovl49:019d -> 0203
+
+019d asks (ovl56:0088, STRING group 45) with 307f:007f = 0203 as *yes*.  0203: ovl45:1de4;
+0b62:03be on army records 0..999; ovl62:0000; ovl64:1927, 1931; ovl65:01ff; ovl64:113b; DS:2a86
+= DS:166a = 0; ovl62:0af3; ovl60:0000(1) (DS:28c6 = 1, music mode 0, the talking face
+ovl58:026f(2), whose rnd(1, 30, 10) comes only when the advisor talks: 026f returns at once
+when DS:26c8 != 0, 0293..029a); **ovl25:0519** (all eight AI blocks re-initialised from the
+abandoned game's SCN, with their dice; DS:0832 = 1).  The abandoned game stays the run's
+memory: a later load and a later Begin both take the run words from it (§10.4, §10.7), a
+later Begin also the AI heap blocks.
+
+### 10.6 Quit, ovl49:0000
+
+DS:2a86 == 0 -> 0072 at once; else ovl56:0088 (STRING group 44) with yes = 0072, no =
+ovl34:1434 (the game screen redraw ovl61:0000(0, 0)).  0072: ovl58:026f(4), then 0a4c:02b5
+(text mode, music off, vectors back, mouse, `printf(DS:27c9, DS:27f8)` one console line,
+exit(0)).  Nothing is written on exit.
+
+### 10.7 What a Begin keeps from the running program
+
+A Begin in a run that had a game (after New Game, or after the end of a game) starts from the
+run's memory as a load does [V grep of the writers]: nothing in the scenario loader / Begin
+(ovl57), in ovl61:0000(x, 1) (1732, 17f6, ovl68:0952, 0174, 0aeb, 0a9d, 0418) or in
+ovl53:0000 writes the path cache DS:3f7e (0555:0350 has only the callers 0555:034b, the
+allocation, and ovl29:0e51, the load), the battle arrays DS:41fa..436a and DS:4160 (read by
+the attack prelude ovl36:0522), the selection words DS:5dfe / 5e00 / 2bda / 5dfc / 5dfa /
+3250 / 3252 / 6862 / 6842 / 6852, the caches DS:5dca / 5dda / 5dea or the report block
+DS:4464; the army type table is read once per run (ovl44:112f).  ovl53:0000 writes only:
+DS:16a6 = 1 with Hidden Map and exactly one human (006f..007c; otherwise the old value
+stays), the army records 999..0 owner 0xff and x = y = -1 (00c1..00fe; every other byte stays,
+so 0b62:0309 hands out records with the old game's +0xe bits 4-7 and the bytes the creators
+do not write), and the selection pointers DS:5e5e / 5e62 / 5e3e[0..7] (0100..0120).  The
+search field and the cost map are rewritten by the set-up's own searches (territories,
+neighbour table), the overview bitmap by the loader's ovl63:232b.  Engine:
+`rules.setup.new_game(..., run=rules.saveload.run_part(previous game))`,
+`rules.saveload.begin_carry`.
+

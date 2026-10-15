@@ -7,7 +7,11 @@ Chord (ovl58:0b5f, `audio.effects.chord`) sites of the input dispatch:
   not 'A'..'Z' (ignored at 07be:00bd), not ^W (07be:0430) and not one of the 46 codes of
   its switch table 07be:0337 (`KEY_CASES`).  Esc and Return first look for a live button
   of the lists DS:1514 / DS:155c (07be:00cc / 0104); no screen here has one, so they chord.
-  Not modelled: the early exits on DS:166c / 1172 / 1174 / 1176 / 3700 (07be:006f..00a2).
+  While a left press is held on a button (DS:166c, `ButtonRow.held`) a key does nothing,
+  menu bar included (07be:006f..007a returns before 1372:0047 at 00b5).  Not modelled: the
+  early exits on DS:1172 / 1174 / 1176 (map drags, none on these screens) and 3700 (07be:007d..00a2).
+* a right press over a button opens its help unless a left press is held on a button
+  (08a9:0143, `ui.keys.right_help`).
 
 Quit (menu id 505) is ovl49:0000 (07be:02ea): before a game (DS:2a86 = 0, set by
 ovl61:0000) it calls ovl49:0072 at once, in a game it opens the confirmation ovl56:0088
@@ -24,6 +28,7 @@ from ..audio import effects, voice
 from ..model.newgame import NewGameConfig
 from ..rules.rng import Rng
 from ..ui import registry
+from ..ui.keys import right_help
 from ..ui.layout import NORMAL
 from ..ui.menubar import TitleBar, title_bar, with_codes
 from ..ui.widgets import ButtonRow, draw_pointer, kit
@@ -145,9 +150,7 @@ class ScreenHost(BaseState):
             if self.dialogs:
                 return
             if e.type == pygame.MOUSEBUTTONDOWN and e.button == 3:
-                b = self.buttons.at(e.pos)
-                if b:
-                    registry.right_click_handler("button")(self, b.id, e.pos)
+                right_help(self, self.buttons, e.pos)
             elif e.type == pygame.MOUSEBUTTONDOWN and e.button == 1 and self.bar.bar.press(self, e.pos):
                 continue
             elif e.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION):
@@ -158,7 +161,7 @@ class ScreenHost(BaseState):
                 hit = self.buttons.event(e)
                 if hit is not None:
                     self.on_button(hit)
-            elif code is not None:
+            elif code is not None and self.buttons.held is None:     # 07be:006f DS:166c
                 if not self.bar.bar.key(self, code) and unbound_key(code):
                     effects.chord(self.app)                      # 07be:032c
 

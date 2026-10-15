@@ -19,6 +19,9 @@ Evidence (WARLORD2.EXE ovl57):
 * dispatch 07be:04d8: 159-168 -> ovl57:1650(i): option 0 cycles 0 -> 1 -> 2 -> 0, the
   others toggle; 169-171 -> ovl57:1694(p): the first six words become preset row p;
   172 -> ovl57:16c6 (close; the setup screen redraws its buttons and rating).
+Input (DS:166a = 1, ovl57:12b5; `ui.keys.popup_input`): 172 is in DS:1514 and DS:155c, so
+Esc and Return close, 'A'..'Z' nothing, any other key the chord; a left press on a pressed
+preset chords (07be:0e7b).
 `words` (the ten option words, DS:23b4) is changed in place; the dialog closes with None.
 """
 from __future__ import annotations
@@ -29,6 +32,7 @@ from ...assets.exe import ds_str, ds_words
 from ...assets.fonts import CHANCE17, CHANCE36
 from .. import registry
 from ..dialog import Dialog
+from ..keys import popup_input
 from ..layout import NORMAL, PRESSED
 from ..widgets import ButtonRow, kit, text_centred
 
@@ -91,21 +95,18 @@ class Options(Dialog):
         return ds_str(self.kit.exe, on if v else off)
 
     def update(self, events, dt) -> None:
-        for e in events:
-            if e.type == pygame.MOUSEBUTTONDOWN and e.button == 3:
-                b = self.buttons.at(e.pos)
-                if b:
-                    registry.right_click_handler("button")(self.host, b.id, e.pos)
-                    return
-            hit = self.buttons.event(e)
-            if hit in OPTION_IDS:
-                cycle(self.words, hit - OPTION_IDS[0])
-            elif hit in PRESET_IDS:
-                apply_preset(self.words, self.presets[hit - PRESET_IDS[0]])
-            elif hit == OK:
-                return self.close(None)
-            if hit is not None:
-                self._states()
+        popup_input(self, events, self.buttons, self.kit.exe, self.press)
+
+    def press(self, hit: int) -> bool:
+        if hit in OPTION_IDS:
+            cycle(self.words, hit - OPTION_IDS[0])
+        elif hit in PRESET_IDS:
+            apply_preset(self.words, self.presets[hit - PRESET_IDS[0]])
+        elif hit == OK:
+            self.close(None)
+            return True
+        self._states()
+        return False
 
     def draw(self, fb: pygame.Surface) -> None:
         k, t = self.kit, self.kit.text

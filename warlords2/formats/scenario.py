@@ -146,6 +146,7 @@ def parse_scn(d: bytes) -> dict:
             "level_14": r[20], "owner": r[21],
             "income": struct.unpack_from("<H", r, 42)[0],
             "production": prod,
+            "slot_bytes": [[r[22 + s], r[26 + s], r[30 + s], r[34 + s], r[38 + s]] for s in range(4)],
             "capital_of": caps.get((x, y)),
             "runtime_tail_hex": r[44:].hex(),
         })

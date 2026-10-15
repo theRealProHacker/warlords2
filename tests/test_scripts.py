@@ -45,6 +45,20 @@ def test_script(script, tmp_path):
 
 
 @pytest.mark.gamedata
+def test_in_process_repeat_is_identical(tmp_path):
+    """Two runs of m5b_battle in one process give the same checks, shots and engine state: the
+    once-per-run DS:0a54 (the capture's tutorial page, ovl31:0283) belongs to the App, not to
+    the process."""
+    script = Path(__file__).resolve().parent / "scripts" / "m5b_battle.json"
+    runs = []
+    for k in range(2):
+        m = run(script, tmp_path / f"ev{k}", ["--headless"], enforce_golden=False)
+        runs.append(([(c["op"], c["ok"]) for c in m["checks"]], [sh["sha256"] for sh in m["shots"]],
+                     m["engine_state_hash"]))
+    assert runs[0] == runs[1]
+
+
+@pytest.mark.gamedata
 def test_runs_are_hermetic_without_user_dir(tmp_path):
     """Without --user-dir each run gets its own empty user dir, removed afterwards: the
     OPTIONS.DAT m2b_begin writes at Begin (ovl57:2289) never reaches m2b_setup."""

@@ -18,12 +18,14 @@ Evidence (overlay offsets, docs/research/exe_logic.md §1; cells: `assets.sprite
 * The path ghost (`path_ghost`, set by ovl64:2ef5 at 3015..3077 for the path end
   DS:6471/6473 in view, drawn by ovl64:238e..23ff after the stacks): ashadow cell
   (t % 16 * 32, t / 16 * 29, 32, 29) of the moving army's type t (+4, signed) through
-  ashadow's own mask (DS:521f) at the square + (8, 5).
+  ashadow's own mask (DS:521f) at the square + (8, 5) (type 0xff: `draw_ghost`).
+
+The map-view mode DS:3254 (a computer turn with Hidden Map and one live human: road bit 0x80,
+the human's stored view, instead of 0x20) is `compose(seen=0x80)`.
 
 Not drawn here (M4c): the path marks of ovl64:2ef5 (cell +0x1b bits 4-5 from the path list
-DS:6475, drawn ovl64:22bf..2385 as ashadow (0x1f0, 0x1f or 0x30, 16, 14) at + (16, 13));
-the sage map-view mode DS:3254 (road bit 0x80 instead of 0x20) and the debug switch
-DS:26c6 (0a4c:0100) that adds a marker to stacks.
+DS:6475, drawn ovl64:22bf..2385 as ashadow (0x1f0, 0x1f or 0x30, 16, 14) at + (16, 13)); the
+debug switch DS:26c6 (0a4c:0100) that adds a marker to stacks.
 """
 from __future__ import annotations
 
@@ -32,7 +34,7 @@ from dataclasses import dataclass
 import pygame
 
 from ..assets import sprites as S
-from ..model.ids import MAP_H, MAP_W
+from ..model.ids import MAP_H, MAP_W, N_ARMY_TYPES
 from .screen import IDENTITY
 
 AREA = (16, 30, 360, 360)
@@ -69,12 +71,13 @@ class Cell:
     raised: bool = False          # +0x1c bit 0x10: the moving army's square
 
 
-def fog_mask(world, x: int, y: int, neighbours) -> int:
-    """ovl64:0f6f: bit k = neighbour k (DS:2eda/2eea order) off the map or unseen."""
+def fog_mask(world, x: int, y: int, neighbours, seen: int = SEEN) -> int:
+    """ovl64:0f6f: bit k = neighbour k (DS:2eda/2eea order) off the map or unseen (road bit
+    `seen`: 0x20, or 0x80 with DS:3254, ovl64:0f76)."""
     m = 0
     for k, (dx, dy) in enumerate(neighbours):
         nx, ny = x + dx, y + dy
-        if not (0 <= nx < MAP_W and 0 <= ny < MAP_H) or not world.roads[ny * MAP_W + nx] & SEEN:
+        if not (0 <= nx < MAP_W and 0 <= ny < MAP_H) or not world.roads[ny * MAP_W + nx] & seen:
             m |= 1 << k
     return m
 
@@ -92,13 +95,15 @@ def path_ghost(state, left: int, top: int, moving: int, end: tuple[int, int]) ->
     path end square `end` (DS:6471/6473) when that square is in the view at (left, top)."""
     x, y = end
     if left <= x < left + VIEW and top <= y < top + VIEW:
-        return Ghost(x - left, y - top, state.armies[moving].type_id)     # +4 (cwde: types < 0x80)
+        return Ghost(x - left, y - top, ((state.armies[moving].type_id & 0xFF) ^ 0x80) - 0x80)   # +4, cwde (306f..3073)
     return None
 
 
-def compose(state, left: int, top: int, sp, moving: int | None = None) -> list[list[Cell]]:
+def compose(state, left: int, top: int, sp, moving: int | None = None,
+            seen: int = SEEN) -> list[list[Cell]]:
     """cells[x][y] of the view whose top-left square is (left, top), as ovl64:2593 builds it.
-    `moving`: index of the army DS:5e62 points at, else None."""
+    `moving`: index of the army DS:5e62 points at, else None.  `seen`: the road bit of the
+    explored squares, 0x20, or 0x80 in the map-view mode DS:3254 (ovl64:13c8 / 143f, 0f76)."""
     w = state.world
     hidden = bool(state.options.hidden_map)                       # SCN 0x124
     first = []                                                    # ovl64:25ec: rank-0 type per row
@@ -112,8 +117,8 @@ def compose(state, left: int, top: int, sp, moving: int | None = None) -> list[l
             f, r = w.flags[i], w.roads[i]
             c = Cell(w.tiles[i] & 0xFF, r & ROAD_PIECE, bool(f & PORT), bool(f & FORTIFIED),
                      army_type=first[S.owner_row(f & OWNER)])
-            if hidden and not r & SEEN:                           # ovl64:13c8
-                v = sp.fog_table[fog_mask(w, x, y, sp.neighbours)]
+            if hidden and not r & seen:                           # ovl64:13c8 / 143f
+                v = sp.fog_table[fog_mask(w, x, y, sp.neighbours, seen)]
                 c.fog = -1 if v == 0xFF else v
             col.append(c)
         cells.append(col)
@@ -131,9 +136,8 @@ def compose(state, left: int, top: int, sp, moving: int | None = None) -> list[l
             continue
         c.count = (c.count + 1) & 0x1F
         c.owner = S.owner_row(a.owner)
-        rank = state.fight_order[c.owner]
-        if rank[c.army_type] < rank[a.type_id]:
-            c.army_type = a.type_id
+        if _rank(state, c.owner, c.army_type) < _rank(state, c.owner, a.type_id):   # 2b07..2b77
+            c.army_type = a.type_id & 0x1F                        # 2b83..2ba6: +4 & 0x1f
         if a.flags & ABOARD and not w.flags[a.y * MAP_W + a.x] & PORT:
             c.army_type = S.NAVY_TYPE
     for n in reversed(range(len(state.items))):                   # ovl64:2d7c
@@ -155,6 +159,18 @@ def compose(state, left: int, top: int, sp, moving: int | None = None) -> list[l
     return cells
 
 
+def _rank(state, row: int, t: int) -> int:
+    """ovl64:2b07..2b77: the signed byte SCN 0x60b + row * 29 + t.  The army's side reads its
+    +4 sign-extended (2b1e cwde; type 0xff: the byte before the row, X36); the cell's side its
+    5-bit type field +0x17 bits 2-6 (2b61..2b68), which is 31 after a type 0xff army (2b89
+    and 0x1f): for 29..31 the next row's bytes 0..2, past row 8 the first bytes of the
+    SCN 0x710 terrain table (scenario.py reads both from the same file bytes)."""
+    n = N_ARMY_TYPES * len(state.fight_order)
+    off = row * N_ARMY_TYPES + t
+    b = state.world.terrain_of_tile[off - n] if off >= n else state.fight_order_byte(row, t)
+    return ((b & 0xFF) ^ 0x80) - 0x80
+
+
 def draw_stack(dst: pygame.Surface, sp, x0: int, y0: int, owner: int, type_id: int, count: int) -> None:
     """ovl64:0335: army, flag pole, pennant(s) of a stack at the square (x0, y0)."""
     sheet = sp.armies[S.owner_row(owner)]
@@ -165,6 +181,23 @@ def draw_stack(dst: pygame.Surface, sp, x0: int, y0: int, owner: int, type_id: i
         dst.blit(sheet, (x0, y0 + S.PENNANT_LOW_AT), sp.pennant(1))
         count -= 4
     dst.blit(sheet, (x0, y0), sp.pennant(min(count, 4)))
+
+
+def draw_ghost(dst: pygame.Surface, sp, ghost: Ghost) -> None:
+    """ovl64:239d..23fb: source (t % 16 * 32, t / 16 * 29) with C division, 32x29, through
+    ashadow's mask at the same place.  For type byte 0xff (t = -1) that is (-32, 0): the
+    blitter 0f00:0c4d addresses plane byte y * stride + (x >> 3) (0c87..0c9e, stride 64 for
+    the 512-wide sheet), so source row j >= 1 is the end of sheet row j - 1 (x 480..511) and
+    row 0 the 4 bytes before each plane's buffer (memory-manager contents, not determinable;
+    nothing is drawn there)."""
+    x, y = ghost.col * S.TILE + S.GHOST_AT[0], ghost.row * S.TILE + S.GHOST_AT[1]
+    if ghost.type_id >= 0:
+        dst.blit(sp.ashadow, (x, y), S.ghost_cell(ghost.type_id))
+        return
+    if ghost.type_id != -1:
+        raise ValueError("ghost of type %d" % ghost.type_id)
+    w = sp.ashadow.get_width()
+    dst.blit(sp.ashadow, (x, y + 1), (w - S.GHOST_W, 0, S.GHOST_W, S.GHOST_H - 1))
 
 
 def render(dst: pygame.Surface, cells: list[list[Cell]], sp, ghost: Ghost | None = None) -> None:
@@ -195,14 +228,13 @@ def render(dst: pygame.Surface, cells: list[list[Cell]], sp, ghost: Ghost | None
             dst.blit(sp.atrans, (px, py), S.ITEM)
     for px, py, c in todo:
         if c.standard >= 0:                                   # ovl64:213c
-            dst.blit(sp.standard(c.standard), (px, py))
+            sp.draw_standard(dst, c.standard, (px, py))
     for owner in range(S.NEUTRAL_ROW + 1):
         for px, py, c in todo:
             if c.count and c.owner == owner and (not c.fortified or c.raised):
                 draw_stack(dst, sp, px, py, owner, c.army_type, c.count)
     if ghost is not None:                                     # ovl64:238e..23ff
-        dst.blit(sp.ashadow, (ghost.col * S.TILE + S.GHOST_AT[0], ghost.row * S.TILE + S.GHOST_AT[1]),
-                 S.ghost_cell(ghost.type_id))
+        draw_ghost(dst, sp, ghost)
     for px, py, c in todo:
         if 0 <= c.fog < S.FOG_FULL:
             dst.blit(sp.fog, (px, py), S.fog_cell(c.fog))

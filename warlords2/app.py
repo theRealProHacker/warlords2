@@ -55,6 +55,12 @@ def discover_states(app: App) -> dict[str, BaseState]:
 class App:
     def __init__(self, cfg: argparse.Namespace):
         self.cfg = cfg
+        from .model.ai import AiProcess
+        self.ai_process = AiProcess()             # the AI's DGROUP words for this run (model.ai)
+        self.capture_tutorial_shown = False       # DS:0a54: once per run (ui.dialogs.capture)
+        if getattr(cfg, "allow_unverified", False):
+            from .rules.constants import set_allow_unverified
+            set_allow_unverified(True)                    # --allow-unverified (plan section 3.2)
         if cfg.headless:
             os.environ["SDL_VIDEODRIVER"] = "dummy"
             os.environ["SDL_AUDIODRIVER"] = "dummy"
@@ -68,7 +74,7 @@ class App:
 
         # everything is read here, synchronously, before pgsm exists
         pygame.display.init()
-        self.assets = AssetStore(self.gd)
+        self.assets = AssetStore(self.gd, app=self)
         if not self.gd.path(MOUSE_FILE).is_file():           # ovl64:003b -> ovl52:0054 -> ovl52:0000
             from .audio import effects
             effects.chord(self)                               # ovl52:002e, before the message
@@ -194,6 +200,10 @@ class App:
         if self._closed:
             return
         self._closed = True
+        for st in getattr(self.manager, "states", {}).values():   # a turn-loop run parked at a present point
+            ab = getattr(st, "abandon_run", None)
+            if ab is not None:
+                ab()
         if self._hook_errors:                            # raised by no `_settle`
             print("pgsm hook errors not raised before close:", file=sys.stderr)
             _report(self._hook_errors)

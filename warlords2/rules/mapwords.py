@@ -35,3 +35,29 @@ def refresh_map(state) -> None:
     for i in range(MAP_W * MAP_H):
         if f[i] & MAP_FORTIFIED and not f[i] & MAP_ARMY:
             f[i] &= ~MAP_FORTIFIED
+
+
+def army_bits(state) -> None:
+    """The map part of ovl63:158d (the army markers of a map page): clear bit 0x10 on every
+    square, then set it on the square of every army record with x >= 0 and y >= 0 (any owner,
+    table order; the drawing filters of the arguments do not touch the bits).  With Hidden Map
+    (SCN 0x124), a computer side to move (SCN 0xd0[SCN 0x110] != 0) and SCN 0x159 == 0 the
+    routine returns before it.  Callers: the quest page ovl01:0320 for quest types 2 and 3
+    (ovl01:0845, `rules.quests.quest_page`) and Report > Armies ovl42:0143 (ovl42:0160, case
+    DS:0df6 == 0).  Unlike ovl62:0000 (`refresh_map`) owner nibbles and bit 0x20 stay.
+    Evidence: asm ovl63:158d..1816 (159a..15c5 gate, 15fb..1625 clear 0xef over 112 x 156,
+    1627..1810 armies 0..SCN 0x181 - 1: 1656 / 165f x, y >= 0, 1675 bit already set -> next,
+    1698 or 0x10)."""
+    from .constants import heroes as KH
+    from ..model.ids import Control
+    # SCN 0x124 is GameOptions.hidden_map (KH.ARMY_BITS_SKIP_HIDDEN)
+    if (state.options.hidden_map
+            and state.players[state.current].control != Control.HUMAN
+            and not state.flags.get(KH.ARMY_BITS_SKIP_UNLESS.value, 0)):
+        return
+    f = state.world.flags
+    for i in range(MAP_W * MAP_H):
+        f[i] &= ~MAP_ARMY & 0xFF
+    for a in state.armies:
+        if a.x >= 0 and a.y >= 0:
+            f[a.y * MAP_W + a.x] |= MAP_ARMY

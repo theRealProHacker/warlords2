@@ -3,7 +3,7 @@
 One module per phase, `warlords2.states.phases.<name>`, each defining `PHASE`, a `Phase`
 subclass.  `step` returns the name of the next phase or None to stay.  A phase whose
 module does not exist yet (its milestone is not done) is entered as None: the game shows
-the map and waits (`states.game.Game.idle`).
+the map and waits.
 """
 from __future__ import annotations
 
@@ -28,6 +28,14 @@ class Phase:
 
     def paint(self, fb: pygame.Surface) -> None:
         """Drawn after the game frame, before the dialogs."""
+
+    def busy(self) -> bool:
+        """Presenting something (no input taken)."""
+        return False
+
+    def held_mode(self) -> bool:
+        """A mouse drag is held (DS:1176 / 1172)."""
+        return False
 
 
 def phase_class(name: str) -> type[Phase] | None:

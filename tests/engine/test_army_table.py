@@ -42,8 +42,18 @@ def test_freed_record_stays_and_is_never_typed(monkeypatch):
     a = st.armies[0]
     assert (a.id, a.type_id, a.owner, a.x, a.y, a.moves_left, a.transit) == (0, FREE, FREE, -1, -1, 0, FREE)
     assert [b.id for b in st.armies] == list(range(len(st.armies)))
+    # army_type(0xff) answers model.army.NO_TYPE (the EXE's reads for type byte 0xff, X36), so
+    # make a lookup of a freed record's 0xff fail here: no scan may reach it.  (A live unit of
+    # type byte 0xff, rules.city.create_unit, stores -1 and is not caught.)
+    real = type(st).army_type
+
+    def strict(self, type_id):
+        if type_id == FREE:
+            raise KeyError(type_id)
+        return real(self, type_id)
+    monkeypatch.setattr(type(st), "army_type", strict)
     with pytest.raises(KeyError):
-        st.army_type(a.type_id)                          # so no scan may reach it
+        st.army_type(a.type_id)
     # every scan of the table passes the free record
     refresh_map(st)
     M.refresh_moves(st, 0)

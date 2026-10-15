@@ -32,8 +32,9 @@ from .bonuses import s8
 from .constants import heroes as K
 from .constants import movement as KM
 from .constants import unverified_allowed
-from .economy import add_gold, city_count
+from .economy import add_gold, cached_cities, refresh_cities, refresh_income
 from .engine import IllegalCommand, NotImplementedCommand
+from .present import present
 from .movement import FREE, alloc_army, armies_at, type_flag
 
 log = logging.getLogger(__name__)
@@ -80,7 +81,11 @@ def turn(state) -> int:
 
 def is_computer(state, p: int | None = None) -> bool:
     """Whether side p (default: the current side) is run by the computer.
-    Evidence: ovl25:09ab: SCN 0x0d0[p] == 1 (DS:0836, a debug override, is 0)."""
+    Evidence: ovl25:09ab (asm 09b3..09d5): SCN 0x0d0[0x110] == 1, or DS:0836 != 0.  DS:0836 is 1
+    only while the computer turn ovl25:0000 runs (set at ovl25:0071, cleared at 0354; its
+    one caller ovl68:01e3 is in ovl68:0000, which ovl61:21cc..21f7 runs only for 0x0d0[0x110]
+    == 1), when 0x0d0[0x110] == 1 already, so the test reduces to the control word of the side
+    on turn."""
     p = state.current if p is None else p
     return state.players[p].control == Control.COMPUTER
 
@@ -163,13 +168,13 @@ def overview_rolls(state, x: int, y: int) -> list[int]:
 
 
 def selection_flying(state) -> bool:
-    """DS:5dfc == 2: the selected stack moves flying (the `flying` argument of ovl64:1298).
-    Evidence: DS:5dfc is written only by 0c8c:0529 from the moving group (rules.movement.stack_mode)."""
-    from .movement import stack_mode
-    sel = state.selection
-    ids = sel.moving if len(sel.moving) > 1 else [sel.selected]
-    group = [a for a in (live(state, i) for i in ids) if a is not None]
-    return bool(group) and stack_mode(state, group)[0] == KM.MODE_FLY.value
+    """DS:5dfc == 2: the selected stack moves flying (the `flying` argument of ovl64:1298), the
+    word as the last selection step stored it (`Selection.mode`), not recomputed: a flight item
+    taken since then does not count until the next 0c8c:0529.
+    Evidence: asm ovl64:12e5 (cmp word [0x5dfc], 2 inside ovl64:1298; its callers push only
+    side, x, y); DS:5dfc is written only by 0c8c:0529 (asm 0c8c:06c0..071e,
+    rules.movement.store_selection_words)."""
+    return state.selection.mode == KM.MODE_FLY.value
 
 
 # ------------------------------------------------------------------------------- names
@@ -238,9 +243,10 @@ def hero_counts(state) -> tuple[int, int]:
 def offer_check(state):
     """Whether the current side is offered a hero now; returns {"city", "price"} or None.
     Evidence: asm ovl47:0000..01fb: price (DS:1110) = 0; nothing while SCN 0x15d is set; turn 1:
-    the city at the capital (ovl62:044a), free; else cap 5 (6 with >= 40 cities); no offer with
+    the city at the capital (ovl62:044a), free; else ovl62:03f9 (007b) and cap 5 (6 with
+    DS:5dea[p] >= 40, 008c); no offer with
     40 heroes on the map or the cap reached; price rnd(1,600,1000) with own heroes, else
-    rnd(1,400,300); no offer if gold < price or rnd(1,30,0) > 6; k = rnd(1,cities,0) picks the
+    rnd(1,400,300); no offer if gold < price or rnd(1,30,0) > 6; k = rnd(1,DS:5dea[p],0) (0168) picks the
     k-th own city in table order; a computer side then takes ovl25:0919(city)."""
     p = state.current
     if state.flags.get(0x15D, 0) != 0:
@@ -248,7 +254,8 @@ def offer_check(state):
     pl = state.players[p]
     if turn(state) == 1:
         return {"city": state.city_at(*pl.capital), "price": 0}
-    n_cities = city_count(state, p)
+    refresh_cities(state)                        # asm ovl47:007b (ovl62:03f9)
+    n_cities = cached_cities(state, p)
     cap = K.OFFER_CAP_BIG.value if n_cities >= K.OFFER_BIG_CITIES.value else K.OFFER_CAP.value
     total, own = hero_counts(state)
     if total >= K.OFFER_TOTAL_MAX.value or own >= cap:
@@ -284,7 +291,10 @@ def human_offer(state) -> list:
     drawn name (HeroOffered, pending; answered by AcceptHero or NameHero).
     Evidence: ovl68:04bd -> ovl47:0000, then ovl47:0d5c, which draws the name (ovl47:0c67) on
     opening; buttons accept 0x11f, decline 0x120 (disabled on turn 1), rename 0x121, sex
-    0x122 / 0x123 (ovl47:120c)."""
+    0x122 / 0x123 (ovl47:120c); then, still inside 0d5c with the dialog drawn, the tutorial page:
+    SCN 0x12e set and SCN byte 0x134 bit 0 clear -> bit 0 set, FILE.DAT (25, 0) through
+    ovl61:168d (asm ovl47:11d5..1207; TurnCue "tutorial" after the HeroOffered)."""
+    from .constants import turn as KT
     _names(state)
     offer = offer_check(state)
     if offer is None:
@@ -295,7 +305,12 @@ def human_offer(state) -> list:
     ev = E.HeroOffered({"player": state.current, "city": offer["city"], "price": offer["price"],
                         "name": name, "female": female, "free": turn(state) == 1})
     state.pending = ev
-    return [ev]
+    out = [ev]
+    b = KT.SCN_TUTORIAL_BYTE.value
+    if state.flags.get(KT.SCN_TUTORIAL_FLAG.value, 0) and not state.flags.get(b, 0) & KT.TUT_OFFER_BIT.value:
+        state.flags[b] = state.flags.get(b, 0) | KT.TUT_OFFER_BIT.value
+        out.append(E.TurnCue({"kind": "tutorial", "file": KT.TUT_OFFER_FILE.value}))
+    return out
 
 
 def computer_offer(state) -> list:
@@ -348,13 +363,16 @@ def _resume(state, ev, events) -> list:
 
 
 def name_hero(state, cmd: C.NameHero) -> list:
-    """Accept the offer with the name and sex the player set.
+    """Accept the offer with the name and sex the player set.  The name may be empty: Return in
+    the editor copies its buffer even when it is "" (ovl56:0575) and accept then creates a hero
+    named "".  The 15 is the buffer the dialog passes; typing stops at 14 characters (ovl56:
+    param - 1) and at the box width, and only 0x20..0x7a are typed - editor rules of the UI.
     Evidence: ovl47:12ce edits DS:44d2 with at most 15 characters (ovl56:03a6), ovl47:12f9 sets
-    DS:44d0 to 0 / 1; ovl47:127e then creates the hero."""
+    DS:44d0 to 0 / 1; ovl47:127e then creates the hero; asm ovl56:0575 (strcpy on Return)."""
     ev = _answer(state)
     name = cmd.name
-    if not isinstance(name, str) or not 0 < len(name) <= K.NAME_MAX.value or "\0" in name:
-        raise IllegalCommand("hero name must be 1 to %d characters" % K.NAME_MAX.value)
+    if not isinstance(name, str) or not 0 <= len(name) <= K.NAME_MAX.value or "\0" in name:
+        raise IllegalCommand("hero name must be 0 to %d characters" % K.NAME_MAX.value)
     try:
         name.encode(K.NAME_ENCODING.value)
     except UnicodeEncodeError:
@@ -483,7 +501,9 @@ def pay_and_allies(state, hero, price: int) -> list:
     """Pay for a hired hero and add 1-3 allies at its square.
     Evidence: asm ovl47:01fc..0300: gold -= DS:1110 (word), DS:1110 = 0; nothing more on turn 1;
     t = ovl47:1a9b(); r = rnd(1,100,0): < 70 -> 1, < 95 -> 2, else 3; each ally by ovl34:12e6(t,
-    hero x, y)."""
+    hero x, y).  First the overview ovl63:0000(1, 0, NULL) at 020a (present point "overview";
+    with the markers on, DS:2d25, and force 0 it draws nothing)."""
+    present("overview", at="ovl47:020a", markers=1, force=0)
     add_gold(state, state.current, -price)
     if turn(state) == 1:
         return []
@@ -549,13 +569,16 @@ def hero_died(state, army_id, x, y) -> list:
     Evidence: asm ovl36:16cd..1835: slot +0x543 = 0; list ovl51:03d9 mode 2; state = 0 when
     there is an item and the terrain at (x, y) is Water (sound), else 1; holder 0, x, y; item ==
     SCN 0x110 -> ovl44:0410(-2) cities: +0x31 = 0, target (-1, -1).  The road bit 0x40 is not
-    set, so a dropped standard is not 'planted' (ovl47:0b47)."""
+    set, so a dropped standard is not 'planted' (ovl47:0b47).  The splash ovl58:023d at 173b is
+    the present point "sound"."""
     from .bonuses import carried_items
     from .constants import city as KC
     a = state.armies[army_id]
     slot_of(state, a).used = 0
     items = carried_items(state, a)
     lost = bool(items) and state.world.terrain(x, y) == Terrain.WATER
+    if lost:
+        present("sound", name="splash", at="ovl36:173b")     # ovl58:023d
     st = int(ItemState.NOT_IN_PLAY) if lost else int(ItemState.ON_MAP)
     for i in items:
         it = state.items[i]
@@ -584,7 +607,7 @@ def _own_hero(state, aid):
 
 def items_here(state, hero) -> list[int]:
     """The item dialog's list for a hero: carried items, then items lying on its square.
-    Evidence: ovl51:03d9 mode 1 (asm ovl51:0425..052e): state 3 with holder = the army's index,
+    Evidence: ovl51:03d9 mode 6 (asm ovl40:05b1 push 6; jump table ovl51:06fb -> 0425..052e): state 3 with holder = the army's index,
     then state 1 with x, y = the army's square, each in table order."""
     out = [i for i, it in enumerate(state.items) if it.state == ItemState.CARRIED and it.holder == hero.id]
     out += [i for i, it in enumerate(state.items)
@@ -594,10 +617,11 @@ def items_here(state, hero) -> list[int]:
 
 def take(state, cmd: C.TakeItem) -> list:
     """A hero of the current side picks up an item lying on its square.
-    Evidence: ovl40 item dialog (heroes of SCN 0x110, ovl40:0000; list ovl51:03d9 mode 1) ->
+    Evidence: ovl40 item dialog (heroes of SCN 0x110, ovl40:0000; list ovl51:03d9 mode 6) ->
     ovl40:0e70 -> ovl47:08c7: state 3, holder = the army's index; for items 0..7 (standards) the
-    road bit 0x40 of the hero's square is cleared.  Closing the dialog runs the quest check
-    ovl01:1ded(3) (ovl40:0b2d), done here after every take."""
+    road bit 0x40 of the hero's square is cleared.  Closing the dialog (ovl40:0b2d) refreshes the
+    income cache (ovl62:0372 at 0b30, not the upkeep one) and runs the quest check ovl01:1ded(3),
+    both done here after every take."""
     hero = _own_hero(state, cmd.hero)
     i = cmd.item
     if not (isinstance(i, int) and 0 <= i < len(state.items)) or i not in items_here(state, hero) \
@@ -608,6 +632,35 @@ def take(state, cmd: C.TakeItem) -> list:
     if i < K.STANDARDS.value:
         state.world.roads[_flat(hero.x, hero.y)] &= ~ROAD_STANDARD & 0xFF
     events = [E.ItemTaken({"item": i, "army": hero.id})]
+    refresh_income(state)                        # the dialog's close, asm ovl40:0b30 (ovl62:0372)
+    return events + _quest_items(state)
+
+
+def take_all(state, cmd: C.TakeAll) -> list:
+    """The search result's Take (button 293 -> ovl34:186e): every item lying on the square of the
+    selected hero (DS:5e5e) goes to it at once, in item-table order (ovl51:03d9 mode 3: state 1
+    at the hero's square): holder = the hero's index, state 3 - the road bit 0x40 is *not*
+    cleared (unlike `take`, ovl47:08c7); then the stack is selected again (as ovl34:1964,
+    `rules.ruins._reselect`; the search already did that for the result's close, so here it runs
+    a second time, after the items are taken, as in the EXE) and the item quest check
+    ovl01:1ded(3, 0, 0, 0, 0) runs once; the income cache is not refreshed (no ovl62:0372 on
+    this path).  One `ItemTaken` per item, in that order.
+    Evidence: asm ovl34:186e..1963 (1875..18a3 index of DS:5e5e, 18b5 ovl51:03d9(3, x, y),
+    18c1..18f1 +0x17 = index, +0x16 = 3, 1908..1939 0b62:007d / 5e5e / 0b62:09ec / ovl67:06eb,
+    1959 ovl01:1ded(3))."""
+    from .ruins import _reselect
+    hero = _own_hero(state, cmd.hero)
+    if cmd.hero != state.selection.hero:
+        raise IllegalCommand("take all works on the selected hero (DS:5e5e)")
+    x, y = hero.x, hero.y
+    taken = [i for i, it in enumerate(state.items[:K.ITEM_RECORDS.value])
+             if it.state == ItemState.ON_MAP and (it.x, it.y) == (x, y)]
+    events = []
+    for i in taken:
+        it = state.items[i]
+        it.state, it.holder = int(ItemState.CARRIED), hero.id
+        events.append(E.ItemTaken({"item": i, "army": hero.id, "all": True}))
+    events += _reselect(state, x, y)
     return events + _quest_items(state)
 
 
@@ -616,7 +669,8 @@ def drop(state, cmd: C.DropItem) -> list:
     hero's square.
     Evidence: ovl40:0d1e -> ovl47:0943: terrain at the army's square == 2 -> state 0 (sound);
     else state 1, holder 0, x, y = the army's square (the road bit 0x40 is not set); then the
-    dialog's quest check ovl01:1ded(3) (ovl40:0b2d)."""
+    dialog's close ovl40:0b2d: the income cache (ovl62:0372 at 0b30) and the quest check
+    ovl01:1ded(3)."""
     hero = _own_hero(state, cmd.hero)
     i = cmd.item
     if not (isinstance(i, int) and 0 <= i < len(state.items)) or state.items[i].state != ItemState.CARRIED \
@@ -629,6 +683,7 @@ def drop(state, cmd: C.DropItem) -> list:
     else:
         it.state, it.holder, it.x, it.y = int(ItemState.ON_MAP), 0, hero.x, hero.y
     events = [E.ItemDropped({"items": [i], "army": hero.id, "x": hero.x, "y": hero.y, "lost": lost})]
+    refresh_income(state)                        # the dialog's close, asm ovl40:0b30 (ovl62:0372)
     return events + _quest_items(state)
 
 
@@ -679,7 +734,12 @@ def award_medal(state, battle) -> list:
     and DS:42a4 >= 4; award only when nothing is aboard, result == 1, real, eligible > 0,
     rnd(1,100,0) < chance and DS:5e5e (the stack's hero) is set; k = rnd(1,eligible,-1) picks
     the k-th eligible unit; with < 4 medals: +1 medal and strength >= 15 ? allowance + 1 :
-    strength + 1 (cap 9)."""
+    strength + 1 (cap 9).  DS:5e5e is only tested for null (asm 23e3): after a computer battle
+    it still points at a hero that died, so the test is `selection.hero >= 0`, not `live`.
+    Then (asm 24a5..24ba) only when SCN 0xd0 + 2 * DS:41fa (the battle's attacking side,
+    `battle_work.attacker`) is 0 (human) the pop-up is shown, and it rolls its two lines on the
+    game's dice: (158, -1) at 2524 and (160, -1) at 2581 (ovl59:04f0 -> 02bf(1, n, -1)), kept
+    in `MedalAwarded.info["text_rolls"]` = (r1, r2)."""
     events: list = []
     s = battle.setup
     stack = _medal_stack(state)
@@ -698,7 +758,7 @@ def award_medal(state, battle) -> list:
         return events
     if state.rng.rnd(*K.MEDAL_ROLL.value) >= chance:
         return events
-    if live(state, state.selection.hero) is None:
+    if state.selection.hero < 0:                 # asm 23e3: DS:5e5e != 0 only (a dead hero counts)
         return events
     k = state.rng.rnd(1, len(eligible), K.MEDAL_PICK_ADD.value)
     a = eligible[k]
@@ -711,5 +771,12 @@ def award_medal(state, battle) -> list:
     else:
         add_strength(a, 1)
         gain = "strength"
-    events.append(E.MedalAwarded({"army": a.id, "medals": a.medals, "gain": gain}))
+    info = {"army": a.id, "medals": a.medals, "gain": gain}
+    att = s8(state.battle_work.attacker)
+    if 0 <= att < len(state.players) and state.players[att].control == K.MEDAL_TEXT_HUMAN.value:
+        n158, n160 = K.MEDAL_TEXT_COUNTS.value
+        r1 = state.rng.rnd(1, n158, K.MEDAL_PICK_ADD.value)     # asm 2524: (158, -1)
+        r2 = state.rng.rnd(1, n160, K.MEDAL_PICK_ADD.value)     # asm 2581: (160, -1)
+        info["text_rolls"] = (r1, r2)
+    events.append(E.MedalAwarded(info))
     return events

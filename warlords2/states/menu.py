@@ -32,11 +32,22 @@ The menu bar is the program's one `ui.menubar.TitleBar` (`title_bar`).  Every en
 talking face opens from the first update after it (`start_screen`), not with the talking
 advisor off (`audio.voice.talking`: OPTIONS.SND digit 2, --no-voice).
 
-Dice: the faces roll rnd(1, 30, 10) (ovl58:094c) in the EXE's one dice stream (ovl59:02bf),
-before the setup screen's loader draws its 256 rolls (`states.setup`).  Not modelled: each
-entry here rolls from its own `Rng` started at the seed (`rng`), so the face's blink is
-seeded but the setup screen's stream does not continue after it; with the talking advisor
-off nothing is rolled and the stream is exact.
+Dice: ovl59:02bf is the EXE's one roller, seeded on its first call (DS:2678 -> ovl59:0356)
+and never again in a run; nothing rolls from the start-up (08a9:0219..024c) up to ovl60:0000.
+The faces roll rnd(1, 30, 10) once per call (ovl58:094c, reached from every branch of
+speech 2 (0838 -> 0845 / 085d -> 0854 / 0939 -> 0944) and 0 (087b -> 0944); the only exit is
+the talking advisor off at ovl58:0293; the speech files are FILE.DAT (0x3b / 0x3c, 1 / 0),
+fixed entries; ovl59:052f draws a die only for a negative STRING / FILE / ERROR.DAT entry
+(04f0 / 0505 / 051a -> 058b..0595)), so with the talking advisor on each
+entry with `draw` (the start-up 08a9:024c, the setup screen's Main Menu ovl57:0ee0) and
+Begin with the random map roll before the setup screen's loader (ovl63:2479).  Menu and
+setup draw from the run's one `Rng` (`session_dice`, started at the seed with the default
+die source); the setup screen hands its state to Begin (`NewGameConfig.rng_state`).  The
+music on the way to the first game draws no die: mode 0 before the face (ovl60:00fd) and at
+the setup screen's entry (ovl57:003a / 003c) plays the fixed FILE.DAT entries (8, 0) /
+(7, 0), and Begin's mode 11 (ovl57:0e24 / 0e26) (19, 0) / (7, 0) (register X32).
+Not modelled: after a game the stream does not continue from the game's dice (the game's
+`GameState.rng` is its own copy of the stream).
 
 No saved games or maps exist before M10b / M11, so ovl49:0e25 / 0e42 are false here; 101
 and 102 run their registered actions and are inert until M10b / M11 register them.
@@ -76,6 +87,17 @@ GREETING, ONE_MOMENT = 2, 0               # ovl58:026f(2) (ovl60:0000), (0) (ovl
 RANDOM_SCENARIO = "RANDOM"
 
 
+# --------------------------------------------------------------------------- dice
+
+def session_dice(app) -> Rng:
+    """The run's one ovl59:02bf stream before a game (seeded once, DS:2678 / ovl59:0356):
+    started at the seed on the first roll, then shared by Game Start and Game Setup."""
+    dice = getattr(app, "session_dice", None)
+    if dice is None:
+        dice = app.session_dice = Rng(app.cfg.seed, NewGameConfig.rng)
+    return dice
+
+
 # --------------------------------------------------------------------------- scenarios
 
 
@@ -112,7 +134,6 @@ class Menu(ScreenHost):
         self.directory: str | None = None    # DS:5da0 (record +0x3c)
         self.random = False                  # DS:28c8
         self.greet = False                   # ovl58:026f(2) pending
-        self.rng: Rng | None = None          # this entry's dice (see the module doc)
 
     def on_enter(self, frm: str, scenario: str | None = None, **kw) -> None:
         """ovl60:0000(1).  `scenario` (a directory name) makes that scenario current."""
@@ -122,7 +143,6 @@ class Menu(ScreenHost):
         if scenario is not None:
             self.directory = scenario.upper()
         self.greet = True
-        self.rng = Rng(self.app.cfg.seed, NewGameConfig.rng)
 
     def enter_screen(self, k: Kit) -> None:
         """ovl60:0000: the current record (DS:28ce) by directory, the first visit's default
@@ -146,7 +166,8 @@ class Menu(ScreenHost):
             self.face(GREETING, lambda: None)
 
     def roll(self, dice: int, sides: int, add: int) -> int:
-        return self.rng.rnd(dice, sides, add)
+        """ovl59:02bf from the run's one stream (`session_dice`)."""
+        return session_dice(self.app).rnd(dice, sides, add)
 
     def refresh(self) -> None:
         """ovl60:011e."""

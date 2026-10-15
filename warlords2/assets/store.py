@@ -42,7 +42,12 @@ DIRS = {0: "PICS", 2: "TERRAIN{t}"}          # 1 = <scenario>/PICS
 QUADRANTS = ("startup.pck", "screen.pck")
 PALETTES = ("STANDARD.PAL", "BLACK.PAL")
 
-# ERROR.DAT messages (group, index); printed to stderr, never on screen (plan 1.6)
+# ERROR.DAT messages (group, index); printed to stderr, never on screen (plan 1.6).  A file
+# the EXE cannot open (0997:0489..04b5 pictures, ovl61:0971..099c, ovl45:1e92..1eb6) is
+# sprintf(ERROR.DAT (1, 0) via ovl59:051a, name) handed to ovl52:0000, which plays the chord
+# (ovl58:0b5f at ovl52:002e) before it prints the message and exits (ovl59:012b, 0a4c:02b5).
+# The three boot tables STRING / ERROR / FILE.DAT fail silently in the EXE (ovl59:03a0 jumps
+# to 04ec); here a file missing while the store is built is reported and exits without it.
 ERR_SCENARIO, ERR_FILE, ERR_MOUSE = (0, 0), (1, 0), (2, 0)
 
 
@@ -76,8 +81,9 @@ def parse_picture_table(exe: bytes, names: list[str]) -> list[PicEntry]:
 
 
 class AssetStore:
-    def __init__(self, gd: GameDir, terrain_set: int = 0):
+    def __init__(self, gd: GameDir, terrain_set: int = 0, app=None):
         self.gd = gd
+        self.app = None                                  # set once the tables below are read
         self.terrain_set = terrain_set
         self.errors = StringTable(self.read("DATA/ERROR.DAT"))
         names = StringTable(self.read("DATA/FILE.DAT")).groups[PIC_GROUP]
@@ -85,17 +91,22 @@ class AssetStore:
         self._by_name = {p.name: p for p in self.pictures}
         self.palettes = {n: parse_pal(self.read(n)) for n in PALETTES}
         self._cache: dict[tuple[int, str | None], pygame.Surface] = {}
+        self.app = app                                   # the chord of ovl52:0000 from here on
 
     def error(self, which: tuple[int, int], arg: str) -> str:
         """An ERROR.DAT message with its %s filled in."""
         return self.errors.get(*which).replace("\\n", "").replace("%s", arg)
 
     def read(self, rel: str) -> bytes:
-        """Bytes of a game file; a missing file prints the ERROR.DAT message and exits."""
+        """Bytes of a game file; a missing file plays the chord (once the store is built with
+        an app), prints the ERROR.DAT message and exits."""
         try:
             return self.gd.read(rel)
         except FileNotFoundError:
             errors = getattr(self, "errors", None)       # unset while ERROR.DAT itself loads
+            if self.app is not None:
+                from ..audio import effects
+                effects.chord(self.app)                  # ovl52:002e, before the message
             print(self.error(ERR_FILE, rel) if errors else f"cannot open {rel}", file=sys.stderr)
             raise SystemExit(1) from None
 

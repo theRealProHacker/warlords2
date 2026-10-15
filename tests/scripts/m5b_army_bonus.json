@@ -1,0 +1,213 @@
+{
+ "note": "View -> Army Bonus by its key 'o' (menu 522, ovl66:1e3b): the Knights' 29 types in fight order, six rows; Down (492), Page Down (494) four times (19, then 21) (the last row is table entry 26, ovl66:1f26 caps the first row at 21, 492 / 494 disabled), Page Up (493), Up (491), Esc (490 Done, DS:1514).",
+ "args": [
+  "--scenario",
+  "TUTORIA",
+  "--seed",
+  "3",
+  "--controls",
+  "HCCCCCCH",
+  "--no-voice"
+ ],
+ "steps": [
+  [
+   2,
+   {
+    "wait_dialog": "progress",
+    "frames": 5
+   }
+  ],
+  [
+   50,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 30
+   }
+  ],
+  [
+   84,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   86,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 5
+   }
+  ],
+  [
+   92,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   94,
+   {
+    "wait_dialog": "hero_offer",
+    "frames": 5
+   }
+  ],
+  [
+   97,
+   {
+    "press_button": 287
+   }
+  ],
+  [
+   99,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 5
+   }
+  ],
+  [
+   103,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   105,
+   {
+    "wait_dialog": "production",
+    "frames": 5
+   }
+  ],
+  [
+   108,
+   {
+    "key": "escape"
+   }
+  ],
+  [
+   111,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   115,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   117,
+   {
+    "key": "o"
+   }
+  ],
+  [
+   119,
+   {
+    "wait_dialog": "army_bonus",
+    "frames": 2
+   }
+  ],
+  [
+   121,
+   {
+    "shot": "01_army_bonus"
+   }
+  ],
+  [
+   122,
+   {
+    "press_button": 492
+   }
+  ],
+  [
+   124,
+   {
+    "shot": "02_down"
+   }
+  ],
+  [
+   125,
+   {
+    "press_button": 494
+   }
+  ],
+  [
+   127,
+   {
+    "press_button": 494
+   }
+  ],
+  [
+   129,
+   {
+    "press_button": 494
+   }
+  ],
+  [
+   131,
+   {
+    "press_button": 494
+   }
+  ],
+  [
+   133,
+   {
+    "shot": "03_last_page"
+   }
+  ],
+  [
+   134,
+   {
+    "press_button": 493
+   }
+  ],
+  [
+   136,
+   {
+    "press_button": 491
+   }
+  ],
+  [
+   138,
+   {
+    "shot": "04_up"
+   }
+  ],
+  [
+   139,
+   {
+    "key": "escape"
+   }
+  ],
+  [
+   141,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   142,
+   {
+    "shot": "05_closed"
+   }
+  ]
+ ]
+}

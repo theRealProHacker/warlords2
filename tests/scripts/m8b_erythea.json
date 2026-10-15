@@ -1,0 +1,310 @@
+{
+ "note": "ERYTHEA, the Sirians human, the other seven sides computer (Observe on for all after the first human turn start, DS:16a6 at ovl68:026d): turn 1 (pop-up, hero offer accepted 287, production screen closed 192), Settings by Alt+X with Observe unticked for every computer side but the White Dwarves (268 + p, ovl33:053f), End Turn by Alt+E (ovl61:2074: the buttons disabled by ovl61:0418, the map drawn): the computer turns ovl68:0000 one per run, each with its name in the info area (ovl61:11d1), the bar's ground (1291) and the bars 131b(5..100); an unobserved side leaves the map as last drawn (ovl64:006c 0083..0098) while its walks still wait 3 ticks a step, the White Dwarves' hero walks (0a8b:04c8, map and selection frame per step) and takes a neutral city (ovl36:124a: map mark 1836, STRING 0x95 and 0x96 through 11d1(.., 5), no window for a neutral defender; 1836(x, y, 0) and the overview after); Shift held during the Kingdoms' turn opens Settings after their phases (ovl25:045e -> ovl33:0000(0), titles in the Kingdoms' colours), the loop stops at ovl61:220b, closed (251) the loop goes on; then the Sirians' Turn 2 pop-up.  Drawn from the engine's state at each present point (rules.present).  The state_hash steps check the engine's hashes recorded by the first runs (want).",
+ "args": [
+  "--scenario",
+  "ERYTHEA",
+  "--seed",
+  "3",
+  "--controls",
+  "HCCCCCCC",
+  "--no-voice"
+ ],
+ "steps": [
+  [
+   2,
+   {
+    "wait_dialog": "progress",
+    "frames": 5
+   }
+  ],
+  [
+   30,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 40
+   }
+  ],
+  [
+   74,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   76,
+   {
+    "wait_dialog": "hero_offer",
+    "frames": 10
+   }
+  ],
+  [
+   90,
+   {
+    "press_button": 287
+   }
+  ],
+  [
+   92,
+   {
+    "wait_dialog": "production",
+    "frames": 10
+   }
+  ],
+  [
+   106,
+   {
+    "press_button": 192
+   }
+  ],
+  [
+   110,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   111,
+   {
+    "move": [
+     500,
+     200
+    ]
+   }
+  ],
+  [
+   112,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   113,
+   {
+    "key": "x"
+   }
+  ],
+  [
+   114,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   115,
+   {
+    "wait_dialog": "settings",
+    "frames": 4
+   }
+  ],
+  [
+   120,
+   {
+    "press_button": 269
+   }
+  ],
+  [
+   121,
+   {
+    "press_button": 271
+   }
+  ],
+  [
+   122,
+   {
+    "press_button": 272
+   }
+  ],
+  [
+   123,
+   {
+    "press_button": 273
+   }
+  ],
+  [
+   124,
+   {
+    "press_button": 274
+   }
+  ],
+  [
+   125,
+   {
+    "press_button": 275
+   }
+  ],
+  [
+   126,
+   {
+    "move": [
+     600,
+     460
+    ]
+   }
+  ],
+  [
+   127,
+   {
+    "shot": "01_observe_white_dwarves_only"
+   }
+  ],
+  [
+   128,
+   {
+    "press_button": 251
+   }
+  ],
+  [
+   130,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   131,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   132,
+   {
+    "key": "e"
+   }
+  ],
+  [
+   133,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   134,
+   {
+    "state_hash": "end_turn",
+    "want": "08edbe48979c6f2aa4f5c7a289bbf70e6a827da4e4f73b6f8a9c73ac83d7c740"
+   }
+  ],
+  [
+   180,
+   {
+    "shot": "02_stone_giants_unobserved"
+   }
+  ],
+  [
+   300,
+   {
+    "shot": "03_white_dwarves_walk"
+   }
+  ],
+  [
+   355,
+   {
+    "shot": "04_white_dwarves_mark_before"
+   }
+  ],
+  [
+   372,
+   {
+    "shot": "05_white_dwarves_result"
+   }
+  ],
+  [
+   386,
+   {
+    "shot": "06_white_dwarves_after_the_battle"
+   }
+  ],
+  [
+   400,
+   {
+    "shot": "07_ussyrian_orcs_map_kept"
+   }
+  ],
+  [
+   401,
+   {
+    "state_hash": "ussyrian_orcs",
+    "want": "3a52bb8446caf596c53bedc8eaea13737a7bebed7c34bd548484332531fe59e3"
+   }
+  ],
+  [
+   530,
+   {
+    "key": "left shift",
+    "hold": true
+   }
+  ],
+  [
+   531,
+   {
+    "wait_dialog": "settings",
+    "frames": 120
+   }
+  ],
+  [
+   590,
+   {
+    "shot": "08_settings_after_the_side"
+   }
+  ],
+  [
+   591,
+   {
+    "state_hash": "settings",
+    "want": "2e63a6e0500b0aefd872d53441dc9b5d090effa0eb8fa446f57c87a6753b1aeb"
+   }
+  ],
+  [
+   592,
+   {
+    "keyup": "left shift"
+   }
+  ],
+  [
+   593,
+   {
+    "press_button": 251
+   }
+  ],
+  [
+   595,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   600,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 400
+   }
+  ],
+  [
+   790,
+   {
+    "shot": "09_sirians_turn_2"
+   }
+  ],
+  [
+   791,
+   {
+    "state_hash": "sirians_turn_2",
+    "want": "382c8b80ac79e5d1d13aee11132650b0ce8125a1d845a9cf0a50825ed566b2e9"
+   }
+  ]
+ ]
+}

@@ -6,7 +6,8 @@ handlers (`registry.event_sounds`) run when its presentation starts, then every 
 (`registry.event_view`) as `fn(host, event)`; a view returns an iterator (one item per logical
 frame it keeps the screen) or None.  While anything is playing the host draws `scene` (a copy of
 the state as it was before the command, which the views move along; the real state is never
-touched) and takes no input.
+touched) and takes no input; the overview shows `overview` instead when a view set it (a redraw
+of the overview alone, e.g. ovl63:0000 when the battle window closes).
 
 Timing: the original's waits count BIOS timer ticks (INT 1Ah, 65536 / 1193182 s; ovl59:0000, the
 step wait of 0a8b:04c8, the selection-frame phase 077b:011f, the double click 0b62:0405);
@@ -46,6 +47,7 @@ class Animator:
         self.queue: deque = deque()
         self.views: list = []
         self.scene = None
+        self.overview = None               # a later copy the overview shows (ovl63:0000 mid-command)
 
     @property
     def busy(self) -> bool:
@@ -68,7 +70,7 @@ class Animator:
                 except StopIteration:
                     self.views.pop(0)
             if not self.queue:
-                self.scene = None
+                self.scene = self.overview = None
                 return
             ev = self.queue.popleft()
             for fn in registry.event_sounds(type(ev)):

@@ -1,0 +1,827 @@
+{
+ "note": "TUTORIA, two humans (side 0 and side 7, hotseat), Diplomacy on (--options word 1). Turn 1 of side 0: 'd' opens the Diplomatic Report (menu 515 -> ovl00:0000: popup 11, JOIN screen 21, the grid, the diagonal for every side, peace icons between the two live sides, header shields of live sides only, the rating panel); 369 -> the Action dialog (ovl00:0324 -> 0346: JOIN screen 22, own column skipped); 386 proposes neutral to side 7 (ovl00:0a69, b = 6 -> side 7), 378 peace again; 371 back to the Report; Esc presses 368 (DS:1514); palette 183 -> the Action dialog (07be:054a), Return presses 370 (DS:155c). The stack walks north (path set by Alt+click, Move 173). Side 7's turn 1: 183 -> Action, 380 proposes neutral to side 0. Turn 2 of side 0: the palette shows 184 (bit 4 of [0][0], ovl61:0174), its Action dialog shows the proposal row; the walk ends next to side 7's city; its attack at peace raises the treachery question (ovl36:010c -> ovl56:0088, STRING 140): Esc = 190 no (nothing changes, state_hash answered_no), the attack again, Return = 189 yes: infamy, war both ways, the battle (lost); the Report again with war icons (state_hash after_treachery).",
+ "args": [
+  "--scenario",
+  "TUTORIA",
+  "--seed",
+  "1",
+  "--controls",
+  "HCCCCCCH",
+  "--options",
+  "0,1,0,0,0,0,0,0,0,0",
+  "--no-voice"
+ ],
+ "steps": [
+  [
+   2,
+   {
+    "wait_dialog": "progress",
+    "frames": 5
+   }
+  ],
+  [
+   50,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 30
+   }
+  ],
+  [
+   84,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   85,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 4
+   }
+  ],
+  [
+   90,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   92,
+   {
+    "wait_dialog": "hero_offer",
+    "frames": 4
+   }
+  ],
+  [
+   95,
+   {
+    "press_button": 287
+   }
+  ],
+  [
+   96,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 4
+   }
+  ],
+  [
+   102,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   106,
+   {
+    "press_button": 192
+   }
+  ],
+  [
+   107,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 4
+   }
+  ],
+  [
+   112,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   116,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   118,
+   {
+    "key": "d"
+   }
+  ],
+  [
+   119,
+   {
+    "wait_dialog": "diplomacy_report",
+    "frames": 3
+   }
+  ],
+  [
+   123,
+   {
+    "shot": "01_report_turn1"
+   }
+  ],
+  [
+   125,
+   {
+    "press_button": 369
+   }
+  ],
+  [
+   126,
+   {
+    "wait_dialog": "diplomacy_action",
+    "frames": 3
+   }
+  ],
+  [
+   129,
+   {
+    "shot": "02_action_turn1"
+   }
+  ],
+  [
+   131,
+   {
+    "press_button": 386
+   }
+  ],
+  [
+   134,
+   {
+    "shot": "03_proposed_neutral"
+   }
+  ],
+  [
+   136,
+   {
+    "press_button": 378
+   }
+  ],
+  [
+   139,
+   {
+    "shot": "04_proposed_peace"
+   }
+  ],
+  [
+   141,
+   {
+    "state_hash": "turn1_proposals",
+    "want": "b44ef0f1841984a131c9014eac96c98c0cd857ba8912e1a5686acad7fbd74860"
+   }
+  ],
+  [
+   143,
+   {
+    "press_button": 371
+   }
+  ],
+  [
+   144,
+   {
+    "wait_dialog": "diplomacy_report",
+    "frames": 3
+   }
+  ],
+  [
+   147,
+   {
+    "shot": "05_report_again"
+   }
+  ],
+  [
+   149,
+   {
+    "key": "escape"
+   }
+  ],
+  [
+   151,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   153,
+   {
+    "press_button": 183
+   }
+  ],
+  [
+   154,
+   {
+    "wait_dialog": "diplomacy_action",
+    "frames": 3
+   }
+  ],
+  [
+   157,
+   {
+    "shot": "06_palette_action"
+   }
+  ],
+  [
+   159,
+   {
+    "key": "return"
+   }
+  ],
+  [
+   161,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   163,
+   {
+    "move": [
+     196,
+     210
+    ]
+   }
+  ],
+  [
+   165,
+   {
+    "click": [
+     196,
+     210
+    ]
+   }
+  ],
+  [
+   169,
+   {
+    "key": "space"
+   }
+  ],
+  [
+   171,
+   {
+    "key": "up"
+   }
+  ],
+  [
+   173,
+   {
+    "key": "up"
+   }
+  ],
+  [
+   175,
+   {
+    "key": "up"
+   }
+  ],
+  [
+   177,
+   {
+    "key": "up"
+   }
+  ],
+  [
+   179,
+   {
+    "key": "up"
+   }
+  ],
+  [
+   181,
+   {
+    "key": "up"
+   }
+  ],
+  [
+   183,
+   {
+    "key": "up"
+   }
+  ],
+  [
+   185,
+   {
+    "key": "up"
+   }
+  ],
+  [
+   187,
+   {
+    "key": "left"
+   }
+  ],
+  [
+   189,
+   {
+    "key": "left"
+   }
+  ],
+  [
+   191,
+   {
+    "key": "left"
+   }
+  ],
+  [
+   195,
+   {
+    "move": [
+     76,
+     50
+    ]
+   }
+  ],
+  [
+   196,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   197,
+   {
+    "click": [
+     76,
+     50
+    ]
+   }
+  ],
+  [
+   198,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   201,
+   {
+    "press_button": 173
+   }
+  ],
+  [
+   291,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 10
+   }
+  ],
+  [
+   303,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   307,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   308,
+   {
+    "key": "e"
+   }
+  ],
+  [
+   309,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   311,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 20
+   }
+  ],
+  [
+   335,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   337,
+   {
+    "wait_dialog": "hero_offer",
+    "frames": 6
+   }
+  ],
+  [
+   345,
+   {
+    "press_button": 287
+   }
+  ],
+  [
+   347,
+   {
+    "wait_dialog": "production",
+    "frames": 6
+   }
+  ],
+  [
+   355,
+   {
+    "press_button": 192
+   }
+  ],
+  [
+   359,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   361,
+   {
+    "press_button": 183
+   }
+  ],
+  [
+   362,
+   {
+    "wait_dialog": "diplomacy_action",
+    "frames": 3
+   }
+  ],
+  [
+   365,
+   {
+    "press_button": 380
+   }
+  ],
+  [
+   368,
+   {
+    "shot": "07_darklords_neutral"
+   }
+  ],
+  [
+   370,
+   {
+    "key": "return"
+   }
+  ],
+  [
+   372,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   374,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   375,
+   {
+    "key": "e"
+   }
+  ],
+  [
+   376,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   378,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 20
+   }
+  ],
+  [
+   402,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   404,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 6
+   }
+  ],
+  [
+   412,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   416,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   418,
+   {
+    "shot": "08_knights_turn2_palette"
+   }
+  ],
+  [
+   420,
+   {
+    "press_button": 184
+   }
+  ],
+  [
+   421,
+   {
+    "wait_dialog": "diplomacy_action",
+    "frames": 3
+   }
+  ],
+  [
+   424,
+   {
+    "shot": "09_their_proposal"
+   }
+  ],
+  [
+   426,
+   {
+    "key": "escape"
+   }
+  ],
+  [
+   428,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   430,
+   {
+    "key": "up"
+   }
+  ],
+  [
+   432,
+   {
+    "key": "up"
+   }
+  ],
+  [
+   436,
+   {
+    "move": [
+     116,
+     50
+    ]
+   }
+  ],
+  [
+   438,
+   {
+    "click": [
+     116,
+     50
+    ]
+   }
+  ],
+  [
+   444,
+   {
+    "key": "space"
+   }
+  ],
+  [
+   448,
+   {
+    "press_button": 173
+   }
+  ],
+  [
+   538,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 10
+   }
+  ],
+  [
+   550,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   554,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   556,
+   {
+    "move": [
+     196,
+     170
+    ]
+   }
+  ],
+  [
+   558,
+   {
+    "click": [
+     196,
+     170
+    ]
+   }
+  ],
+  [
+   559,
+   {
+    "wait_dialog": "treachery_confirm",
+    "frames": 6
+   }
+  ],
+  [
+   567,
+   {
+    "shot": "10_treachery_question"
+   }
+  ],
+  [
+   569,
+   {
+    "key": "escape"
+   }
+  ],
+  [
+   573,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   574,
+   {
+    "state_hash": "answered_no",
+    "want": "fef821b93c8a4e1355e2407afe7a6c7becca3893665c226e63d0e30e926a92db"
+   }
+  ],
+  [
+   575,
+   {
+    "shot": "11_answered_no"
+   }
+  ],
+  [
+   577,
+   {
+    "click": [
+     196,
+     170
+    ]
+   }
+  ],
+  [
+   578,
+   {
+    "wait_dialog": "treachery_confirm",
+    "frames": 6
+   }
+  ],
+  [
+   586,
+   {
+    "key": "return"
+   }
+  ],
+  [
+   589,
+   {
+    "shot": "12_battle"
+   }
+  ],
+  [
+   791,
+   {
+    "shot": "13_battle_result"
+   }
+  ],
+  [
+   793,
+   {
+    "key": "space"
+   }
+  ],
+  [
+   799,
+   {
+    "shot": "14_after_battle"
+   }
+  ],
+  [
+   801,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   803,
+   {
+    "key": "d"
+   }
+  ],
+  [
+   804,
+   {
+    "wait_dialog": "diplomacy_report",
+    "frames": 3
+   }
+  ],
+  [
+   807,
+   {
+    "shot": "15_report_war"
+   }
+  ],
+  [
+   809,
+   {
+    "state_hash": "after_treachery",
+    "want": "6c9ae665c45ca2dc558eab388d6ab9aafaccb8eeac7b9201754a2d6a5327b2a5"
+   }
+  ],
+  [
+   811,
+   {
+    "key": "return"
+   }
+  ],
+  [
+   813,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ]
+ ]
+}

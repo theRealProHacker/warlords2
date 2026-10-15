@@ -13,6 +13,7 @@ from warlords2.model import events as E
 from warlords2.model.city import City, Slot
 from warlords2.model.ids import EMPTY_SLOT, MAP_ARMY, MAP_W, NO_OWNER, Control, Terrain
 from warlords2.rules import city as CT
+from warlords2.rules import economy as EC
 from warlords2.rules import engine
 from warlords2.rules.constants import allowing_unverified
 from warlords2.rules.engine import IllegalCommand, NotImplementedCommand
@@ -305,6 +306,20 @@ def test_human_sack(quests):
     assert quests == [(1, 0, 400, 0, 0)]
 
 
+def test_treachery_news_written_after_the_answer(quests):
+    """A capture made by treachery carries the kind-8 entry of ovl36:2257 (rules.diplomacy
+    .treachery): written after the answer and its quest call, not on a refused answer."""
+    st = mk()
+    ci = add_city(st, 10, 10, 0, (0,))
+    captured(st, ci)
+    st.pending.info["news_after"] = [0, 8, 0, 1, ""]
+    with pytest.raises(IllegalCommand):
+        engine.apply(st, C.CaptureChoice("sack"))       # button disabled: nothing written
+    assert st.news[0] == []
+    engine.apply(st, C.CaptureChoice("occupy"))
+    assert quests == [(4, 0, 0, 0x4D, 0x3005)] and st.news[0] == [[8, 0, 1, ""]]
+
+
 def test_human_buttons_disabled_at_zero(quests):
     """ovl31:0000: pillage (0x11b) and sack (0x11e) disabled when their value is 0."""
     st = mk()
@@ -398,6 +413,7 @@ def test_loot(gold, cities, loot):
     for k in range(1, cities):
         add_city(st, 20 + 3 * k, 20, 1, ())
     st.players[1].gold = gold
+    EC.refresh_cities(st)                        # ovl62:03f9 at ovl36:0cb5, before the loot
     ev = CT.take_city(st, ci, 0, 1)
     assert st.players[0].gold == 1000 + loot
     assert st.players[1].gold == gold - 2 * loot
@@ -405,6 +421,21 @@ def test_loot(gold, cities, loot):
     assert lo.info["loot"] == loot
     assert any(isinstance(e, E.Msg) and (e.group, e.index, e.args) == (0x93, 0, (loot,))
                for e in ev) == (loot > 0)
+
+
+def test_loot_divides_by_the_stored_city_count():
+    """ovl36:0da0 / 0dc5 read DS:5dea[d] (written at 0cb5), not a fresh count; the take-over then
+    recounts (10c1): the city has changed hands in the word too."""
+    st = mk()
+    ci = add_city(st, 10, 10, 1, (1,))
+    for k in range(1, 4):
+        add_city(st, 20 + 3 * k, 20, 1, ())
+    st.players[1].gold = 1000
+    EC.refresh_cities(st)
+    add_city(st, 40, 40, 1, ())                  # a fifth city the word does not know
+    CT.take_city(st, ci, 0, 1)
+    assert st.players[1].gold == 1000 - 2 * (1000 // 4 // 2)
+    assert st.city_counts[:2] == [1, 4]
 
 
 def test_neutral_city_has_no_loot_and_computer_gets_no_message():

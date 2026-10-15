@@ -10,6 +10,7 @@ from warlords2.model.state import Monster
 from warlords2.rules import engine
 from warlords2.rules import ruins as R
 from warlords2.rules.engine import IllegalCommand
+from warlords2.rules.movement import remove_army
 
 from test_bonuses import put, set_terrain
 from test_heroes import dice, hero, mk
@@ -128,6 +129,55 @@ def test_search_needs_moves_site_and_hero():
     hr.x, hr.y, hr.moves_left = 5, 5, 0
     with pytest.raises(IllegalCommand):
         engine.apply(st, C.Search((hr.id,)))
+
+
+def test_search_is_ovl34_0000_on_the_adopted_selection(monkeypatch):
+    """Search(group) makes the group the selection and runs ovl34:0000 (`search_selection`) on it,
+    after the refusals; a searched site refuses before it runs."""
+    st = mkr()
+    site(st, 5, 5, SiteKind.GOLD_RUIN)
+    hr = hero(st, x=5, y=5)
+    seen = []
+    monkeypatch.setattr(R, "search_selection",
+                        lambda s, cls: seen.append((s.selection.selected, s.selection.hero, cls)) or ["ran"])
+    assert engine.apply(st, C.Search((hr.id,))) == ["ran"] and seen == [(hr.id, hr.id, C.Search)]
+    st.world.flags[5 * MAP_W + 5] |= MAP_EXPLORED
+    with pytest.raises(IllegalCommand):
+        engine.apply(st, C.Search((hr.id,)))
+    assert len(seen) == 1
+
+
+def test_search_keeps_the_stored_hero_of_the_selection():
+    """07be:0279 runs ovl34:0000 on DS:5e5e as stored: for the selected stack it is the hero a map
+    select left (ovl67:0955, the lowest slot), not 0529's leader; another group gets 0529's."""
+    st = mkr()
+    si = site(st, 5, 5, SiteKind.SAGE)
+    h1, h2 = hero(st, x=5, y=5), hero(st, x=5, y=5)
+    sel = st.selection
+    sel.selected, sel.moving, sel.group, sel.count, sel.hero = h1.id, [h2.id, h1.id], 1, 2, h2.id
+    ev = engine.apply(st, C.Search((h1.id, h2.id)))
+    assert ev[0].info == {"site": si, "kind": int(SiteKind.SAGE), "hero": h2.id}
+    st.pending = None
+    st.world.flags[5 * MAP_W + 5] &= ~MAP_EXPLORED
+    engine.apply(st, C.Search((h1.id,)))                    # not the selection: 0529's hero
+    assert sel.hero == h1.id
+
+
+def test_search_selection_reads_the_hero_pointer_as_it_is():
+    """ovl34:009b: DS:5e5e is a pointer; a freed record there is not null, so a stack on a temple
+    whose hero word points at it is not blessed (the hero branch tests the searched bit and the
+    kind; a temple for a human opens the menu)."""
+    st = mkr()
+    si = site(st, 5, 5, SiteKind.TEMPLE)
+    u = put(st, 1, 0, 5, 5)
+    gone = hero(st, x=9, y=9)
+    remove_army(st, gone)                                     # a freed record
+    sel = st.selection
+    sel.selected, sel.moving, sel.hero = u, [u], gone.id
+    ev = R.search_selection(st)
+    assert ev and ev[0].info.get("temple_menu") and ev[0].info["site"] == si
+    sel.hero = -1
+    assert isinstance(R.search_selection(st)[0], E.Blessed)
 
 
 # ----------------------------------------------------------------------------- temples

@@ -20,6 +20,9 @@ Evidence (WARLORD2.EXE ovl60):
   470 / 472 -> ovl60:0ba0 (rows move down one record, the selected row follows, clamped
   to row 6); 471 / 473 -> ovl60:0c11 (rows move up, clamped to row 0); 474 -> ovl60:0b7e
   (close with the selection), 475 -> ovl60:0b90 (close, nothing chosen).
+Input (DS:166a = 1, ovl60:08b1; `ui.keys.popup_input`): Return presses 474 (DS:155c), Esc 475
+(DS:1514), 'A'..'Z' nothing, any other key the chord; a left press on a disabled arrow chords
+(07be:0e7b).
 The dialog closes with the chosen record index, or None.  Texts and formats come from the
 data files and the EXE.
 """
@@ -32,6 +35,7 @@ from ...assets.fonts import CHANCE17
 from ...assets.text import printf
 from .. import registry
 from ..dialog import Dialog
+from ..keys import popup_input
 from ..layout import DISABLED, NORMAL
 from ..widgets import ButtonRow, kit, text_centred
 
@@ -57,6 +61,8 @@ class ScenarioSelect(Dialog):
             self.rows = [r + 1 for r in self.rows]
         self.selected = current                  # DS:2a49
         app = host.app
+        from .save_load import list_names
+        list_names(app, [r["dir"] for r in records])     # ovl60:05b5..05c4: record +0x14 into DS:483c
         last = getattr(app, "scenario_list_top", None)
         if last is None:
             last = ds_word(k.exe, LAST_TOP)
@@ -112,17 +118,7 @@ class ScenarioSelect(Dialog):
         self._states()
 
     def update(self, events, dt) -> None:
-        for e in events:
-            if e.type == pygame.MOUSEBUTTONDOWN and e.button == 3:
-                b = self.buttons.at(e.pos)
-                if b:
-                    registry.right_click_handler("button")(self.host, b.id, e.pos)
-                    return
-            hit = self.buttons.event(e)
-            if hit is not None:
-                self.press(hit)
-                if self.stack is None:
-                    return
+        popup_input(self, events, self.buttons, self.kit.exe, self.press)
 
     def draw(self, fb: pygame.Surface) -> None:
         k, f = self.kit, self.kit.fonts[CHANCE17]

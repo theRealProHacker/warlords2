@@ -6,7 +6,8 @@ the Game Setup screen and the bitmap came with Begin (`overview=`); Begin goes s
 into the game (ovl57:0cfe -> ovl61:0000(0, 1)), so only the engine game starts here.
 --scenario has no setup screen: the same load (`states.setup.load_scroll`, STRING groups
 135 then 137) runs first, its rolls from an `Rng` like the one `new_game` starts with.
-Then the first main-loop pass (`Game.loop_pass`) before the first frame of the map.
+Then the main loop runs (`Game.start_turns`: ovl61:0000(0, 1) -> ovl61:2123, whose passes begin
+with the site tiles, map words and cost map) before the first frame of the map.
 """
 from __future__ import annotations
 
@@ -36,9 +37,13 @@ class Building(Phase):
     def step(self, events, dt):
         if not self.done:
             return None
-        self.game.map_ready = True
-        self.game.loop_pass()
-        return "turn_start"
+        g = self.game
+        self.done = False
+        g.start_turns()
+        g.map_ready = True
+        if g._next is None and not g.dialogs:     # the loop was refused (logged): the bare map
+            return "human"
+        return None                          # turn_start / human chosen, or the message first
 
 
 PHASE = Building

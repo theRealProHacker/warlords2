@@ -15,6 +15,19 @@ Tools and dumps (dumps are in `out/`, not tracked; regenerate with the commands)
 | `tools/re/ai_dump.py` | `out/re/ai/dc/ovl18..30.c`, `res_{0555,0a8b,0b62,0c8c}.c` | compacted Ghidra decompile of every function of those segments |
 | `tools/re/xref.py` (existing) | `out/re/ai/rnd.txt` (filtered: `grep -E 'RND (ovl(1[89]\|2[0-9]\|30)\|0a8b\|0c8c\|0555\|0b62):'`) | every rnd() site with reconstructed (dice, sides, add) |
 
+Tool caveats (found in the second review; check the listing before relying on these dumps):
+* `funcs.tsv` / `callgraph.txt` split functions only at labelled entry points: an unlabelled
+  function is merged into the preceding one, so its callees appear as the preceding function's,
+  and a call into it may end a breadth-first search early. A path from these files (e.g.
+  `rnd_reach_turn.txt`) is a lead, not evidence: 077b:005f "reached from 0a8b:0254" was such a
+  false path (its rnd lies in the uncalled 077b:00c1).
+* `rnd@` markers in `callgraph.txt` can sit on the wrong function for the same reason.
+* `xref_ai.tsv` attributes every `es:[bx+off]` after a `les bx` of a far pointer to the AI
+  block when the pointer was DS:40ee earlier in the function; e.g. "ovl28:0efc R +0x0c" is the
+  hero table S, not AI[+0x0c].
+* The Ghidra decompile names DGROUP variables by another segment base (e.g. DS:412c appears as
+  DAT_451b_01cc): compare linear addresses, not the printed offsets.
+
 ## 1. Size and shape
 
 The AI is overlays **ovl18–ovl30** (≈57 KB of code, 175 functions in the listing's function
@@ -57,20 +70,20 @@ then ovl62:0af3. (Engine: `rules/turn.py` HOOKS["ai_turn"].)
 | AI function | called from | what it is | engine hook |
 |---|---|---|---|
 | ovl25:0000 | ovl68:01e3 | computer turn | turn `ai_turn` |
-| ovl25:0519 | ovl57:0eae (Begin); ovl49:0263 inside the uncalled ovl49:0203 | (re)initialise all 8 AI blocks, §4.1 | setup `ai_setup` |
+| ovl25:0519 | ovl57:0eae (Begin); ovl49:0263 in New Game ovl49:0203 (the *yes* callback of ovl49:019d, menu 500 / Alt+N; stub 307f:007f) | (re)initialise all 8 AI blocks, §4.1 | setup `ai_setup`; New Game `rules.saveload.new_game(ai_setup=)` |
 | ovl25:0919(c) | ovl47:01ed (hero offer) | city for a new hero, §6.18 | heroes `ai_hero_city` |
-| ovl25:09ab() | 27 sites: ovl00:0db3, ovl01:1ded, ovl34, ovl36:20a8, ovl47, ovl67:06eb, 0555:08bf, 0a8b:04c8 | "this side is computer-controlled now", §3.3 | needed by every rules module that asks it |
+| ovl25:09ab() | 28 far calls (ovl00 ×2 in 0db3, ovl01 ×13 in 1ded, ovl34 ×4, ovl36 ×2 in 20a8, ovl47 ×4, ovl67:06eb, 0555:08bf, 0a8b:04c8) [V grep `-> ovl25:09ab` over out/asm] | "this side is computer-controlled now", §3.3 | needed by every rules module that asks it |
 | ovl25:09d7(x,y,def,att) | ovl36:02c7 (human attack), ovl36:1502 (AI attack) | battle memory, §6.19 | combat `ai_memory` |
 | ovl26:0080 | ovl34:015a | sage choice | ruins `ai_sage` |
-| ovl26:038d(x,y) | ovl36:16a3 (end of the AI's real battle) | quest bookkeeping, §6.11a | new hook needed (combat, after the AI's battle) |
+| ovl26:038d(x,y) | ovl36:16a3 (last step of the AI's real battle ovl36:124a(x, y, 1), §7a.7) | quest bookkeeping, §6.11a | new hook needed (combat, after the AI's battle) |
 | ovl26:0000(c, prev) | 0a8b:0416 | early plunder of human cities, §6.11a | inside the move executor |
 | ovl28:0427(x,y) | 0a8b:0064, 0a8b:0598, ovl24:023f | the selected hero (DS:5e5e) picks up items lying on the square / city (§6.2) | inside the move executor |
 | ovl22:15c3(a, s) | 0a8b:01c8 | hero searches the site on arrival, quests (§6.6) | inside the move executor |
 | ovl29:1771(c,x,y) | 0a8b:0331 | re-target after a move, §5.12 | inside the move executor |
 | ovl23:0478 | 0555:06f7 | debug text only, prints for human sides (§6.6a) | none |
-| ovl19:1864 | ovl19:0f1b, ovl26:0000, ovl26:038d | capture choice (EL §6.5); ends with ovl29:1851 | city `ai_raze` = 1851 |
+| ovl19:1864 | ovl19:0f1b, ovl26:0000, ovl26:038d | capture choice (EL §6.5); the raze branch ends with ovl29:1851, whose result 1864 returns; only 0f1b uses it (ovl19:11e3), 0000 (ax = 1 at ovl26:007a) and 038d (ovl26:049a) discard it [V] | city `ai_raze` = 1851 (§9) |
 | ovl29:0000 | ovl57:02bb (scenario load) | clears city AI bytes, EL §9.1 | setup |
-| ovl29:0da9 / 0dff | ovl49:0d4b / ovl49:08a4 | read / write AI state in a saved game, §3.4 | persist |
+| ovl29:0da9 / 0dff | ovl49:0d4b (save 0a46) / ovl49:08a4 (load 0414) | write / read the AI state of a saved game (0dff then clears the path cache), §3.4 | persist (`ai.cards.load_draws` as `rules.saveload.load`'s `ai_read`) |
 | ovl29:0fd5, 103d | ovl39:00cc, 025a | production choice for garrisons and Active neutrals (EL §9.5) | setup / round end |
 | ovl30:0000 | ovl53:013a (new game) | territories, EL §9.5 + §4.2 | setup |
 | ovl30:0034 | ovl61:182d (round end) | empty function (`push bp; mov bp,sp; pop bp; retf`) [V] | none |
@@ -97,7 +110,7 @@ Layout. Initialiser ovl21:084d(p) (called for p = 7..0 by ovl25:0519, block lock
 | +0x02 | w | – | – | W ovl21:0000; R ovl20:10a8, ovl25:0af2, ovl27:06a0, ovl29:1a4d | own intact cities (§6.8) |
 | +0x04, +0x06, +0x08 | w | – | – | W ovl21:0000; R ovl20:10a8 (+6) | intact cities of other sides / neutral / not own and still unseen (§6.8) |
 | +0x0a | w | – | card +0x31; default 30/20/10 | R ovl25:0af2 | rebuilding quota: `max(5, AI[+0x0a]·cities/80)` |
-| +0x0c | w | 0 | bit 0 = card +0x0a ≠ 0; default bit 0 for personalities 1, 2 | R ovl18:0851 | bit 0: may attack cities of neutral (and, with no war at all, peaceful) sides (ovl18:0851) |
+| +0x0c | w | 0 | default bit 0 for personalities 1, 2; then `|= 1` when card +0x0a ≠ 0 (an OR: a card with 0 keeps the default bit, 1045..104b) | R ovl18:0851 | bit 0: may attack cities of neutral (and, with no war at all, peaceful) sides (ovl18:0851) |
 | +0x0e | w | – | – | W ovl28:065d; R ovl25:0af2 | number of own heroes recorded by the hero phase (≤ 6) (§6.2) |
 | +0x10 | w | – | card +0x2d; default 3/6/7 | R ovl25:0af2 | army type bought when gold ≤ 2000 |
 | +0x12 | w | – | card +0x2f; default 3/18/0 | R ovl25:0af2 | army type bought when gold > 2000 |
@@ -123,7 +136,12 @@ Layout. Initialiser ovl21:084d(p) (called for p = 7..0 by ovl25:0519, block lock
 | +0x3bc..+0x41c | 7 × w[8] | 0 | – | W ovl25:09d7; R ovl18:0000, ovl27:0e04, ovl20 | battle memory per opponent, §6.19 |
 
 AI[+0x3a] min member strength 1..4, +0x3c/+0x3e/+0x40 flyer / fast / medium source-city counts (ovl21:01b3, §6.8). Ranges +0x14, +0x3a..+0x40 and +0x4e..+0x55 are not initialised by 084d
-[V]; the block is not zeroed on allocation [U whether 0d28:011f zeroes].
+[V]; the block is not zeroed on allocation: 0d28:011f (handle allocator: free-handle search,
+0d28:0244 → 053c / 02cf / 05c8 / 0a84, header writes) has no store into the block; only the
+calloc-style 0d28:027c clears (rep stosb at 02af), and ovl25:04c5 does not use it [V 0d28 listing].
+So these fields hold whatever the heap held at the first Begin (and are saved so). +0x3a..+0x40 are
+zeroed by ovl21:01b3 at 01ec..01fa before any read [V]; no AI read of +0x14 or +0x4e..+0x55 was
+found [I: grep of the DS:40ee accesses in ovl18..ovl29].
 
 ### 3.2 City role byte AI[+0x56+c]
 
@@ -178,20 +196,42 @@ everywhere it behaves differently for the computer.
 
 ### 3.4 Lifetime and saving [V]
 
-* The AI blocks and the neighbour table persist for the whole game and are **saved**:
-  ovl29:0dff(file) (save, called from ovl49:08a4) writes the 8 blocks (0x42c bytes each, p =
-  0..7) and then the 0x4b0-byte neighbour table with 170b:006d, then calls 0555:0350;
-  ovl29:0da9(file) (load, ovl49:0d4b) reads them back in the same order with 170b:004e.
-  [I] that 006d writes and 004e reads: the save path is ovl49:0414, the load path ovl49:0a46.
-* ovl49:0203, the only other caller of ovl25:0519, has no caller in any listing (no near call,
-  no overlay stub entry points to it) [V grep]; it deletes all armies and rebuilds the map tables,
-  so it is an unused reset routine. A loaded game therefore keeps the saved AI blocks: the load
-  path ovl49:0a46 (from 0a09, 0a25, 11f3) reads them with ovl29:0da9 and nothing re-initialises
-  them [V].
+* The AI blocks and the neighbour table persist for the whole game and are **saved** [V]:
+  ovl29:0da9(file) (called from the save ovl49:0a46 at 0d4b) writes the 8 blocks (0x42c bytes
+  each, p = 0..7) and then the 0x4b0-byte neighbour table with 070b:004e (ah = 40h, write);
+  ovl29:0dff(file) (called from the load ovl49:0414 at 08a4) reads them back in the same order
+  with 070b:006d (ah = 3Fh, read) and then calls 0555:0350, the path-cache clear.  (res_070b:
+  0006 open / create, 003a close, 004e write, 006d read, 00a9 lseek.)  **The path cache is
+  cleared by the load, not by the save.**  (Before M10b this section had the two directions
+  swapped.)
+* ovl49:0203 is New Game: stub 307f:007f -> 0203, pushed by ovl49:019d (menu 500, Alt+N 0x131)
+  as the *yes* callback of its confirmation ovl56:0088 [V].  It frees all 1000 army records
+  (0b62:03be), runs ovl62:0000, ovl64:1927 / 1931, ovl65:01ff, ovl64:113b, sets DS:2a86 =
+  DS:166a = 0, ovl62:0af3, shows the Game Start screen ovl60:0000(1) (its talking face
+  ovl58:026f(2) rolls rnd(1, 30, 10) when the advisor talks; with DS:26c8 != 0 it returns at
+  once, ovl58:0293..029a) and then calls **ovl25:0519 on the abandoned game's SCN**:
+  all eight blocks re-initialised with their rnd draws (§4.1), DS:0832 set; a following Begin
+  reuses those heap blocks (and the other run words, EL §10.7), a following load draws nothing
+  more (`rules.saveload.new_game`).
+  Earlier versions of this document called 0203 uncalled dead code; that was wrong.
+* A loaded game keeps the saved AI blocks: the load ovl49:0414 reads them with ovl29:0dff and
+  nothing re-initialises them afterwards [V]. **But** when the blocks are not yet allocated
+  (DS:0832 == 0, i.e. a game loaded before any Begin, New Game or load in this run of the
+  program), the first ovl25:056c(p) of 0dff (ovl29:0e0f) calls ovl25:04c5(1)
+  (ovl25:057a..057d), which allocates all eight blocks and runs ovl25:0519 → ovl21:084d / 0d7b
+  for p = 7..0 — with their rnd() draws (§4.1, §8) — before the file data overwrites the
+  blocks [V ovl25:04c5..0516, 0573..0580]. The SCN image (2c04:0000, 0x2ee1 bytes) has already
+  been read at ovl49:063c, before 0dff (ovl49:08a4, called only when the load's `game` flag
+  [bp+8] is set), so the number of draws per side follows the **loaded** game's 0x0d0 / 0x0c0
+  / 0x137 (and the computers' cards), and the fight-order rows 0d7b copies from the cards stay
+  in the loaded SCN [V]. A reimplementation that loads a saved game must therefore consume
+  those draws when its own "blocks allocated" flag is 0, or the RNG stream differs from the
+  original after such a load (`ai.cards.load_draws`).  The overview rebuild ovl63:232b (256
+  rnd(1, 3, 1)), when the load runs it, comes after these draws (ovl49:08fe).
 * The path cache of the path search (20 slots × 0xd6 bytes at DS:3f7e, §7a.0/§7a.3) is keyed only
   by target, mode and mask, survives across turns and sides, and is cleared only at allocation and
-  by the save path (0555:0350 at the end of ovl29:0dff) [V]: a reimplementation must keep it to
-  reproduce the original's paths.
+  by the game load (0555:0350 at the end of ovl29:0dff, ovl49:0414) [V]: a reimplementation must
+  keep it to reproduce the original's paths.
 * SCN fields the AI owns: city +0x2f (claim/territory, EL §9.5; read by ovl29:0a27), city
   +0x2c..+0x40 cleared at scenario load (ovl29:0000). They are in the SCN image and saved
   with it.
@@ -210,7 +250,7 @@ ovl21:084d(p):
     personality = level (0x0c0[p]) if computer (0x0d0[p] != 0) and level in {0, 1}, else 2
     ovl21:0d7b(personality, p)
     for k in 3..0: task force k word +0 = 0
-    for i in 7..0: battle-memory words +0x3bc..+0x40c [i] = 0   (+0x41c not cleared)
+    for i in 7..0: battle-memory words +0x3bc..+0x41c [i] = 0   (all seven rows; +0x41c at ovl21:09a3)
 ```
 ovl21:0d7b defaults (personality 0 / 1 / 2) and the card overrides are EL §6.8, re-checked
 here: defaults draw rnd(1,4,0)×3 (0: +0x18, +0x1e, +0x1a), (1: +0x18, +0x1e, rnd(1,8,0) +0x1c),
@@ -263,7 +303,14 @@ for k in 0..5:
 0555:1b2e; return n
 ```
 Query ovl25:0656(c, d, ids_out, dists_out): returns 1 if d is one of c's six entries; copies
-the six ids / distances when the pointers are non-null.
+the six ids / distances when the pointers are non-null. The test compares the id **byte**
+(zero-extended) with the word d (0676..067b), so d = 255 matches an empty entry (0xff) and
+d = −1 never does [V].
+
+The temporary owner of city c is SCN 0x110, which 0398 has set to 0 (045d, 0499..0565); the
+restore (062b..071b) writes the saved owner byte back and sets the four owner nibbles to
+**owner & 0xf**, whatever they held before [V]. 0749 writes only its picks: entries after the
+last pick keep 0398's 0xff / 0 [V 094e..0a0f].
 
 ### 4.3 Territories, ovl30:0000 → ovl29:010b; garrisons [V]
 
@@ -290,6 +337,10 @@ for i in 0..7 with army a = list[i]:
 0c8c:0529()                                       # stack move mode (EL §4.2)
 return 1
 ```
+DS:5e62 keeps its previous value when no entry's row byte beats −1 (every byte ≥ 0x80) [V
+0b9d..0bd3]; DS:5e3e[i] is null for each −1 entry, so a list with a −1 before a live entry
+leaves a hole in DS:5e3e (kept in place by the engine, `Selection.moving`; Changelog "Selection
+holes").
 5.3 **0c7e(army, kind, idx)** goto point: kind 4 → unchanged; kind 1 (city idx): own city →
 (x+1, y+1); other → (x, y) moved one step toward the army by 0d88 (each coordinate +1 when
 below the army's); kind 2 → item idx position (2c04:0d02/0d04 + 0x1d·idx); kind 3 → site idx
@@ -312,10 +363,16 @@ started and partly done), else 0.
 (−1 none) without setting anything.
 
 5.8 **11d5(c)** buy a flying slot: s = 1ae9(c) (weakest slot); ovl44:1128 (open ARMYTYPE);
-for t in 0..28 with flies(t) (DS:45c4+6t) and not w13 (DS:45c8+6t): price = w4(t) (ovl44:138f);
-if price + 30 ≤ gold: ovl44:1299(c, s, t) (fills the slot, gold −= price, defence recomputed),
+for t in 0..28 with flies(t) (DS:45c4+6t) and not w13 (DS:45c8+6t): r = ovl44:138f(t, …) = index
+of the production record DS:447c + 0x3e·r whose word +0 == t, price = that record's word +0x1e
+(an output argument of 138f) [V ovl44:138f..142b]; (a loop over c's four slots compares their
+types with t and discards the result: no effect, 1214..1232);
+if price + 30 ≤ gold (signed): ovl44:1299(c, s, r) (fills the slot, gold −= price, defence recomputed),
 AI[+0x11e+c] |= 2, +0x2d = 0, +0x31 = 0; stop. An unaffordable type moves on to the next t.
-ovl44:11e2 at the end. [V]
+ovl44:11e2 at the end. [V] When 1ae9 returns −1 (all four slots at effective strength ≥ 10),
+1299 writes the "slot −1" bytes +0x15 (owner), +0x19, +0x1d, +0x21, +0x25 [V ovl44:12b6..1347,
+no range test]; the engine refuses that case. ovl44:138f leaves its outputs unwritten when no
+record has word +0 == t (returns 29); with ARMYTYPE's ids 0..28 that does not happen.
 
 5.9 **1ae9(c)** slot to replace: scan s = 0..3; the first empty slot (type 0xff) is returned
 at once; otherwise the slot with the lowest effective strength (strength + 2 when w15 == 1),
@@ -330,10 +387,27 @@ on (x, y), table scanned 0x181-1..0; 12c9 requires moves left (+7) ≥ minmoves 
 count 1: DS:5e3e[0] = list[0]; count > 1: DS:5e3e[i] for every entry and 2bda = 1;
 DS:5e62 = DS:5e3e[0].
 
-5.12 **15c5(x, y)** win odds: `n = max(AI[+0x20], 1)`; n times ovl36:124a(x, y, 0) (battle
-set-up for the current selection against the square, battle loop, no casualties), count the
-results whose surviving-defender count is 0; return wins·100/n. **Each simulation draws the
-battle dice** (EL §3.4), so every odds query consumes rnd().
+5.12 **15c5(x, y)** win odds [V ovl29:15c5..1625]:
+```
+n = AI[+0x20] if AI[+0x20] >= 1 (signed) else 1          # always 10: only 084d writes +0x20
+wins = 0
+repeat n times: r = ovl36:124a(x, y, 0); DS:410a = r (far, no reader)
+                if r[+2] (= DS:412e, defender survivors) == 0: wins += 1
+return wins·100 idiv n                                    # signed, truncating
+```
+124a(x, y, 0) [V ovl36:124a..1376]: DS:415e/415c = x, y; set-up ovl38:008b(x, y) for the
+**current selection** against the square; then DS:412c = defenders (DS:42c5), DS:4130 =
+attackers (DS:42c4), battle loop ovl36:08a6, DS:412e / DS:4132 = surviving defenders / attackers
+(DS:422c[i] / DS:4224[i] ≠ 0); returns the far pointer DS:412c. No casualties, no movement, no
+battle memory, no treachery, no medals, no quest check (all of those are mode 1 only, §7a.7).
+* The attackers are DS:5e3e[0..DS:5dfe−1] when DS:2bda ≠ 0, else DS:5e62 alone [V
+  ovl38:0293..02ea]; so each caller's selection decides what is simulated (§7).
+* **Dice:** each simulation draws the battle dice of 08a6 (EL §3.4: pairs of rnd(1, die, 0)
+  until each duel ends) — except when either side is empty: 08a6 ends at once when the attacker
+  or the defender count is 0 (ovl36:08c4..08e1) and draws nothing [V]. So a target square
+  without defenders (an ungarrisoned city, an empty square) costs **0 draws** and returns 100.
+* The set-up and the loop overwrite the battle arrays DS:4224..42e6 and the battle log
+  (DS:41b2..41b5), as every set-up does (EL §3.5); these leftovers are read later (§7).
 
 5.13 **1771(c, x, y)** (from the move executor 0a8b:0254) and **1885(x, y, flag)** target choice:
 ```
@@ -356,15 +430,27 @@ battle dice** (EL §3.4), so every odds query consumes rnd().
           if s > best: best, pick = s, c        # strict: highest index wins ties
       unlock; return pick
 ```
-5.14 **1851()** (after razing, end of ovl19:1864; engine hook `ai_raze`): distance map from
-the leader DS:5e62 with the stack's mode, then `return 1885(leader.x, leader.y, 1)` — the
-decompile shows no return value, but ax from 1885 passes through unchanged (ovl29:187b..1884),
-and ovl19:0f1b attacks the returned city next [V].
+[V ovl29:1771..1850, 1885..1a4c] Exact points:
+* 1771 draws 15c5 first, then reads the leader's square; "human" is `0x0d0[o] == 0` (not
+  ovl25:09ab), and the rnd(1,4,−1) is drawn whenever `o != 0xf` and o is human, **also when ok is
+  already 1** (a human side at war) [V 17de..1808]. `p > 50` is signed (`jle 0x32`).
+* 1885's own x, y parameters are never read: their stack slots are passed to ovl21:0a85 as the
+  `&x, &y` outputs (1998..19a3) and `x == -1` is the "unreachable" test. The candidate tests
+  run in the order shown; 15c5 is drawn only for a reachable foreign candidate. `d < DS:5e00`
+  is signed; s = −2 never beats the start value −1, so a candidate with p ≤ 10 is never chosen.
+* No intact test on the owner side: a city counts when terrain(corner) == 10 (intact) [V 190d].
+5.14 **1851()** (after razing, end of ovl19:1864; engine hook `ai_raze`): distance map
+0555:1ab9(15, leader.x, leader.y, DS:5dfc, DS:5dfa) from the leader DS:5e62 with the stack's
+mode and mask, then `return 1885(leader.x, leader.y, 1)` — the decompile shows no return value,
+but ax from 1885 passes through unchanged (ovl29:187b..1884), and ovl19:0f1b attacks the
+returned city next [V]. 1885 draws a 15c5 per reachable candidate (§5.13), so the hook must run
+in full on every AI raze, whichever caller uses the result (§9).
 
 5.15 **1626(x, y, &n, &str, &heroes)**, **16ae(x, y)** (any of the 3×3 squares has road-layer
 bit 0x20 [I segment]), **170c** (centres the view and shows the move only for a human side),
 **1a4d(c, &slot)** (production pick of kind 3 dry-run; ok unless AI[+0x02] ≥ 12 and its
-strength ≤ 2, or AI[+0x02] ≥ 8 and ≤ 1).
+strength ≤ 2, or AI[+0x02] ≥ 8 and ≤ 1; "strength" = the slot's strength + 2 when
+DS:45c9[6·type] (w15) == 1, the same effective strength as §6.8 `eff` and 1ae9).
 
 ## 6. The computer turn, ovl25:0000 [V]
 
@@ -399,7 +485,7 @@ vectoring ovl25:085f; progress 95
 0a4c:0348; progress 100
 DS:0836 = 0; ovl25:063d (unlock table); unlock AI block
 ovl00:1063                          # refused de-escalation penalty (EL §6.6)
-ovl25:045e: if Alt or Shift held (0000:0417 & 0x0b): ovl64:...:0000(0) (settings, rules.md §9.7)
+ovl25:045e: if Alt or Shift held (0000:0417 & 8, or & 3): ovl33:0000(0) at 0479 (Settings, rules.md §9.7)
 ```
 "progress n" = ovl61:131b(n). The 0x0d0 flip only matters for a human side, which never
 runs ovl25:0000 from ovl68:0000 [I]; it is reproduced as coded.
@@ -458,9 +544,11 @@ for p in 7..0 alive (cur included):
 if leader != -1 and leader != cur:
     for p in 7..0 alive: prop(cur,p) = 2 if p == leader or p == enemy else 0
 if not human and AI[+0x38] != 0:                  # step F (card +0x65)
-    for p in 7..0 alive computer, p != cur, prop(cur,p) != 0: if ovl18:0a6e(p): prop(cur,p) = 0
-    if some alive non-computer h (0x0d0 != 1) has cur_rel(cur,h) == 2:
-        for p in 7..0 alive computer with DS:40f2[p] != 0: prop(cur,p) = 0
+    for p in 7..0, alive, 0x0d0[p] != 0, p != cur, prop(cur,p) != 0:   # 057c..05f4
+        if ovl18:0a6e(p): prop(cur,p) = 0
+    if some h in 7..0, alive, 0x0d0[h] != 1, has cur_rel(cur,h) == 2:    # 05fb..0646 (h = cur allowed)
+        for p in 7..0, alive, 0x0d0[p] == 1, DS:40f2[p] != 0:          # 0651..069d, no p != cur test:
+            prop(cur,p) = 0                                             #   prop(cur,cur) is cleared too
 if not human and 2c04:0116 != 0:                  # step G ("I am the Greatest", EL X29)
     vs_human[s] = 1 for each alive computer s with cur_rel(s,h) == 2 for some alive non-computer h
     for p in 7..0 alive computer: if vs_human[cur] or vs_human[p]: prop(cur,p) = 0
@@ -476,7 +564,11 @@ DGROUP BSS]; then 0a6e is 0.
 position); for c in count-1..0 with terrain 10, claim(c) ≠ cur and (claim(c) == 0xf or the
 claiming side is dead): d = dist(c, c0); keep the smallest d with d < 40 (strict <, start
 10000: highest index on ties); set claim(best) = cur. One city per turn. [V] (c0 = −1 when no
-city stands on the capital square: the record −1 is read [U what it holds]).
+city stands on the capital square; then the city record −1 is read, which lies inside the
+relation matrix and is therefore deterministic: record −1 = 2c04:157d − 0x41 = 2c04:153c, so its
+x = word 2c04:153c (relation bytes [0][1], [0][2]), y = word 2c04:153e ([0][3], [0][4]) and its
+owner byte +0x15 = 2c04:1551 = relation byte [2][6] (2c04:153b + 8·2 + 6) [V address arithmetic].
+A reimplementation must read these exact relation bytes, not treat −1 as "no capital".)
 
 `ovl18:0851(c)` attack permission (callers ovl20:10a8, ovl22:05ff): owner 0xf → 1; else
 with n = number of alive sides s with `cur_rel(cur,s) == 2` and `r = cur_rel(cur, owner)`:
@@ -505,7 +597,7 @@ for p in 7..0:
               + 4·mem3bc[p] + mem3cc[p] + mem3dc[p] + 2·(mem3ec[p] + mem3fc[p] + mem40c[p])
               + lvl + |inf - infamy[p]| / 8 + |cities[cur] - cities[p]| / 4     # idiv, truncating
 any_war = some alive p != cur with prop(cur,p) == 2           # the proposals as they stand
-if 2c04:0116 and cur is computer: score[p] = 0 for alive computers p allied against humans (as §6.1 step G)
+if 2c04:0116 and cur is computer: score[p] = 0 for alive computers p with vs[cur] or vs[p] (as §6.1 step G)
 for p in 7..0:
     if ovl18:0a6e(p): score[p] = 0
     if any_war and prop(cur,p) == 0: score[p] = 0
@@ -734,7 +826,8 @@ if terrain(item x, y) == 10 and owner(ovl62:044a(item x, y)) != cur: return 0   
 return 1
 ```
 * On a city square ovl62:044a should find the city; if it returned −1 the owner byte of record −1
-  (2c04:157d − 0x41 + 0x15) would be read [V code; U whether reachable, not checked].
+  (2c04:1551 = relation byte [2][6], see ovl18:0917 in §6.1) would be read [V code; whether
+  reachable not checked — every intact-city square lies in some city's 2×2 block].
 
 #### ovl28:1348(j, S) enemy cities [V 1348..1636]
 
@@ -811,15 +904,23 @@ return r
 ```
 h = S[j]; c = S+0x38; hc = S.city[j]                                 # 0b8b..0bcb
 d = dist(c, h)                                                       # 0bf9  [V] never read afterwards
-n = ovl29:13b2(h.x, h.y, &L8, (h.+0xe>>4)&7, h.+0xe&0xf, 12)         # 0c04..0c57  [V] selects
-if n == 0: return 0                                                  # 0c5c
-if hc != -1 and AI[+0x182+hc] (byte) == n:                           # 0c61..0c78  [V] the group is the whole garrison
+n = ovl29:13b2(h.x, h.y, &L8, (h.+0xe>>4)&7, h.+0xe&0xf, 12)         # 0c04..0c57  [V] selects; n is NOT stored
+if n == 0: return 0                                                  # 0c5a..0c5c (`or ax, ax` only)
+if hc != -1 and AI[+0x182+hc] (byte) == j:                           # 0c61..0c78  [V] compares with [bp-2], see below
     th = ovl20:0a3e(h.x, h.y, -1)                                    # 0ca1
     if th < (15 if T > 5 else 10): return 0                          # 0cac..0cc1 (jg)  [V] stay
 ovl29:0ae7(L8, 1, c, 0)                                              # 0ccf  [V] order kind 1 city c
 0a8b:0001(leader.goto.x, leader.goto.y, 0)                           # 0ce5  [V]
 return 0                                                             # 0ced: di is 0 throughout  [V]
 ```
+* **Uninitialised local** [V listing + decompile `local_4`]: 0b75 never writes [bp-2]; the
+  `cmp ax, [bp-2]` at 0c75 reads a stale stack word. 0000 calls 0efc(j, &S) (3 words) right before
+  0b75(j, &S, 0) (4 words), so 0b75's bp-2 is 0efc's bp-4, where 0efc saved di (0efc 0f00 `push
+  di`) = 0000's di = **j**, the hero's slot in S (0..5). Nothing else writes that word between the
+  two calls (0314..0357 only dispatches) [V]; only a hardware interrupt taken in that ~25-instruction
+  window could change it [I, negligible]. So the "stay" test is `garrison count == j`, not
+  "the group is the whole garrison": a reimplementation must compare with j. (07ea's similar test at
+  0a20 does use its n, [bp-2] written at 0905 [V].)
 * 0b75 always returns 0, so after a city move the hero's rounds end [V].
 * 0ae7 sets the goto by ovl29:0c7e (enemy city: corner moved one step toward the army, ai.md §5.3);
   the executor attacks the city on reaching it, and for AI[+0x46] == c with a hero selected it does not
@@ -925,8 +1026,12 @@ until stable
 * **Dead 0xff test** [V]: both 17db (198c..1992) and 1a3d (1ab3..1aba) load the row byte with cbw
   and compare with 0x00ff, so an empty entry (0xff) becomes item −1, never skipped. Item −1's type
   byte is 2c04:0ce0 = byte +0x16 of site 39's name (site 39 = 2c04:0cca..0ce8); its holder word would
-  be 2c04:0ce3 (site 39 +0x19/+0x1a). Since a name byte is 0 or printable (≥ 0x20), it never equals
-  1, 2, 5, 6, 7 or 8, so the bug has no effect [I]. A reimplementation simply skips 0xff [I].
+  be 2c04:0ce3 (site 39 +0x19/+0x1a). The site name is +4..+0x17, so 0ce0 is name byte 18. It is
+  0x00 in every shipped scenario (the .SCN files are the 2c04 image: ERYTHEA, ISLADIA, HADESHA,
+  DRAGON, SORCERY, TUTORIA, RANDOM; checked at file offset 0xce0) [V data]; the game never writes
+  site names in play, and a generated name byte is 0 or printable (≥ 0x20). It never equals 1, 2,
+  5, 6, 7 or 8, so the bug has no effect, and the holder word is never written for item −1 (the
+  type test fails first) [V]. A reimplementation simply skips 0xff.
 * Only the giver's row is cleared; the receiver's row is not extended while both counters move [V].
   This is what ends the B pass: a receiver's counter says it has an item but its row has none to
   give. Examples [I, worked from the code]: B = (1, 0) → the item moves to the second hero and stays
@@ -1001,7 +1106,8 @@ in army +0xe bits 4-6 (value k+1).
     cap = ovl62:044a(capital of cur)
     if owner(cap) not in (0xf, cur) and no active TF (k' < AI[+0x24a]) has enemy == owner(cap):
         0607(); return 0                          # our capital is lost: drop the oldest TF
-    if 041c(k) == 0: 066d(k); return 0            # no target left
+                                                  # (cap = -1: owner = byte 2c04:1551, §6.1)
+    if 041c(k) == 0: 066d(k, 0); return 0         # no target left
     1579(k)
     shared = another active TF has the same staging city
     if (not shared and owner(TF.staging) == cur) or 02ed(k):
@@ -1011,14 +1117,20 @@ in army +0xe bits 4-6 (value k+1).
             if 06e9(k) and TF.staging >= 0: ovl24:023f(TF.staging, 1)
             if TF active: 16fd(k); return 1
     return 0
-02ed(k): new staging = nearest (dist, strict <, start 1000) of the staging city's six neighbours
-    owned by cur that is not a staging city (ovl27:07f8); none → 066d(k), return 0; else set, return 1
-041c(k): targets that are AI[+0x46] or no longer owned by the enemy → −1; n = remaining
-    for each neighbour t of the staging city (i = 5..0) owned by the enemy, not flag bit 0, not listed:
-        n += 1
-        slot = highest empty target slot (scan 5..0), else the slot with the largest distance
-        if empty or that distance > NBdist(staging, i): put t there with that distance
-    return n
+02ed(k): new staging = nearest (dist(n, staging), strict <, start 1000, NB slots i = 5..0, so the
+    highest slot wins ties) of the staging city's six neighbours owned by cur that are not a
+    staging city (ovl27:07f8); no intact test; none → 066d(k, 1), return 0; else set, return 1
+041c(k): for i in 0..5: a target that is AI[+0x46] or no longer owned by the enemy → −1;
+        n = number of the others (no intact test)
+    for each neighbour t of the staging city (NB slot i = 5..0) owned by the enemy, not flag bit 0,
+        not already in TF.targets:
+        n += 1                                    # counted even if it is not stored below
+        slot = -1; worst = 0
+        for j in 5..0: if targets[j] == -1: slot = j; worst = -1; break     # highest empty slot
+                       if dists[j] > worst (signed): slot = j; worst = dists[j]   # largest, highest j on ties
+        if slot != -1 and (worst == -1 or NBdist(staging, i) < worst):
+            targets[slot] = t; dists[slot] = NBdist(staging, i)   # a NB distance, not a graph distance
+    return n                                      # [V ovl19:041c..0606]
 066d(k, reason): role[staging] = 8; role[source] = 8 for every source; ovl27:08ba(k)   # reason unused
 0607(): 066d on the TF with the largest age (strict >, k from AI[+0x24a]-1 down: highest index on ties)
 06e9(k): launch a group from the staging city
@@ -1036,22 +1148,27 @@ in army +0xe bits 4-6 (value k+1).
     every army of L: +0xe bits 4-6 = k + 1
     0f1b(k, L, best); return 1
 08b2(k, L): j = highest free leader slot (3..0); if none: return
-    leader = the first hero in L scanning 7..0, else the strongest (strict >)
+    leader = the first hero in L scanning 7..0, else the strongest (+8, signed, strict >: highest
+    slot on ties); a hero found later in the scan still wins [V 08b2..0995]
 1251(k): a leader that is no longer own or no longer carries group k+1 is removed (−1)
 0996(k): for j in 3..0:
     repeat:
         1251(k); a = TF.leaders[j]; if a == -1: break
-        n = ovl29:13b2(a.x, a.y, L, group(a), kind(a), ·)  # its group on its square
+        n = ovl29:13b2(a.x, a.y, L, group(a), kind(a), 0)  # its group on its square (09ee push 0)
         if n == 0: break
         0c8c:0529(); 0555:1ab9(15, a.x, a.y, DS:5dfc, DS:5dfa)    # distance map with the stack's mode
         r = 0b49(k, L, TF.enemy, 15)
         if r == 0:
-            c = order index of the last member if its kind is 1, else none
+            c = order index of the first non-empty L slot scanning 7..0 if its kind is 1, else none
             if c != none: 0f1b(k, L, c)            # keep marching on its city
             break
         if r in (1, 3): break                      # r == 2: same group again
 0b49(k, L, enemy, range):
-    near = enemy city with distance (ovl21:0a85 in the map) < 50 and < DS:5e00 and 15c5 > 75, nearest (strict <, start 1000)
+    near = -1; bd = 1000
+    for c in count-1..0 with owner(c) == enemy:          # no intact and no flag-bit-0 test
+        d = ovl21:0a85(c, &x, &y, map, 0)               # x not tested: unreachable gives d = 100
+        if d < 50 and d < DS:5e00 (signed): p = 15c5(c.x, c.y)   # drawn only here
+            if p > 75 and d < bd: near, bd = c, d       # strict: highest index on ties [V 0b49..0bec]
     r = 0c32(k, L, enemy, range, map)
     if r != 0 and near != -1: r = 0f1b(k, L, near)
     return r
@@ -1068,21 +1185,28 @@ in army +0xe bits 4-6 (value k+1).
     for every own survivor in L: if c != none: kind 1, index c (order restored); non-own entries → -1
     return 2
 0f1b(k, L, c): attack/enter city c
-    if L non-empty and terrain(c) != 10:           # c was razed
-        c = the TF target with terrain 10 nearest by dist(·) [I: arguments of 0a8b:0acc hidden]
-    loop:
+    if L[0] != -1 and terrain(c) != 10:            # c was razed
+        best = 1000; pick = -1
+        for i in 0..5 with t = TF.targets[i] != -1:
+            d = dist(L[0].x, L[0].y, t.x, t.y)        # computed before the terrain test [V 0fcc..0ff3]
+            if d < best and terrain(t) == 10: pick, best = t, d   # strict: lowest i on ties
+        if pick != -1: c = pick
+    loop:                                          # the retarget above is not repeated in the loop
         nt = #targets; drop non-own entries of L; was = owner(c)
         ovl29:0ae7(L, 1, c, 0); r = 0a8b:0001(leader.goto, 0)
         if r == 1: ovl24:0000(1); 1251(k); return 3     # 0a8b:0001 result 1: the whole selection is deleted
         1251(k)
         if owner(c) != cur or was == cur: return 3     # not taken, or it was ours already
-        capital = c is cur's capital square
+        capital = (c.x, c.y) == player[cur] capital (2c04:0193/0195 + 0x14·cur)
         if capital or nt < 2 or not TF.flags & 1:
             if not capital: sack (199c) if flags & 2 else pillage (1a2a) if flags & 4
             134c(k, c); return 1
-        c = 1864(c, 0)                                  # flag 1: capture choice, may raze
-        if c == -1: return 1                             # kept (occupy / sack)
+        c = 1864(c, 0)                                  # TF flag 1: capture choice, may raze
+        if c == -1: return 1                             # kept (occupy / sack), or razed with no next target; no 134c
         # razed: 1864 returned the next target city (ovl29:1851) → attack it in the same call
+    # L may hold holes here (0c32 drops dead entries, then 0b49 calls 0f1b; or members killed
+    # in an earlier pass of this loop): 0ae7 writes them into DS:5e3e as null entries in place
+    # (Changelog M8b4, "Selection holes")
 134c(k, c): after taking c (c != staging; else return 0)
     ovl24:023f(c, 1); remove c from the targets (first match)
     tn = Σ over c's neighbours owned by the enemy of [d<10]+[d<20]+[d<30]+[d<50]  (NB distances)
@@ -1090,14 +1214,16 @@ in army +0xe bits 4-6 (value k+1).
     new = c if to < tn else staging; add new to TF.stagings (first empty, if not present)
     if tn == 0 and to == 0: 066d(k); return 0        # TF finished
     TF.staging = new; role[c] = 7; 16fd(k); return 1
-1579(k): with exactly one target T: T's neighbours (0..5) without flag bit 0: enemy-owned → added
-    to the targets (first empty slot); own: staging found → keep; else the first that is not a
-    staging city (07f8) becomes the new staging city (if the current one is not a neighbour)
+1579(k): with exactly one target T (the highest-index non-empty slot): T's neighbours (NB slot
+    0..5) without flag bit 0: enemy-owned → added to the first empty target slot (0..5) without
+    writing its distance word +0x272 (it keeps its old value) [V 165b..168a]; own: staging found →
+    keep; else the first that is not a staging city (07f8) becomes the new staging city (if the
+    current one is not a neighbour)
 16fd(k): bring rear armies forward
-    for each former staging v in TF.stagings (v != staging, owned by cur):
+    for each former staging v in TF.stagings (i = 0..5; v != -1, v != staging, owned by cur):
         if no neighbour of v owned by another side (≠ 0xf, ≠ cur) lies at NB distance < 25:
             ovl24:023f(v, 1)
-            n = ovl29:13b2(v.x + 1, v.y, L, 0, 0, TF[+0x58])   # unordered armies with allowance >= the TF minimum [I: order of the two zero arguments]
+            n = ovl29:13b2(v.x + 1, v.y, L, 0, 0, TF[+0x58])   # sub 0, kind 0 (17f1 push dword 0), allowance >= the TF minimum [V]
             if n > 3: ovl29:0ae7(L, 1, staging, 0); 0a8b:0001(leader.goto, 0)
 ```
 The capture choice ovl19:1864(c, forced) [V]:
@@ -1187,7 +1313,7 @@ for pass = 0, 1:                                                    # di, 02e2/0
   < 4 are released) [V]; AI[+0x22] = non-flying explorers [V]. Their other readers (ai.md §3.1:
   ovl24:023f, ovl21:0000) are outside this section.
 * A hero explorer is released as soon as the side has a city with role 7 [V] (role 7 is the
-  task-force target role, ai.md §3.2 [I]).
+  task-force **staging** city, §3.2 / §6.13).
 * Flag 0x20 = "explorer" [I from this function and 15c3, which sets it on allies before calling
   the same ovl20:0e4b]. 0e4b itself belongs to the ovl20 trace.
 
@@ -1312,7 +1438,7 @@ turn outside a city is re-planned [V].
 ```
 a = army[i]
 near = ovl20:0981(a.x, a.y, cur)                            # 0c97: min dist(a, own intact city), start 10000, strict <
-weak = a.strength < 3 or a.max_moves < 8                    # 0cac, 0cbe signed bytes -> di
+weak = a.strength (+8) < 3 or a.allowance (+6) < 8          # 0cac, 0cbe signed bytes -> di
 if not flies(a.type) and weak:                              # 0cde..0ce9
     ovl24:015e(i, 1); return                                # 0cee: DISBAND the army (see below)
 n = ovl29:12c9(a.x, a.y, &list[8], 8)                       # 0d25: own armies on the square with moves_left >= 8; selected
@@ -1328,7 +1454,7 @@ if changed: ovl29:14d3(&list)                               # 0e61 reselect
 if n < 2 and weak:                                          # 0e69 (n = 12c9's count, before filtering)
     ovl24:015e(i, 1); return                                # 0e76 (a weak flyer alone is disbanded)
 0c8c:0529()                                                 # 0e81 stack move mode -> DS:5dfc / 5dfa
-lim = (a.strength / 2) * 10 if DS:5e5e == null else 50      # 0e86..0ea8: no hero: signed /2 truncating (cdq,sub,sar)
+lim = (a.strength / 2) * 10 if DS:5e5e == null else 50      # 0e86..0ea8: no hero: signed /2 truncating (cdq,sub,sar), then ·10
 lim = min(near + 10, lim)                                   # 0ead..0ec1 (near+10 if strictly smaller)
 0555:1ab9(lim, a.x, a.y, DS:5dfc, DS:5dfa)                  # 0eea distance map from the army's square
 t = ovl22:0f3c(n)                                           # 0ef7
@@ -1344,8 +1470,8 @@ else:
   idle walkers that are weak (strength < 3 or max moves < 8) and stacks that find no reachable
   target city within the search limit [V]. (Names of ovl24 helpers belong to the ovl24 trace.)
 * The search limit is in pathfinder cost units (§4.3): up to 10 more than the straight-line distance
-  to the nearest own city, capped at 5·strength (no hero; strength here is the **trigger army's**,
-  not the stack's) or 50 with a hero [V].
+  to the nearest own city, capped at 10·⌊strength/2⌋ (no hero; strength here is the **trigger
+  army's**, not the stack's) or 50 with a hero [V].
 * `n` passed to 0f3c is the 12c9 count (before the walkers were dropped) [V 0ef2 pushes [bp-2]].
 
 #### ovl22:0f3c(n) choose a target city from the distance map [V]
@@ -1375,8 +1501,10 @@ return best
 * ovl21:0a85(c, &x, &y, T, flag) [V decompile]: cap = 100 (flag 0) or 1000; iterates the city's
   squares through the offset list DS:07d8 (0a8b:0b4d), reads `T[x*0x9c + y]` (word, byte offset
   `x*0x138 + y*2`), keeps the smallest `|value|` strictly below the cap and its square; x = y = −1
-  when none. So the table is x-major, 156 words per column [V decompile; I that DS:07d8 lists the
-  2×2 city squares].
+  when none, and then the return value is the cap (100 here). So the table is x-major, 156 words
+  per column. DS:07d8 = {0,2,2,4,4,4,6,6,6,0,0,0} are cumulative steps (0a8b:0b4d, listing
+  ovl21:0ad5..0b4d) that walk the **12-square ring around the 2×2 block**, not the city's own
+  squares (§6.8 0a85, §7a.4) [V].
 * Every foreign candidate within reach costs AI[+0x20] battle simulations [V].
 
 #### ovl22:10e3 specials [V]
@@ -1393,8 +1521,9 @@ for c = count-1..0:                                         # 10f7
         role(c) = 13                                        # 1194
 ```
 * r == 1 means "a hero but no flyer on the square" (§2.10): the city is switched to role 13 [V]
-  (role 13 is turned back into 4/8 by ovl25:0386 next turn, ai.md §6.0 [V]). Who sets bit 0x20 of
-  AI[+0x11e+c] is outside this section [U: writer not located here].
+  (role 13 is turned back into 4/8 by ovl25:0386 next turn, ai.md §6.0 [V]). Bit 0x20 of
+  AI[+0x11e+c] ("city holds a hero") is written only by ovl24:023f (clean city, §6.9: cleared
+  with 0x10 at ovl24:0514, set at 0527) [V grep].
 
 #### ovl22:11a6(list) hero + flyer exploration [V]
 
@@ -1613,9 +1742,11 @@ x0 = c.x (157d), y0 = c.y (157f); seen = 0
 0bd8         if 19d9:[y*0x70 + x] & 0x20: seen = 1   # road/explored layer, bit 0x20
 0c06 if seen: AI[+0x11e+c] &= 0xfe
 ```
-No bounds check [V]: x0-1 = -1 or x0+2 = 0x70 read the neighbouring row's byte, y0-1 = -1 reads
-before the layer (19d9:-0x70..). [I] cities are never placed on the border, so this is harmless;
-a reimplementation should index `y*0x70+x` linearly to stay exact.
+No bounds check [V]: x0-1 = -1 or x0+2 = 0x70 read the neighbouring row's byte (index
+`y*0x70+x` linearly to stay exact); y0-1 = -1 gives a 16-bit offset 0xff90+x, which wraps to
+19d9:ff8f.. (64 KiB past the layer start, not before it: unknown memory) [V 0bd1..0bdd]. [I] cities
+are never placed on row 0 or column 0 / 0x6e+, so this is harmless; a reimplementation may treat
+off-map squares as unseen.
 Bit 0 of AI[+0x11e+c] = `CF_UNSEEN` [I from 084d (set for all cities when HiddenMap) and this
 clear rule]: the city counts as seen once any square of the 4×4 block x0-1..x0+2 × y0-1..y0+2 is
 explored. It is never set again after 084d [V: grep of every `or/and/mov byte es:[bx+0x11e]` in
@@ -1701,10 +1832,10 @@ Slot fields of city c, slot s: type = signed byte 2c04:[0x1593+0x41·c+s], str =
 [0x159b+…], moves = signed byte [0x159f+…] (all cwde'd / compared as signed bytes) [V].
 `w15(t)` = byte DS:45c9[6t] (= 45c4+5), `flies(t)` = byte DS:45c4[6t] (00_shared.md) [V addresses].
 `eff(c,s)` = str + 2 if w15(type) == 1 else str (same rule as ovl29:1a4d / 1ae9) [V].
-`ok(c)` = ovl27:0a7a(c, 1) [V push 1 at 0390/0475/05ac]:
+`ok(c)` = ovl27:0a7a(c, 1) [V push 1 at 0390/0475/05ac] (c is not the staging city of an active task force and has role 8 or 5, or 6):
 ```
 ovl27:0a7a(c, also6) [V ovl27.asm 0a7a..0aec]:
-    for k in AI[+0x24a]-1..0: if TF[k].active and TF[k].target(+4) == c: return 0
+    for k in AI[+0x24a]-1..0: if TF[k].active and TF[k].staging(+4, AI[+0x250]) == c: return 0
     if role(c) in (8, 5): return 1
     if also6 and role(c) == 6: return 1
     return 0
@@ -1852,8 +1983,13 @@ DS:081c = {0,0,1,1} (y): square 0 = (x+1, y), 1 = (x, y), 2 = (x, y+1), 3 = (x+1
 023f(c, force):                                   # returns 1 (0 when c is out of range)
     old = AI[+0x182+c]; AI[+0x11e+c] |= 4; AI[+0x182+c] = 0
     n = heroes = flyers = w13s = ordered = 0; H[8] = -1; L[32] = -1
-    for a in 0x181-1..0 with a on one of c's four squares:
-        if owner(a) != cur: ovl24:015e(a, 1)       # delete (hero death first); NOT skipped afterwards
+    for a in 0x181-1..0 with c.x <= a.x <= c.x+1 and c.y <= a.y <= c.y+1 (signed):   # no owner/x test first
+        if owner(a) != cur: ovl24:015e(a, 1)       # delete (hero death first); NOT skipped afterwards:
+                                                   # the freed record (type/owner 0xff, kind 0) is counted
+                                                   # below, flies/w13 read DS:45be / DS:45c2 (type −1), and
+                                                   # it enters L, so the placement loop gives it the city
+                                                   # square again [V 039e..04a6; I: a foreign army on an
+                                                   # own city square is not expected to occur]
         AI[+0x182+c] += 1
         if a.order kind (+0xe & 0xf) == 1 and a.+0xf >> 1 == c: a.+0xe &= 0xf0; a.+0xf &= 1   # drop "go to this city"
         if a.+0xe & 0xf != 0: ordered += 1
@@ -1901,40 +2037,72 @@ what reads it there for AI armies is not traced [U].
 `0a3d(c)` defenders wanted: over c's six neighbours that are intact cities of another
 **side** (owner ≠ 0xf, ≠ cur): any at war → 8; else 2 or more → 4; one → 3; none → 2.
 
-`0b5c(c, n, L, G)` garrison order (returns k):
+`0b5c(c, n, L, G)` garrison order (returns k) [V ovl24:0b5c..10a0]:
 ```
 quota = DS:0824[n] if n < 13 else 8        # {0,0,0,0,3,3,4,5,5,6,7,7,7}
-minmv = 0; air = 0
-if role[c] == 7:                            # a task-force target
-    f = #flyers in L counted when strength (+8) > 3 or none counted yet; h = #heroes
+minmv = 0; air = 0; taken = 0; g = 0 (len G); k = 0
+if role[c] == 7:                            # the city is a task-force staging city
+    f = h = 0
+    for i in n-1..0 with a = L[i] != -1:
+        if hero: h += 1
+        elif flies: if a.strength (+8) >= 4 or f == 0: f += 1
     if f and h: f += h
-    air = (f > 3 and n < 17) or (f > 2 and n < 9)
-    for task force j in 3..0 active with target (+0x250) == c:
+    air = (f >= 4 and n <= 16) or (f >= 3 and n <= 8)
+    for task force j in 3..0, active, staging (+0x250) == c:    # the lowest such j decides minmv
         minmv = 12 if flags (+0x2a6) & 0x10 else 16 if & 8 else word +0x2a4
         if flags & 0x20: air = 1
-v = 3 - AI[+0xba+c] / 3
+v = 3 - AI[+0xba+c] / 3                     # unsigned byte, truncating
 if 0 < v < n and n - quota < v: quota = n - v
-taken = 0 (bit set of kinds: 1 hero, 0x10 flyer, 2 w15==2, 4 w15==3, 0x80 w13, 8 w15==1, 0x20 w17, 0x40 w18)
 loop:
+    bA = bB = -1; iA = iB = -1
     for i in n-1..0 with a = L[i] != -1:
-        s = strength
-        if len(G) < quota:
-            if not taken & 1 and hero: s += 1000
-            elif a.+6 >= minmv:            # allowance
-                bonus by the first kind not yet taken: flyer 900; and unless air: w15==2 800,
-                w15==3 700, w13 600, w15==1 500, w17 400, w18 300
+        s = a.strength (+8, signed byte); w15 = DS:45c9[6·type]
+        if g < quota:
+            if not taken & 1 and hero:                     s += 1000
+            elif a.allowance (+6) < minmv:                 pass
+            elif not taken & 0x10 and flies:               s += 900
+            elif air:                                      pass
+            elif not taken & 2 and w15 == 2:               s += 800
+            elif not taken & 4 and w15 == 3:               s += 700
+            elif not taken & 0x80 and w13 (DS:45c8):       s += 600
+            elif not taken & 8 and w15 == 1:               s += 500
+            elif not taken & 0x20 and w17 (DS:45c5):       s += 400
+            elif not taken & 0x40 and w18 (DS:45c6):       s += 300
         else: taken = 0xfff
-        if taken & 1 and hero: s = 1;  if taken & 0x80 and w13: s = 2
-        pool B if a.+6 < minmv or (air and not flyer and not hero) else pool A; keep the max s per pool (strict, i descending)
-    stop when both pools are empty
-    if taken != 0xfff: taken |= the kinds of the chosen army (from A if any, else B)
-    append the chosen (A if any, else B) to G; if from A: k += 1
-return min(k, quota)
+        if taken & 1 and hero: s = 1
+        if taken & 0x80 and w13: s = 2
+        if a.allowance < minmv or (air and not flies and not hero):
+            if s > bB: bB, iB = s, i                       # pool B, strict: highest i on ties
+        else:
+            if s > bA: bA, iA = s, i                       # pool A
+    if iA == -1 and iB == -1: break
+    if taken != 0xfff:
+        ch = L[iA] if iA != -1 else L[iB]
+        if hero(ch): taken |= 1
+        else: taken |= (2 if w15 == 2) | (4 if w15 == 3) | (0x10 if flies) | (0x80 if w13)
+                     | (8 if w15 == 1) | (0x20 if w17) | (0x40 if w18)
+    if iA != -1: G[g] = L[iA]; L[iA] = -1; g += 1; k += 1
+    else:        G[g] = L[iB]; L[iB] = -1; g += 1
+return min(quota, k)
 ```
-`015e(a, redraw)`: hero → ovl36:16cd (death); 0b62:03be deletes; redraw → 10a1.
-`0000(redraw)` / `00ca(list, redraw)`: delete every army of the selection / of the list.
-`10a1(x, y)`: redraw the square if the side is shown (0x147) or human and (x, y) is inside the
-view rectangle 0x175..0x17b.
+`015e(a, redraw)`: x, y = a's square (read first); hero → ovl36:16cd(a, x, y) (death); 0b62:03be
+deletes; redraw → 10a1(x, y).
+`0000(redraw)` [V ovl24:0000..00c9]: for slot i = 0..7 of DS:5e3e with a non-null pointer: the record
+index is found by scanning 0x181−1..0, x, y read through the pointer, 015e(a, 0), DS:5e3e[i] = null;
+then DS:5e5e = DS:5e62 = null (DS:2bda, 5dfe, 5e00 untouched); redraw and x ≠ −1 → 10a1 on the
+**last** army's square; ovl62:0000 (map words rebuilt). Called by ovl19:1117 (redraw 1).
+`00ca(list, redraw)` [V ovl24:00ca..015d]: entries **7..0** that are not −1: x, y read, 015e(a, 0);
+then as 0000 (10a1 on the last one's square, i.e. the lowest slot; ovl62:0000); the list and the
+selection are not written. Called by ovl22:0f30 (redraw 1).
+`10a1(x, y)`: redraw (ovl64:006c) if the side is shown (0x147[cur] ≠ 0) or not computer
+(0x0d0[cur] ≠ 1), and 0x177 ≤ x ≤ 0x17b, 0x175 ≤ y ≤ 0x179 [V ovl24:10a1..1109]; display only.
+`0a3d`'s war test reads relation[**cur**][owner] (2c04:153b + 8·cur + owner, 0b07..0b1e).
+No caller uses 023f's return value (ovl19:0289/02c1/1394/17e6, ovl20:0111, ovl28:0129) [V].
+Income DS:5dca and upkeep DS:5dda (023f at 066b..068a, also ovl25:06d4 at 0775..0795) are **caches**:
+written only by ovl62:0372 / 02bf, which run at the turn-start settlement (ovl68:082a / 082f, before
+ovl43:0000's new units), in ovl36:0a6b after every real battle (0cba) and on a capture (10c6), after
+a raze (ovl32:00a1), at load, Disband (0b62:089a) and in some dialogs — not after 015e or a purchase
+[V grep of the writers and their callers].
 
 ### 6.10 neutral: taking neutral cities, ovl20:0000 [V]
 
@@ -1956,10 +2124,18 @@ Hidden call arguments read from the listing (ovl20:0194..01ba, 0782..0887, 0e73.
     return n
 01f6(c, ids, dists): the neighbours of c (NB order i = 0..5) that are intact (terrain 10),
     neutral (owner 0xf), not AI[+0x46], and (none accepted yet or i < 2 or NB distance < 20)
-0935(c, sent): the last such neighbour (scan 5..0) with sent ≤ 2, else 0xff
-0a3e(x, y, side): nearest army (dist, start 1000) not neutral and (side == -1: not cur's; else
-    owned by side); with Hidden Map only armies for which ovl29:16ae (a seen square around it) holds
-0981(x, y, side): nearest intact city (owner side, or any for -1), start 10000
+0935(c, sent): the last such neighbour (scan 5..0) with sent ≤ 2 (signed byte `< 3`), else 0xff
+    (also 0xff when 01f6 returns 0) [V 0935..0980]
+0a3e(x, y, side): returns the smallest dist (start 1000, strict <) to an army i = N-1..0 with owner
+    byte ≠ 0xf and (side == -1: owner byte ≠ cur; else (signed) owner == side); with Hidden Map
+    only armies for which ovl29:16ae(a.x, a.y) (a seen square in the 3×3 around it) holds
+    [V 0a3e..0b18]. **There is no x ≠ −1 test**: a freed army record (0b62:03be: owner 0xff,
+    type 0xff, x = y = −1; freed records below the high mark 0x181 stay in the scan) counts for
+    side == −1 as an army at (−1, −1), i.e. at dist trunc(√((x+1)² + (y+1)²)); under Hidden Map
+    16ae(−1, −1) tests only square (0, 0). So once any army record has been freed, 0a3e(·, −1)
+    never exceeds the distance to (−1, −1) [V].
+0981(x, y, side): returns the smallest dist (start 10000, strict <) to an intact city (terrain
+    10 at its corner) with owner side (cwde compare), or any owner for −1; scan count-1..0 [V 0981..0a3d]
 03aa(c, sent):
     th = 0a3e(c.x, c.y, -1)
     keep = (2 if th < 5 else 0) + (th < 15) + (AI[+0x48] != 0) + min(Σ_p mem40c[p], 2)
@@ -1967,7 +2143,8 @@ Hidden call arguments read from the listing (ovl20:0194..01ba, 0782..0887, 0e73.
     G = own armies exactly on (c.x, c.y), no TF group, not done (0x40), no order, scanned
         0x181-1..0, the first `keep` of them skipped, at most 8
     if G empty: return 0
-    sort G by allowance (+6) descending (strict >, an allowance of 0 is never taken)
+    sort G by allowance (+6, signed) descending: repeatedly take the largest > 0 (strict, slots
+        7..0, so the highest slot wins ties); an army with allowance ≤ 0 is dropped [V 056e..05fb]
     repeat:
         take the next `per` armies into a group; stop when none
         if keep == 0 and HiddenMap and 0a3e(c) < 15: stop
@@ -1978,24 +2155,31 @@ Hidden call arguments read from the listing (ovl20:0194..01ba, 0782..0887, 0e73.
     loop:
         drop non-own armies of the group; if NeutralCities: ovl29:14d3(group)   # select it
         best = -1; bs = 1000
-        for i in 5..0 over 01f6(from) with t unflagged (bit 0) and sent[t] < 3:
-            ret = 0
-            if NeutralCities: p = ovl29:15c5(t.x, t.y)       # else 100 without a simulation
+        if 01f6(from, ids, d) == 0: return                 # no candidate at all: no Hidden-Map tail
+        for i in 5..0 with t = ids[i] != 0xff:
+            skip if AI[+0x11e+t] & 1
+            *ret = 0                                       # written before the sent test
+            skip if sent[t] >= 3                           # signed byte
+            if NeutralCities: p = ovl29:15c5(t.x, t.y)     # else p keeps its value (100) without a simulation
             if p >= 75:
-                s = rnd(1,10,0) + d_i + 10·sent[t] + (10 if d_i >= 41) + (30 if d_i >= 51) + 100 - p
-                if s < bs: best, bs = t, s                    # strict, unsigned NB distance d_i
-        if best == -1: break
-        sent[best] += n; DS:40c0 = src; DS:07c6 = best
+                s = rnd(1,10,0) + d_i + 10·sent[t] + (10 if d_i > 40) + (30 if d_i > 50) + 100 - p
+                if s < bs: best, bs = t, s                 # strict: highest slot on ties; d_i unsigned byte
+        if best == -1:
+            if HiddenMap and DS:40c0 == src and DS:07c6 != -1:
+                ovl29:0ae7(group, 1, DS:07c6, 0x80)        # order only, no move
+            return
+        sent[best] += n (byte; n = the group size passed in); DS:07c6 = best; DS:40c0 = src
         ovl29:0ae7(group, 1, best, 0x80); 0a8b:0001(leader.goto, 0)
         if owner(best) != cur or AI[+0x48] != 0: return
         from = best; if 0a3e(best.x, best.y, -1) < 10: return
-    if HiddenMap and DS:40c0 == src and DS:07c6 != -1: ovl29:0ae7(group, 1, DS:07c6, 0x80)  # order only
+                                                           # [V ovl20:06c7..0934]
 02ff (from production, Hidden Map only): own role-3 cities whose neutral neighbours
     (01f6) are all flagged bit 0 → role 2
 0b19(c, fly_only): explorers from city c
     th, keep as in 03aa; tf = any TF active
     E = own armies exactly on (c.x, c.y) without TF group, not done, no order, not a hero
         when tf, flyers only when fly_only; first `keep` skipped; at most 8; sorted by allowance
+        as in 03aa (descending, strict, highest slot on ties; allowance ≤ 0 is dropped) [V 0b19..0e4a]
     for each army a of E in that order:
         if keep == 0 and HiddenMap and 0a3e(c) < 15: return
         0e4b(a, c)
@@ -2019,26 +2203,36 @@ loop: if a.moves_left < 2: return
 177f(a, …) frontier search in the 10×10 window x ∈ [a.x-5, a.x+4], y ∈ [a.y-5, a.y+4]:
     home = a's home city (+9); boat = a aboard
     if rnd(1,4,-1) == 0 and a stands on a city square that is coastal (0555:109d) and a is no hero: boat = 1
-    for x ascending, y ascending:
+    *kind = 0; best = 0; found = 0
+    for x in a.x-5 .. a.x+4 ascending, y in a.y-5 .. a.y+4 ascending, on the map:
         if terrain city and owner nibble != cur: 1bab: d = 2 if DS:5dfc == 2 else dist(a, sq);
             if d < 4 and (not aboard or 0555:109d(sq)) and some 3×3 square around sq is seen
-            (road layer 0x20): kind = 1; k = sq
+            (road layer 0x20): kind = 1; k = sq       # overwrites an earlier kind 1 or 2: the last one in scan order is kept
         if terrain 11 (ruin/temple): 1c9d: if kind == 0 and not aboard and a seen square around: kind = 2; k = sq
+                                                      # only while kind == 0: the first site, and never over a city
+        if terrain city: continue
         if terrain != city and (DS:5dfc == 2 or road or DS:5dfa & 1 or terrain != 5)
            and sq not seen and (DS:5dfc == 2 or cost(terrain) != 0):
             u = unseen squares in sq's 3×3 (on the map)
             if u > 1:
                 if boat: b = 200 if terrain in (2, 3) else 0
                 else:    b = 0 if terrain in (2,3) else (0 if terrain == 5 else 100) + (200 if road)
-                s = rnd(1,10,0) + 2·dist(sq, a) + dist(sq, home) + 10u + b
-                if boat and b: s += 10·min(dist(sq, home), 50)
-                if s > best (from 0): (x, y) = sq; best = s; found = 1
-    return found
-164e(a, &x, &y): flagged-bit-0 intact city with the smallest dist(city, a) + rnd(1,10,0)
-    (one draw per candidate, strict <, start 10000); target (city.x - 1, city.y - 1)
+                d1 = dist(sq, a); d2 = dist(sq, home); r = rnd(1,10,0)   # rnd after both dists
+                s = r + 2·d1 + d2 + 10u + b
+                if boat and b: s += 10·min(d2, 50)
+                if s > best (signed, from 0): (x, y) = sq; best = s; found = 1   # strict: first in scan order on ties
+    return found                                      # [V ovl20:177f..1baa, 1bab..1d37]
+    (`aboard` = a.flags & 0x1000; `boat` starts as aboard and the rnd(1,4,−1) at 1837 is drawn
+    first, unconditionally; `home` = city a.+9 (signed byte); "seen" = road-layer bit 0x20;
+    the u count includes sq itself; the road test is 19d9 & 0x1f ≠ 0; cost(terrain) = word
+    DS:1274[terrain].)
+164e(a, &x, &y): over c = count-1..0 with terrain(c) == 10 and AI[+0x11e+c] & 1 (any owner):
+    v = dist(c, a) + rnd(1,10,0) (one draw per such city, after the dist); keep the smallest
+    (strict <, start 10000: highest index on ties); target (c.x − 1, c.y − 1); returns 1 if one [V]
 10a8(a, x, y): attack a city met while exploring
-    c = city (count-1..0) intact, not own, not AI[+0x46], dist(c, (x, y)) ≤ 2, ovl18:0851(c);
-        a flagged one gets ovl21:0b95(c) and the scan continues
+    c = the first city in count-1..0 that is intact, not own, not AI[+0x46], dist(c, (x, y)) ≤ 2
+        and ovl18:0851(c) != 0, after `if flag bit 0: ovl21:0b95(c)`, has flag bit 0 clear
+        (a city still flagged after 0b95 is skipped and the scan goes on) [V 10b0..1193]
     if none: return 0
     ovl29:0ae7([a], 4, 0, 0x20); p = ovl29:15c5(c.x, c.y)
     need = 75; if not hero and strength < 4:
@@ -2047,18 +2241,24 @@ loop: if a.moves_left < 2: return
     a.flags &= ~0x20; ovl29:0ae7([a], 1, c, 0x80); 0a8b:0001(goto, 0); return 1
 12eb(a, x, y): visit a site met while exploring
     s = ovl28:056d(x, y, &kind)                     # site on that square
-    require s != -1, a not aboard, (kind != 1 or not a.flags & ovl28:063c(…)), (hero or kind == 1),
-            square owner nibble 0xf or cur
-    ovl29:0ae7([a], 4, 0, 0); goto = (x, y); r = 0a8b:0001(x, y, 0)
-    if r != 1:
-        if a.pos == (x, y): DS:5e62 = a; hero → ovl22:15c3(a, s) else ovl34:0000() (EL §5.4)
-            if kind == 5: own unordered w13 armies on the square get flag 0x20
-        else: if kind == 1 and aboard: a.flags |= ovl28:063c(); a.flags |= 0x40
-    a.flags |= 0x20; order and goto cleared; return 1
-    (r == 1 → return 0 [V: falls to the final `return 0`])
-1581(a, x, y): goto = (x, y); ovl67:06eb(a) (selects a's whole group as a click would);
-    r = 0a8b:0001(goto, 0); if r == 1: clear 0x20 and the order
-    a.flags |= 0x40; goto cleared; a.+0x11 = 0
+    require s != -1, a not aboard, (kind != 1 or not a.flags & ovl28:063c(s)), (hero or kind == 1),
+            square owner nibble 0xf or cur                       # else return 0
+    ovl29:0ae7([a], 4, 0, 0); leader.goto = (x, y); r = 0a8b:0001(leader.goto, 0)
+    if r == 1: return 0
+    if a.pos == (x, y):
+        DS:5e62 = a; hero → ovl22:15c3(a, s) else ovl34:0000() (a non-hero only gets here for a
+        temple, kind 1; EL §5.4)                               # rnd: §8
+        if kind == 5 (the value from 056d, read before the search): every army j = N-1..0 with
+            owner cur, order kind 0, w13 type, on (x, y): flags |= 0x20
+    else:
+        if kind == 1 and aboard: a.flags |= ovl28:063c(s)
+        a.flags |= 0x40
+    a.flags |= 0x20; a.+0xe &= 0xf0; a.+0xf &= 1; a.goto = (-1, -1); return 1   # [V 12eb..1580]
+1581(a, x, y): a.goto = (x, y); ovl67:06eb(a) (selects every army on a's square as a click
+    would; its 0c8c:0529 copies the **leader's** goto to every member, §7a.5);
+    r = 0a8b:0001(DS:5e62.goto, 0)                 # the leader's goto: (x, y) only when a is the leader
+    if r == 1: a.flags &= ~0x20; a.+0xe &= 0xf0; a.+0xf &= 1
+    a.flags |= 0x40; a.goto = (-1, -1); a.+0x11 = 0   # a only, not the other members [V 1581..164d]
 ```
 
 ### 6.11 quick attack, ovl26:04ba / 053f [V]
@@ -2107,8 +2307,10 @@ So AI[+0x42] (card +0x61, default 0/0/1) = "plunder human cities in the first 9 
 **ovl26:038d(x, y)** — end of the AI's real battle (ovl36:16a3): with Quests on, a quest active
 for cur (2c04:1103 + 0xc·cur ≠ 0), its hero (army index at +4) among the attackers DS:42c6[i]
 (i < DS:42c4), quest type (+2) 4 or 5 and target city (+6) == ovl62:044a(x, y):
-AI[+0x4a] += 1; AI[+0x46] = −1; type 5 → ovl19:1864(city, 1) (forced raze path) and
-ovl01:1ded(2, 0, 0); type 4 → ovl01:1ded(4, 0, 0). Quest types: EL §5.7 (4 occupy, 5 raze).
+AI[+0x4a] += 1; AI[+0x46] = −1; type 5 → ovl19:1864(city, 1) (forced: skips the occupy test,
+but still sacks instead when the sack value is ≥ 400; its return value is discarded) and
+ovl01:1ded(2, 0, 0, 0, 0); type 4 → ovl01:1ded(4, 0, 0, 0, 0) (five words: two `push dword 0`
+and the code, `add sp, 0xa`) [V ovl26:0492..04b4]. Quest types: EL §5.7 (4 occupy, 5 raze).
 [V for the code; the field names of the quest record from EL §5.7 are I]
 
 **ovl26:0080()** — the sage, called by ovl34:015a (engine hook `ai_sage`):
@@ -2207,6 +2409,7 @@ index register is −1 after the loop, ovl27:04a4..04b8 [V]; reproduce as coded.
 **06a0(k)** attack style, three draws at most:
 ```
 base = AI[+0x02]·AI[+0x2c] + (AI[+0x2e] human / AI[+0x30] level 2 / AI[+0x32] level 1 / AI[+0x34] level 0)
+                                                    # the side on turn's control / level (06b9..0715), not the enemy's
 TF.flags = 0
 if AI[+0x26] != 0 and rnd(1,1000,0) < AI[+0x26] + base: flags |= 1; return
 if gold < 100: base += AI[+0x36]
@@ -2268,7 +2471,7 @@ vectoring survives only through §6.17 / vectoring §6.17a below.
 
 ### 6.17 rebuilding, ovl25:0af2 / 0c83 / 0bd1 [V]
 ```
-n = max(5, AI[+0x0a]·count/80)                  # signed idiv
+n = max(5, AI[+0x0a]·count/80)                  # 16-bit product, cwd, signed idiv (0afd..0b33)
 if (AI[+0x0e] >= 5 or n·AI[+0x0e] >= AI[+0x02]) and gold >= 500:
     t = AI[+0x12] if gold > 2000 else AI[+0x10]
     c = 0c83(t); if c != -1 and gold >= 500: 0bd1(t, c)
@@ -2284,17 +2487,18 @@ if (AI[+0x0e] >= 5 or n·AI[+0x0e] >= AI[+0x02]) and gold >= 500:
             other: skip
         if cand and AI[+0xba+c] - sub > bv: best, bv = c, that   # strict: highest index on ties
     return best
-0bd1(t, c): price = w4(t) (ovl44:138f)
-    if gold > price + 30: s = 1ae9(c); ovl44:1299(c, s, t) (gold -= price);
+0bd1(t, c): ovl44:1128 (open the table); r = ovl44:138f(t, …), price = record r's +0x1e (as 11d5)
+    if gold > price + 30 (signed, strict): s = 1ae9(c); ovl44:1299(c, s, r) (gold -= price);
         AI[+0x16] += 1; +0x2d = 0; +0x31 = 0; role[c] = 5
+    ovl44:11e2                                   # [V ovl25:0bd1..0c82]
 ```
 
 ### 6.17a vectoring, ovl25:085f [V]
 ```
 for k in AI[+0x24a]-1..0:
-    T = task force k; if T.active and T.target != -1 and owner(T.target) == cur:
-        role[T.target] = 7
-        for j in 3..0: s = T.src[j]; if s != -1 and role[s] == 6: ovl29:0f10(s, T.target)
+    T = task force k; if T.active and T.staging (+0x250) != -1 and owner(T.staging) == cur:
+        role[T.staging] = 7
+        for j in 3..0: s = T.src[j]; if s != -1 and role[s] == 6: ovl29:0f10(s, T.staging)
 ```
 
 ### 6.17b Hero offers and surrender [V]
@@ -2334,6 +2538,37 @@ The AI's odds are ovl29:15c5 (§5.12), AI[+0x20] = 10 simulations of the real ba
 procedure with the real dice; there is no separate formula. Where each phase calls it:
 §5.13 and the phases of §6 (assault, quick attack, neutral, move, hero).
 
+**Which stack is simulated.** 15c5 has no stack argument: ovl38:008b takes the current
+selection (DS:5e3e[0..DS:5dfe−1] when DS:2bda ≠ 0, else DS:5e62 alone, §5.12). Every caller sets
+it first [V call sites]:
+
+| caller of 15c5 | selection made by |
+|---|---|
+| ovl19:06e9 (launch), ovl26:053f (quick attack), ovl28:0cf3 (quest city), ovl22:0c5b → 0f3c (rescue) | ovl29:12c9 → 14d3 (0c5b may reselect a filtered list with 14d3 first) |
+| ovl28:1348 (hero cities), ovl19:0996 → 0b49 / 0c32 (assault) | ovl29:13b2 → 14d3 |
+| ovl20:10a8 (explorer attack) | ovl29:0ae7([a]) → 0c8c:0529 (the explorer alone) |
+| ovl20:06c7 (neutral chain) | ovl29:14d3(group), only when Neutral Cities is on (no 15c5 otherwise) |
+| ovl22:05ff (move #1 re-target) | ovl67:06eb (the moving army's whole square) in ovl22:0000 |
+| ovl29:1771 (executor re-target), 1885 via 1771 | the moving stack (its leader DS:5e62) |
+| ovl29:1885 via 1851 (after ovl19:1864's raze) | what 0a8b:0001(keep = 0) left: DS:5e62 **null** (0b62:08b3) when ovl19:0f1b razes, so DS:5e3e[0..DS:5dfe−1] with DS:2bda, else the null DS:5e62 (plan register X38); with ovl26:0000 / 038d inside the executor's battle, the attacking stack |
+
+**Advisor vs AI** [V ovl29:15c5, ovl36:2065]: the Military Advisor ovl36:2065 and 15c5 call the
+same ovl36:124a(x, y, 0) (2065 near, 15c5 far), so one engine `combat.simulate` serves both,
+given the current selection. 2065 runs 19 trials and counts `r[+6]` (DS:4132, attacker
+survivors) > 0 (signed), returning that count / 2 (truncating); 15c5 runs n = 10 and counts
+`r[+2]` (DS:412e, defender survivors) == 0, returning wins·100 idiv n. Because 08a6 only ends
+when one side is exhausted, the two win tests agree except when **both** sides are empty at the
+set-up (15c5: a win; advisor: a loss); an empty defender is a win for both, an empty attacker
+a loss for both.
+
+**Leftover state.** Each simulation rewrites the battle arrays (DS:4224..42e6, including the
+set-up pointers DS:42c6 / 42e6), the battle log DS:41b2..41b5, DS:412c..4132, DS:415c/415e
+and (15c5 only) DS:410a/410c, which has no reader. The AI reads battle results only after real
+battles (ovl25:09d7, ovl26:038d), so no AI decision reads stale simulation data; but the
+quest check ovl01:1ded(−1, …) at ovl68:01d9 (start of the next computer turn) reads DS:42c6,
+which the last simulation may have left, so the engine's `simulate` must keep writing
+`state.battle_work` as it does now [V xref; EL §3.5].
+
 ## 7a. Movement machinery used by the AI (resident 0a8b, 0555, 0c8c) [V]
 
 From the same helper trace.
@@ -2371,9 +2606,14 @@ ovl49:138a, ovl61:2194].
 
 ### 7a.1 0a8b:0001(x, y, keep) move the selected stack to (x, y) [V]
 
-All AI callers pass the leader's goto and keep = 0.
+All AI callers pass the leader's goto and keep = 0 (ovl19:0e66 first writes its target into
+the leader's goto, 0e4e..0e5c) [V call sites in ovl19, 20, 22, 26, 28]. The early `return 0`
+(L null or (x, y) off the map, 002a..0053) leaves before the loop and before the `keep` test:
+nothing is marked done or deselected [V 004e..0053]. A goto of (−1, −1) takes that exit, e.g.
+ovl20:1581 when the ordered army is not the leader and the leader has no goto (second review);
+such a stack stays eligible for move #1's 05c4 walk [I: which other call sites can pass −1].
 ```
-loop = 1; r = 0                                             # 0009, bp-8
+loop = 1; r = 0; n = 0                                      # 0009 bp-2, bp-8; 000e n = DI
 c = (L.+0xf >> 1) & 0x7f; k = L.+0xe & 0xf                  # 0010..0027, L = DS:5e62 (read once here)
 if L == null or x, y off the map (x<0, y<0, x>=0x70, y>=0x9c): return 0     # 002a..0053
 while loop:                                                 # 0221 -> 0054
@@ -2386,21 +2626,38 @@ while loop:                                                 # 0221 -> 0054
       3: n = 0a8b:0476(DS:5dc8, DS:5dc6)                    # enemy stack ahead: attack it
          if n: loop = 1                                     # survivors: continue toward (x, y)
       4: if k == 3 and DS:5e5e != null:                     # arrived with a site order and a hero
-             j = index (N-1..0) of the hero; s = ovl62:04b5(x, y)   # site at (x, y) or -1
+             j = index (N-1..0) of the record == DS:5e5e    # 0166..01da, first match from the top
+             s = ovl62:04b5(H.x, H.y)                       # 01b5: site on the HERO's square or -1
              if s != -1: ovl22:15c3(j, s)
              for m in DS:5e3e[0..7]: m.+0xe &= 0xf0; m.+0xe &= 0x8f  # 01dc..0202 (+0xf kept)
-      5: if terrain(x, y) == 10 and owner(city c) != cur:  # 00c3..0110: goto is a city square
-             if 0a8b:0254(c, DS:5dc8, DS:5dc6, &x, &y):    # 0129
-                 loop = 1; c = (L.+0xf >> 1) & 0x7f        # 0138..014a (k not re-read)
+      5: if terrain(x, y) == 10:                            # 00c3..00ef: goto is a city square
+             if owner(city c) != cur:                       # 0101..0110 (byte compare)
+                 n = 0a8b:0254(c, DS:5dc8, DS:5dc6, &x, &y) # 0129
+             if n: loop = 1; c = (L.+0xf >> 1) & 0x7f       # 0131..014a (k not re-read)
       other (0, 1): nothing
-if keep == 0: ovl67:08fb(); 0b62:08b3(1, 1)                 # 022a..023d: 0x40 on the stack, deselect
+if keep == 0: ovl67:08fb(); 0b62:08b3(1, 1, 1)              # 022a..023d: 0x40 on the stack, deselect
 return r
 ```
+* `n` is one register (DI) for both 0476's survivor count and 0254's result, set to 0 only on
+  entry [V 000e, 012f, 0216, 0131]. In case 5 with an **own** order city c the test `if n`
+  reads the value left by an earlier iteration: after a won battle (case 3, n > 0) or a redirect
+  (case 5, n = 1), a later status 5 with owner(c) == cur loops again — and, since nothing changes
+  between two such iterations (0 steps walked, moves untouched, same path), for ever [V code].
+  Status 5 survives 07f9 only while the stack has ≥ 2 moves (0a90 turns it into 2 otherwise), so
+  that is a precondition. Reachable only when
+  the walk is stopped by a foreign city that is not the order city while c is own: c is not a city
+  order (k ≠ 1, c = whatever +0xf holds) or a cached path (§7a.3: the cache is not keyed by
+  ownership) leads through a city captured since; a fresh search never enters a foreign city
+  other than the opened target [I from 08bf]. A reimplementation that reproduces the original
+  must keep the stale value (and would hang where it hangs).
+* Case 4 searches the site on the **hero's** square (DS:5e5e's x/y), which differs from (x, y)
+  when status 4 came from the end of a cut path (117b, §7a.3) rather than from reaching the goto.
 * Status values come from 0c4f / 07f9 (§4.2): 1 no path, 2 out of moves (or embarked/landed),
   3 an enemy stack blocks the next square, 4 path end reached, 5 a foreign city blocks the next
   square, 0 stopped otherwise [V].
 * ovl67:08fb [V decompile]: sets 0x40 on DS:5e62 (single) or on every DS:5e3e member (group). So
-  every AI stack that went through 0001 is "done" for the turn whatever happened, and move #1's next
+  every AI stack that went through 0001's loop is "done" for the turn whatever happened (not after
+  the early off-map / no-leader return above), and move #1's next
   walk (05c4) skips it [V].
 * ovl28:0427(x, y) [V decompile]: when a hero is selected (DS:5e5e), every item with state 1 (lying)
   on (x, y) — or within the 2×2 block (x..x+1, y..y+1) when (x, y) is a City — gets state 3 and holder
@@ -2457,10 +2714,15 @@ return r
   stops at the last free square.
 * Moves are charged with the cumulative cost up to the last square stopped on (`cum[steps-1]`), not
   the squares walked beyond it [V].
-* 04c8(rec, steps) [V 04c8..07f8]: per step: timing delay (display), 0b4d step, the new (x, y) is
-  written to every member (group) and the leader; computer side: ovl28:0427(x, y); 0b62:01a7 /
-  0b62:0e9b (map army bits, [I]); DS:2ea8 += 1; ovl64:1298(cur, x, y) (Hidden Map reveal, EL §4.1:
-  sets the seen bit 0x20) → redraw if anything was revealed. After the last step, with mode 1:
+* 04c8(rec, steps) [V 04c8..07f8]: per step: 0b4d step (its result is not tested; 07f9 has
+  already checked the squares), the new (x, y) is written to every DS:5e3e member (group only)
+  and to the leader; computer side (ovl25:09ab): ovl28:0427(x, y); then 0b62:01a7(ox, oy) on the
+  square **just left**: when no army record (0..DS:0181−1) stands there any more, the map high
+  byte loses 0x10 (army) and 0x20 (fortified) [V 0b62:01a7..024d]; DS:2ea8 += 1; 0b62:0e9b is an
+  empty function [V]; ovl64:1298(cur, L.x, L.y) (Hidden Map reveal, EL §4.1: sets the seen bit
+  0x20) → ovl63:1fed(L.x, L.y, 1) redraw if anything was revealed; ovl64:0565; then a delay loop
+  (clock 0000:1bcf, ≤ 3 ticks or 10000 rounds, skipped when ovl59:0a7c or 0000:1bf0 says so —
+  display only, no rnd). After the last step, with mode 1:
   sailing (mask & 8) and the square is not Water/Shore/Bridge (terrain ∉ {2, 3, 1}): every member
   `flags &= ~0x1000`, DS:5dc4 = 2 (landed); not sailing and the square is Water or Shore: if any
   member is a non-flying non-hero, every non-flier (heroes included) is set aboard (0x1000); else, if
@@ -2472,9 +2734,17 @@ return r
 
 0555:18be(rec, mv, cum) [V decompile]: cum[0..99] = 0xff; walk dirs (≤ 100, stop at 0xff or off map)
 from the start; step cost = 19e4 (EL §4.3: flying 1 on cost-1 squares else 2; ship C & 7; land C & 7
-with the hills/forest bonus → 2 when C & 7 > 2); in mode 1 the first step that changes water ↔ land onto
-a non-crossing square sets a flag and **every later step costs 0x80** [V 19e4]; cum[i] = min(total, 0xff);
-returns the number of steps with total ≤ mv (counting all of them, also after a step that exceeded mv).
+with the hills/forest bonus → 2 when C & 7 > 2); in mode 1 the first non-crossing square whose
+water bit differs from **aboard** (mask & 8: aboard and the square is land, or not aboard and it is
+water) sets a flag — its own cost still counts — and **every later step costs 0x80** [V 19e4
+1a61..1a7e]; 19e4 compares with the stack's state, not with the previous square (0373 at
+0744..075d / 07cf..07e6 and 117b at 1332..134f do compare the two squares' water bits). cum[i] =
+min(total, 0xff) for i < 100; returns the number of steps with total ≤ mv (signed, counting all of
+them, also after a step that exceeded mv) [V 18be..19e3].
+* 07f9's stack test reads relation byte 2c04:153b[cur·8 + o] for the square's owner nibble o;
+  for o ≥ 8 (0xf: a neutral army outside a city — cities are caught by the status-5 test first)
+  this runs into the next row, or past the 64 bytes into the city count 2c04:157b and city 0
+  [V 093d..094e]; rules/movement.py `_relation_bits` reproduces that.
 
 ### 7a.3 Path search 0555:000a(rec) / 0373 / 08bf / 117b, cache 1508 / 16f0, shortcut 020e [V]
 
@@ -2494,7 +2764,7 @@ returns the number of steps with total ≤ mv (counting all of them, also after 
         for pass = 0, 1 while r == 0: r = 0373(rec, pass)   # 015f..0186
         if r == 1 and not mask & 0x10:
             117b(rec)                                       # extract the path into dirs
-            if [bp-2] == 0xd: 13e4(rec)                     # uninitialised local, see [U]
+            if [bp-2] == 0xd: 13e4(rec)                     # uninitialised local: never 0xd, §10.2
             16f0(d, rec, d >= 15)                           # store in the cache
     0bde(rec, 0); unlock; return r                          # restore a temporarily opened city
 ```
@@ -2505,11 +2775,18 @@ returns the number of steps with total ≤ mv (counting all of them, also after 
   T cell = 30000, and 0x7531 (impassable) where: mode 1: C & 7 == 0 (DS:3f6e = 10, or 20 when the
   **target** is Water/Shore); mode 0: C has no water bit 8; mode 2: C & 0x80 and C & 7 == 0 (foreign
   city squares). With Hidden Map and a **human** side (ovl25:09ab() == 0) unseen squares (road layer bit
-  0x20 clear) are also 0x7531 (except the target; mode 0 exempts the target's row and column) — never for
-  the AI [V 08c9..08ed].
+  0x20 clear) are also 0x7531 (mode 1 exempts the target square; modes 0 and 2 exempt the target's
+  whole row and column) — never for the AI [V 08c9..08ed, 09c2..09e7, 0a92..0ab7, 0b66..0b8b].
+* 0bde(rec, 1) takes the **last** city record (index count−1 down to 0) whose 2×2 block holds the
+  target, and only when the target's terrain is City; 0bde(rec, 0) runs only when DS:01de is set
+  and writes each of the four squares as DS:1288 (= 1), then 0 when the map owner nibble ≠
+  2c04:0110, else | 0x18 when coastal, then | 0x80 [V 0bde..0d9d]. That is not 0d9e's value: an own
+  city square gets cost 1 whatever 0d9e gave it, and the port bit 0x10 0d9e sets on port squares
+  is lost (for a foreign port city the four squares become 0x80) until the next 0d9e.
 * 0373(rec, pass) — ring relaxation from the **target** (not Dijkstra):
   ```
-  pass 0: R = 6, r = 0 (DS:3f68); pass 1: R = 50 (20 if DS:00e0), r continues; mask & 0x10: R = DS:3f70, r = 0
+  pass 0: R = 6, r = 0 (DS:3f68); pass 1: R = 50, r continues; mask & 0x10: R = DS:3f70, r = 0 (both passes)
+  (DS:00e0 set and pass 1: return 0 at once, 03ac..03bc; the 20 at 03ef is dead)
   box = [max(0, min(x0,x1) - R), min(0x6f, max(x0,x1) + R)] x [same for y with 0x9b]
   loop:
       if stop or (mask & 0x10 and r == R): return found
@@ -2529,31 +2806,52 @@ returns the number of steps with total ≤ mv (counting all of them, also after 
                   else (mode 1): skip if neither crossing and water bits differ
                        if mask and c > 2 and ((mask&1 and hills(n)) or (mask&2 and forest(n))): c = 2
                        if (cell is not water or is crossing) and n is water and not crossing: c += DS:3f6e
-                  if v + c < |T[n]| (unsigned): T[n] = -(v + c)     # strict: first writer keeps ties
+                  if v + c < |T[n]| (signed): T[n] = -(v + c)     # strict: first writer keeps ties
               if (X, Y) == start and not mask & 0x10: stop = 1, found = 1   # the scan of this ring still finishes
       r += 1
       if not progress: stop = 1, found = 0
   ```
-  Cells can be finalised and later improved (made negative again) and re-expanded on a later ring
-  [V: the `< 1` test and the relax write]. Values: T[target] = 1, a cell = 1 + Σ costs of the cells
-  from it toward the target (the start counts 1) [V]. In the distance-map mode the result is all
-  rings r = 0..R−1 inside the box of half-size R; cells first reached in the last ring keep a
-  negative (tentative) value; callers read |T| [V ovl21:0a85].
-* 117b(rec) path extraction [V decompile]: from the start, repeatedly: base = 0a8b:0ae4(cur, target)
-  (direction toward the target: same x → N if y0 > y1 else S; same y → W if x0 > x1 else E; else
-  NW/SW/NE/SE by the signs, 0xff when equal) [V 0ae4..0b4c]; try directions `(base + o) % 8` for
-  o in DS:0212 = 0, 7, 1, 6, 2, 5, 3, 4 (straight first, then alternating left/right); a candidate must
-  be on the map with T ∉ {30000, 0x7531}; in mode 1 a water↔land change onto a non-crossing square is
-  refused unless the current square is a crossing; pick the first with `|T| < best` (strict, best
-  starts at |T[start]| and then the chosen value). Up to 198 steps (0xc6); when no candidate is
-  smaller (or 198 reached) the **target is moved to the current square** (rec +4/+6) and extraction ends.
+  The "ring" is the whole square [x1−r, x1+r] × [y1−r, y1+r] (rescanned every round), so cells can
+  be finalised, later improved (made negative again) and re-expanded on a later ring [V: the `≤ 0`
+  test at 05ad and the relax write 0835..0850]. The box limits only which cells are **expanded**;
+  the relax step has no box test, so neighbours one square outside the box can hold tentative
+  values [V]. The start test at 0860 is inside the expansion branch: the start must be expanded
+  in this ring. Values: T[target] = 1, a cell = 1 + Σ costs of the cells from it toward the
+  target (the start counts 1) [V]. In the distance-map mode the result is all rings r = 0..R−1
+  inside the box of half-size R; callers read |T| [V ovl21:0a85] (encoding: §7a.4).
+  CX on return is the cost register of the last neighbour that got past the 0x7531 test in the
+  last expanded cell (raw C & 7 when it was then skipped, the adjusted c otherwise; y1 from 043d
+  when no neighbour was examined) — 117b uses it (below) [V 043d, 0727, 0760, 0784..07a4, 0814,
+  0831].
+* 117b(rec) path extraction [V listing 117b..13e3]: from the start, repeatedly: base =
+  0a8b:0ae4(DI, CX, x1, y1) (direction from (DI, CX) toward the target: same x → N if CX > y1
+  else S; same y → W if DI > x1 else E; else NW/SW/NE/SE by the signs, 0xff when equal) [V 0ae4..0b4c],
+  where **(DI, CX) are registers, not the current square** (push cx / push di at 1224): on the
+  first step DI = 1 (000a's r, 017c) and CX = the value 0373 left (above); on every later step they
+  hold the last candidate computed for the previous square, i.e. previous square + direction
+  (base_prev + 4) % 8 (computed at 124c..125d for every candidate, also an off-map one). When
+  (DI, CX) equals the target, base = 0xff and (0xff + o) % 8 = (7 + o) % 8 (idiv of a positive
+  value). Try directions `(base + o) % 8` for o in DS:0212 = 0, 7, 1, 6, 2, 5, 3, 4; a candidate
+  must be on the map with T ∉ {30000, 0x7531}; in mode 1 a water↔land change onto a non-crossing
+  square is refused unless the current square is a crossing; pick the first with `|T| < best`
+  (signed, strict; best starts at |T[start]| and then the chosen value). Up to 198 steps (0xc6, tested
+  after the candidates); when no candidate is smaller (or 198 reached) the **target is moved to the
+  current square** (rec +4/+6) and extraction ends (start == target: no step). rules/pathfinding.py
+  `_Search.backtrace` implements exactly this (BACKTRACE_ENTRY_DI, `self.cx`) [V code compare].
 * Cache [V decompile 1508/1595/165c/16f0, 0350/146c]: 20 slots (+0 state 0/2, +2 mode, +4 mask, +6/+8
   start, +0xa/+0xc target, +0xe 200 dirs). Slot 0 holds the last short path (d < 15), slots 1..19 long
   ones (first free; when full, the slot whose own start–target distance is smallest, strict `<` from
   10000, replaced only if that distance < d). A lookup matches when target, mode and mask are equal and
   the current start lies on the cached path (walking its dirs from its start); the remaining dirs are
   copied. The cache is keyed by neither side nor map state and is cleared only at allocation and by
-  ovl29:0e51 (save, 0555:0350) [V callers], so paths persist across turns and sides [V].
+  ovl29:0e51 (the load's AI read ovl29:0dff, 0555:0350) [V callers], so paths persist across turns and sides [V].
+  Details [V listing 146c..1867]: the lookup (1595) never reads the state word; 165c returns the
+  index i of the start before stepping, so a start equal to the cached path's last square (after
+  its last dir) does not match, and a 0xff dir or an off-map step ends the walk with no match; a
+  slot cleared by 146c is all zero (dirs 0 = N), so it matches only target (0, 0), mode 0, mask 0
+  from start (0, 0). The store (16f0) copies **200** dir bytes (si = 199..0, 17b7..17e3) into
+  +0xe..+0xd5 and nothing beyond (it does not touch the next slot); it writes state 2, mode, mask,
+  start and the (possibly cut, 117b) target of rec. Slot 0 is written for d < 15 whatever it held.
 * 020e(rec) shortcut for adjacent targets (d == 1) [V decompile]: unless mode 2, refused when exactly
   one of start/target is Water/Shore or the target terrain's DS:1274 cost is 0 (Mountains); otherwise
   dirs[0] = 0ae4(start, target) and success — no army or city test (the walk handles those) [V].
@@ -2564,6 +2862,16 @@ returns the number of steps with total ≤ mv (counting all of them, also after 
 000a(&rec) [V decompile]. So: T from 08bf (mode-specific impassable squares), then rings r = 0..limit−1
 from (x, y) inside the box [x−limit, x+limit] × [y−limit, y+limit]; no path, no cache. **limit** is
 therefore both the box half-size and the number of rings (Chebyshev radius), not a cost cap [V 0373].
+**Encoding of T after 1ab9** [V 08bf, 0373, 000a]: 0x7531 impassable for the mode (08bf; mode 0
+also marks land cells met as neighbours, 07c4); 30000 not reached; a **positive** value = expanded
+(final for this map); a **negative** value −v = reached but not expanded: first reached or improved
+in ring R−1 after its own position was scanned, or outside the box (relaxed from a boundary cell).
+|T| is the distance in both cases (1 at (x, y)). The target-city patch (0bde) and DS:3f6e
+(10, or 20 when (x, y) is Water/Shore) apply as in a path search. Return value: 1 after R rings;
+0 when a ring made no progress before R (pass 1 then resets r to 0, finds (x, y) already positive,
+makes no progress and returns 0 at once, so T is the complete flood of the box), and 0 with no
+flood at all when (x, y) is 0x7531 and not a city square (T = 30000 / 0x7531 everywhere) [V
+000a 0132..015c, 03c8, 04f6..04fe].
 `1b0a()` allocates if needed and locks T, returning its far pointer; `1b2e()` unlocks it [V decompile].
 Readers: ovl21:0a85 (distance of a city = smallest |T| on the 12 squares around its 2×2 block, in the
 order (x,y−1), (x+1,y−1), (x+2,y−1), (x+2,y), (x+2,y+1), (x+2,y+2), (x+1,y+2), (x,y+2), (x−1,y+2),
@@ -2603,10 +2911,9 @@ sets DS:5e3e[0] = list[0] for a count of 1 and every entry for a count > 1 [V ov
 ### 7a.6 How an AI stack attacks or stops [V]
 
 * The AI never calls ovl36:0000 (the human attack command); its battles go through
-  **ovl36:124a(x, y, 1)** (EL §3: set-up ovl38:008b; with the flag ≠ 0 the prelude 0522 moves the
-  stack onto the square and charges the attack cost, then battle loop 08a6, battle memory ovl25:09d7,
-  casualties 0a6b, …) [V call sites 0a8b:02a7, 03ea, 0496; I that flag 1 = "real" from 124a 1319 and
-  15c5 passing 0].
+  **ovl36:124a(x, y, 1)** (step order §7a.7) [V call sites 0a8b:02a7, 03ea, 0496]. The flag
+  selects the path: `cmp [bp+0xa], 0; jne 1379` at ovl36:1319 — 0 = simulation (§5.12), non-zero
+  = the real battle [V].
 * 0a8b:0476(x, y) [V]: 124a(x, y, 1); n = number of non-null DS:5e3e (the survivors re-selected by
   the battle, EL §3.5); n > 0 → 0c8c:0529; return n.
 * 0a8b:0254(c, x, y, &gx, &gy) [V 0254..0475]:
@@ -2626,9 +2933,64 @@ sets DS:5e3e[0] = list[0] for a count of 1 and every entry for a count > 1 [V ov
   ```
   ovl29:1771 draws rnd (battle simulations, ai.md §5.13) [V].
 * Stops: status 2 (moves < 2 or the next step too expensive, or embark/land), 1 (no path), 4
-  (arrival; with a site order and a hero 15c3 searches), 0; every exit of 0001 marks the stack done
+  (arrival; with a site order and a hero 15c3 searches), 0; every exit of 0001's loop (not the
+  early return for a null leader or an off-map goto, §7a.1) marks the stack done
   (0x40) and deselects it (keep = 0) [V].
 
+
+### 7a.7 The AI's real battle ovl36:124a(x, y, 1) — engine work [V ovl36:124a..16b2]
+
+`rules/combat.py` has only the human attack (ovl36:0000) and the simulation; the AI's battle
+path below must be added. `d` = owner nibble of (x, y); `human(p)` = `0x0d0[p] == 0`.
+```
+DS:415e, DS:415c = x, y
+show  = 0x159 != 0 or (d < 8 and human(d))                     # [bp-6], 1281..12a8
+show2 = (0x159 != 0 and d < 8) or (d < 8 and human(d))          # [bp-8], 12ab..12dd
+view  = 0                                                       # [bp-0xa]
+if DS:3254 != 0 and not (19d9[y·0x70 + x] & 0x80): show = show2 = 0      # 12e5..130c
+ovl38:008b(x, y)                                  # set-up for the current selection (§5.12)
+                                                  # (flag 0 returns here, §5.12)
+multi = (number of sides s with 0x137[s] != 0 and human(s)) > 1          # 1379..13b4
+if multi and HiddenMap: view = show; show = show2 = 0
+if DS:41dd != 0:                                  # the target is a city (record pointer from the set-up)
+    if Diplomacy (0x11c) and city.owner (+0x15) != 0xf and (relation[cur·8 + owner] & 3) != 2:
+        ovl36:20a8()                              # treachery: rnd(1,100,0)+100 / rnd(1,15,0)+10, war both ways (below)
+    city +0x30 |= byte DS:0cbe[2·cur]             # attacked-by mask, as the human path does (combat.py)
+if show and not (multi and HiddenMap): ovl36:1836(x, y, 1)             # display only
+ovl36:0522(x, y, -1L)                             # prelude: the stack moves onto the square, attack cost
+if show: ovl65:0227(x, y)                         # display
+if show or view: message (STRING 0x94 with the defender's name, or 0x95 when d >= 8) via
+                 ovl61:11d1(5, …); DS:0cf8 = 1
+else: DS:0cf8 = 0
+r = ovl36:08a6()                                  # battle loop: rnd (EL §3.4)
+ovl25:09d7(x, y, DS:42e6, DS:42c6)                # battle memory (§6.19)
+if show2 or view: battle display (12bf:07a5, ovl37:0160(0), ovl59:0000(5), ovl37:0094(0, r), 12bf:0757)
+ovl36:0a6b(r, x, y)                               # casualties, loot, re-selection (EL §3.5)
+if r == 1: map(x, y) high byte |= 0x10            # army bit
+if show or show2 or view:
+    message: STRING 0x98 (r == 0) / 0x8e (hero name) / 0x96; shown through ovl36:16b3 (which
+    prints only when DS:0cf8 != 0), plus ovl37:04c5, ovl59:0000(10), ovl37:04f6 when show2 or view
+if show and not (multi and HiddenMap):
+    ovl36:1836(x, y, 0); ovl62:0af3; if DS:3254 and HiddenMap: ovl65:05ec; ovl63:0000(…)   # display
+ovl36:2274(r)                                     # medals: rnd (EL §5.8)
+ovl62:0000()
+ovl01:1ded(0, 0, 0, 0, 0)                         # quest check (rnd on completion, below)
+ovl26:038d(x, y)                                  # AI quest bookkeeping (§6.11a)
+return 0
+```
+* Only 20a8, 08a6, 2274 and 1ded draw rnd(); none of the display-gated calls do (no rnd site in
+  ovl37, ovl62, ovl65; ovl61's only sites are in 1732; ovl63's are in 232b / 2785, which are not
+  called from ovl63:0000; 1836 / 16b3 / 0522 / 0a6b and their callees 16cd, 1aff, ovl58:023d,
+  ovl47:04f1, ovl39:0000 have none) [V rnd inventory + call sites]. So whether the defender is
+  human changes the display, not the RNG stream.
+* ovl01:1ded on a completed quest [V ovl01:26e5..273f]: quest record +0 = 0; reward ovl01:1909
+  (rnd: EL §5.7), then ovl01:1c02 applies it (allies through ovl34:12e6, which draws rnd(1,3,−2)
+  ×2); the music call ovl58:0000(3) is made **only when ovl25:09ab() is false** (a human side),
+  so during a computer turn it is skipped and its wall-clock-dependent rnd(1,100,0) (EL §6.2) never
+  happens [V 2723..272e].
+* The treachery call is made by 124a itself (no dialog), before the prelude; for a computer side
+  20a8 skips its nested ovl36:0000 (21cf: only when ovl25:09ab() is false) and shows its message
+  only when 0x159 is set (21f4..2238), then writes the news entry ovl41:1244 [V ovl36:20a8..2261].
 
 **Treachery by deed** [V ovl36:124a decompile, EL §6.6]: when the AI's real battle
 ovl36:124a(x, y, 1) is against a city (DS:41dd set by the set-up), Diplomacy is on, the city has an
@@ -2638,6 +3000,8 @@ human-owned city not at war (its rnd(1,4,-1) == 0 case, §5.13) or ovl18:0851 al
 (AI[+0x0c] bit 0, §6.1); it is the computer's only way to declare war other than its proposals.
 
 ## 8. Random numbers in AI code [V sites, order per phase]
+
+### 8.1 Sites in the AI overlays and the resident AI helpers
 
 All rnd() sites in ovl18–ovl30 and the resident AI helpers (out/re/ai/rnd.txt), plus the
 battle dice of every ovl29:15c5 simulation:
@@ -2659,28 +3023,52 @@ battle dice of every ovl29:15c5 simulation:
 | ovl28:0f0a, 0f31, 0f85, 0fb0 | ovl28:0efc | rnd(1,20,0) ×4 |
 | ovl29:024d, 02d6 | ovl29:010b | EL §9.5 |
 | ovl29:17fc | ovl29:1771 | §5.13 |
-| ovl36:08a6 (via 124a(·,·,0)) | every 15c5 | battle dice |
+| ovl36:08a6 (via 124a(·,·,0)) | every 15c5 | battle dice; none when either side is empty (§5.12) |
 
-Order within a computer turn, phase by phase (each "15c5" = AI[+0x20] simulated battles, each
-drawing pairs of battle dice until the duel ends, EL §3.4; real battles started through
-0a8b:0001 draw their own dice, and 0a8b's callbacks may draw, §10):
+### 8.2 Engine (rules) code reached from AI phases that draws rnd() [V call sites]
+
+These are not AI functions, but the computer turn reaches them, so their draws sit inside the
+phase order below. Each is already rules code (EL), except where §9 says it is missing.
+
+| reached through | function | draws |
+|---|---|---|
+| ovl25:0000 at 0379 (end of the turn) | ovl00:1063 refused de-escalation (EL §6.6) | for p = 0..7 ascending, p ≠ cur, when prop(cur,p) < cur_rel(cur,p) and prop(cur,p) < prop(p,cur): rnd(1,10,0) (1152, prop 0 / rel 2) or rnd(1,2,0) (1199, prop 0 / rel 1 or prop 1 / rel 2) [V ovl00:1063..11bc] |
+| ovl26:0080 (sage, Hidden Map with a target) | ovl34:0cd6 reveal (EL §5.4) | rnd(1,5,8) ×2 then rnd(1,10,15) ×2, unconditionally at its start [V 0cde..0d31] |
+| 0a8b:0001 status 4 / ovl28:07ea / ovl20:12eb → ovl22:15c3 | ovl34:0000 Search (EL §5): ruin 01ab (05af, 05c1, 0677, 07ad:0850, allies 12e6 ×2), sage → ovl26:0080 | as EL §5 |
+| ovl22:15c3 at 16ed (a temple, Quests on, no active quest) | ovl01:0d7a quest assignment (EL §5.7) | 0dea..14ef (9 sites), ovl47:1a9b (1abf), ovl63:2785 (2863..28dd) |
+| ovl20:12eb (a non-hero explorer at a temple) | ovl34:0000 | as above |
+| 0a8b:0254 (order city reached) | ovl29:1771 | 15c5, then rnd(1,4,−1) whenever the owner is a human side, also when `ok` is already 1 (§5.13); then possibly 1885 (15c5 per candidate) |
+| 0a8b:0254 / 0476 → ovl36:124a(x, y, 1) | the real battle (§7a.7) | in order: 20a8 (treachery, rnd(1,100,0) from peace or rnd(1,15,0) from neutral, only for a city of a side not at war), 08a6 battle dice, 2274 medals (rnd(1,100,0), then rnd(1,n,−1) for the unit, EL §5.8), ovl01:1ded(0,…) → on a completed quest 1909 (1936, 1a1f, 1a31, 1ab0, 1bd3, 1bed as EL §5.7) and 1c02 (allies: ovl34:12e6); ovl58:0000 is **not** reached for a computer side (§7a.7) |
+| 124a(1) → ovl26:038d (quest city) | ovl19:1864 (forced) | raze: rnd(1,15,0) then 1851 → 1885 (15c5 per candidate); or sack 199c rnd(1,10,0) / pillage 1a2a rnd(1,5,0) |
+| 0a8b:0254 → ovl26:0000 (human city taken early) | ovl19:199c / 1864 | as above |
+
+### 8.3 Order within a computer turn
+
+Each "15c5" = AI[+0x20] = 10 simulated battles, each drawing pairs of battle dice until the
+duel ends (EL §3.4), and none at all when the target square has no defenders (§5.12).
+"Executor" = 0a8b:0001 with its callbacks (§7a.1, §7a.6): 1771 on reaching an order city,
+the real battle 124a(1) (§7a.7) on attacking, 15c3 on reaching a site with a hero.
 
 | phase | draws, in execution order |
 |---|---|
-| Diplomacy §6.1 | with Diplomacy on: ovl27:0e04 → rnd(1,10,0) for p = 7..0 (8 draws) |
-| move Hero §6.2 | per hero: clean-city / quest 15c5 / executor draws, then up to 2 rounds of {15c5 per candidate city in 1348; 0efc 2 or 4 × rnd(1,20,0)}; details §6.2 |
-| move Search / Explore §6.6 | none directly; exploring armies use ovl20:0e4b, whose 177f draws rnd(1,4,-1) first and then rnd(1,10,0) per candidate square in x-, then y-ascending order, and 164e one rnd(1,10,0) per unseen city (count-1..0); 15c5 where §6.6 says so |
-| assault §6.5 | per active TF k = 0..: 0996 groups j = 3..0 → 0b49 (15c5 per enemy city in reach, count-1..0) → 0c32 (15c5 per candidate square, x then y ascending); 06e9: per target i = 0..5 one 15c5 then rnd(1,4,0); captures: 1864 rnd(1,15,0) (raze) and 1851 → 1885 (15c5 per candidate city), 199c rnd(1,10,0), 1a2a rnd(1,5,0) |
-| move #1, rescue §6.6 | none directly: 15c5 in 0f3c target choice, battles and 1771 in the executor |
+| (a game loaded before any Begin) | ovl25:0519 → 0d7b draws for p = 7..0 while loading (§3.4) — not in the turn, but in the stream |
+| Diplomacy §6.1 | with Diplomacy on: ovl27:0e04 → rnd(1,10,0) for p = 7..0 (8 draws); 0917 draws nothing |
+| move Hero §6.2 | per hero (ascending army index): clean city 023f(c, 1) for its city (no rnd(1,6,−1) with force = 1, but its flyer exploring below); quest-city 0cf3 (15c5 unless already ordered there, then the executor); a site-order continuation (executor); then up to 2 rounds of {1348: 15c5 per candidate city; 0efc: 2 or 4 × rnd(1,20,0); the chosen move through the executor; explore ovl20:0e4b when it applies (§6.2)} |
+| move Search §6.6 (Hidden Map only) | per explorer (heroes first, then the others, N−1..0): ovl20:0e4b → per step 0f46: 177f (rnd(1,4,−1) first, then rnd(1,10,0) per candidate square, x then y ascending), when nothing was found and the army flies 164e (rnd(1,10,0) per flagged intact city, count−1..0), 10a8 (15c5 for the chosen city, then the executor), 12eb (executor, then 15c3 / ovl34:0000), 1581 (executor) |
+| move Explore §6.6 | per hero with flag 0x100: 11a6 → executor and 15c3 (§8.2) |
+| assault §6.5 | per active TF k = 0..AI[+0x24a]−1: 00ca → 0996 groups j = 3..0 → 0b49 (15c5 per enemy city with map distance < 50 and < DS:5e00, count−1..0) → 0c32 (15c5 per candidate square, x then y ascending; then the executor) → 0f1b (executor; captures: 1864 rnd(1,15,0) and 1851 → 1885, or 199c rnd(1,10,0), 1a2a rnd(1,5,0)); 023f(staging, 1) (flyer exploring); 06e9: per target i = 0..5 one 15c5 then rnd(1,4,0), then 0f1b; 023f(staging, 1) again; 16fd: 023f(v, 1) per rear staging city and the executor |
+| move #1 §6.6 | per walked stack: only for a moving army with flag 0x80, 05ff (15c5 per candidate when Neutral Cities is on; explorers 0e4b as above under Hidden Map before turn 10); then the executor |
+| rescue §6.6 | per idle army: 0c5b → 0f3c (15c5 per reachable foreign candidate, count−1..0), then the executor |
 | evaluate, update hide §6.8 | none |
-| clean city §6.9 | per own unprocessed city (count-1..0), only when no hero, unchanged count and not forced: rnd(1,6,-1) |
-| neutral §6.10 | 06c7 per candidate neighbour (i = 5..0): 15c5 if Neutral Cities on, then rnd(1,10,0) when p ≥ 75; explorers as above |
+| clean city §6.9 | per own unprocessed city (count−1..0): rnd(1,6,−1) only when not forced, no hero and the count unchanged; then, under Hidden Map for role 11 with AI[+0x24] < 5, ovl20:0e4b per flyer sent exploring (as move Search) |
+| neutral §6.10 | per own city and pass: 023f(c, 1) for a newly taken city (flyer exploring); 03aa → 06c7 per candidate neighbour (i = 5..0): 15c5 if Neutral Cities on, then rnd(1,10,0) when p ≥ 75; the executor per launched group; 0b19 → 0e4b explorers as move Search |
 | move #2 | as move #1 |
-| quick attack §6.11 | per city, per candidate neighbour i = 5..0: one 15c5 |
-| assault XX §6.13 | ovl27:0e04 8 × rnd(1,10,0); 04d2 rnd(1,2,-1) per tie; 06a0 up to 3 × rnd(1,1000,0) (only for non-zero weights) |
-| specials, last rescue §6.6 | as move #1 |
-| rebuilding, production, vectoring | none |
-| hooks | ovl25:0919 rnd(1,100,add) per own city with role 7/2/3 (count-1..0); ovl26:0080 rnd(3,500,500) then, with a Hidden-Map target, rnd(1,11,-6) for x then y; ovl29:1771 rnd(1,4,-1) when the target belongs to a human |
+| quick attack §6.11 | per city (count−1..0), per candidate neighbour i = 5..0: one 15c5; then the executor |
+| assault XX §6.13 | ovl27:0e04 8 × rnd(1,10,0); 04d2 rnd(1,2,−1) per tie (count−1..0); 06a0 up to 3 × rnd(1,1000,0) (only for non-zero weights) |
+| specials §6.6 | per city with a hero (bit 0x20): 11a6 → executor and 15c3 |
+| rebuilding, last rescue, production, vectoring | last rescue as rescue; the others none |
+| end of the turn | ovl00:1063 (§8.2) at ovl25:0379, after the AI block is unlocked |
+| hooks outside the turn | ovl25:0919 rnd(1,100,add) per own city with role 7/2/3 (count−1..0); ovl26:0080 rnd(3,500,500) then, with a Hidden-Map target, rnd(1,11,−6) for x then y and ovl34:0cd6's four draws |
 
 ## 9. Proposed module split for `warlords2/ai/`
 
@@ -2692,58 +3080,180 @@ One module per original unit, functions named after their address, so a reviewer
 | `ai/state.py` | §3 | `AiBlock` (fields of §3.1 under the names of §3.1/3.2), `NeighbourTable` (NB), `ai_turn_active` (DS:0836), `is_computer_now(state)` = ovl25:09ab | persist: saved with the game (§3.4) |
 | `ai/cards.py` | ovl21:084d, 0d7b | `init_block(state, p)` 084d, `apply_card(state, p, personality)` 0d7b | setup `ai_setup` = `setup_all(state)` = ovl25:0519 |
 | `ai/tables.py` | ovl29:0398, 0749, ovl25:0656 | `build_neighbours`, `nearest_six`, `is_neighbour` | setup (ovl30:0000 → 010b → 0398, before territories) |
-| `ai/util.py` | ovl29 | `nearest_claimed_city` 0a27, `order_stack` 0ae7, `goto_for_order` 0c7e, `set_production` 0e5a, `set_vector` 0f10, `production_in_progress` 0fd5, `choose_production` 103d, `buy_flying_slot` 11d5, `select_square`/`select_square_order` 12c9/13b2, `select_list` 14d3, `win_odds` 15c5, `count_square` 1626, `retarget` 1771, `best_target` 1885, `after_raze` 1851, `can_build_decent` 1a4d, `weakest_slot` 1ae9 | city `ai_raze` = after_raze; move executor needs retarget |
-| `ai/base.py` | ovl25 | `computer_turn` 0000, `pre_turn` 0386, `hero_city` 0919, `record_battle` 09d7 | turn `ai_turn`, heroes `ai_hero_city`, combat `ai_memory` |
+| `ai/util.py` | ovl29 | `nearest_claimed_city` 0a27, `order_stack` 0ae7, `goto_for_order` 0c7e, `step_toward` 0d88, `set_production` 0e5a, `set_vector` 0f10, `production_in_progress` 0fd5, `choose_production` 103d, `buy_flying_slot` 11d5, `fill_slot` ovl44:1299 (also for ovl25:0bd1), `select_square`/`select_square_order` 12c9/13b2, `select_list` 14d3, `win_odds` 15c5, `count_square` 1626, `seen_near` 16ae, `retarget` 1771, `best_target` 1885, `can_build_decent` 1a4d, `weakest_slot` 1ae9, `nearest_ring` ovl21:0a85 (shared by ovl19, ovl22, ovl29) | move executor needs retarget |
+| `ai/base.py` | ovl25 (+ ovl29:1851) | `computer_turn` 0000, `pre_turn` 0386, `hero_city` 0919, `record_battle` 09d7, `after_raze` ovl29:1851 | turn `ai_turn`, heroes `ai_hero_city`, combat `ai_memory`, city `ai_raze` (rules/city.py names `warlords2.ai.base:after_raze`, so 1851 lives here, not in util.py) |
 | `ai/phases/production.py` | ovl25:06d4 | `production` | – |
 | `ai/phases/vectoring.py` | ovl25:085f | `vectoring` | – |
 | `ai/phases/rebuilding.py` | ovl25:0af2, 0bd1, 0c83 | `rebuilding`, `buy_slot`, `rebuild_city` | – |
 | `ai/phases/diplomacy.py` | ovl18, ovl27:0e04 | `diplomacy` 0000, `claim_city` 0917, `ally_vs_human` 0a6e, `may_attack_city` 0851, `choose_enemy` ovl27:0e04 | – (proposals feed rules.diplomacy resolve/penalty) |
-| `ai/phases/assault.py` | ovl19 | `assault` 0000, `run_tf` 00ca, `move_staging` 02ed, `refresh_targets` 041c, `cancel_oldest` 0607, `cancel_tf` 066d, `launch` 06e9, `record_leader` 08b2, `move_groups` 0996, `near_city` 0b49, `skirmish` 0c32, `attack_city` 0f1b, `check_leaders` 1251, `after_capture` 134c, `extend_targets` 1579, `bring_rear` 16fd, `capture_choice` 1864, `sack` 199c, `pillage` 1a2a | city capture choice for computer sides; `after_raze` must **return** the next target (§5.14) — the current hook signature `-> None` in rules/city.py loses it |
-| `ai/phases/neutral.py` | ovl20 | to be filled | – |
-| `ai/phases/evaluate.py` | ovl21:0000, 0c1c | to be filled | – |
+| `ai/phases/assault.py` | ovl19 | `assault` 0000, `run_tf` 00ca, `move_staging` 02ed, `refresh_targets` 041c, `cancel_oldest` 0607, `cancel_tf` 066d, `launch` 06e9, `record_leader` 08b2, `move_groups` 0996, `near_city` 0b49, `skirmish` 0c32, `attack_city` 0f1b, `check_leaders` 1251, `after_capture` 134c, `extend_targets` 1579, `bring_rear` 16fd, `capture_choice` 1864, `sack` 199c, `pillage` 1a2a | city capture choice for computer sides; the raze contract is below the table |
+| `ai/phases/neutral.py` | ovl20 | `neutral` 0000, `neutral_pass` 00b5, `neutral_neighbours` 01f6, `mark_explore_cities` 02ff (called from production), `send_group` 03aa, `neutral_chain` 06c7, `pick_neutral` 0935, `nearest_city` 0981, `nearest_foreign_army` 0a3e (also used by ovl22, ovl24, ovl28), `send_explorers` 0b19, `explore` 0e4b (also used by ovl22, ovl24, ovl28), `explore_step` 0f46, `explore_attack` 10a8, `explore_site` 12eb, `explore_move` 1581, `flagged_city` 164e, `frontier` 177f, `frontier_city` 1bab, `frontier_site` 1c9d | – |
+| `ai/phases/evaluate.py` | ovl21 (without 084d / 0d7b, which are cards.py, and 0a85, which is util.py) | `evaluate` 0000, `tf_groups` 01b3, `flying_slot_bits` 09cf, `refresh_unseen` 0b55, `clear_unseen` 0b95, `update_hide` 0c1c; 0c92..0cd7 are unreachable (omit) | – |
 | `ai/phases/move.py` | ovl22 | `move` 0000, `search` 0284, `explore` 0458, `retarget` 05ff, `rescue` 0888, `last_rescue` 0b4d, `send_to_city` 0c5b, `pick_city` 0f3c, `specials` 10e3, `hero_explore` 11a6, `search_on_arrival` 15c3 | move executor needs `search_on_arrival`; ovl23 is debug output (omit) |
 | `ai/phases/clean_city.py` | ovl24 | `clean_cities` 01f1, `clean_city` 023f, `defenders_wanted` 0a3d, `garrison_order` 0b5c, `delete_army` 015e, `delete_selection` 0000, `delete_list` 00ca, `redraw` 10a1 | – |
-| `ai/phases/quick_attack.py` | ovl26 | `quick_attack` 04ba, `quick_attack_city` 053f, `sage` 0080, `captured` 0000, `after_battle` 038d | ruins `ai_sage` (named `ai.phases.search:sage` in rules/ruins.py — re-point or re-export); move executor needs `captured`; combat needs a hook for `after_battle` at ovl36:16a3 |
+| `ai/phases/quick_attack.py` | ovl26 | `quick_attack` 04ba, `quick_attack_city` 053f, `sage` 0080, `captured` 0000, `after_battle` 038d | ruins `ai_sage` (rules/ruins.py names `warlords2.ai.phases.quick_attack:sage`, M8b4, since M8b1); move executor needs `captured`; the AI battle (§7a.7) calls `after_battle` last |
 | `ai/phases/assault_xx.py` | ovl27 | `assault_xx` 0000, `pick_staging` 01bb, `pick_targets` 03ff, `enemy_core` 04d2, `graph_dist` 058a, `style` 06a0, `is_staging` 07f8, `drop_source` 083e, `reset_tf` 08ba, `count_enemy_nb` 09ca, `source_ok` 0a7a, `refresh_sources` 0aed, `pick_sources` 0b72 | – |
 | `ai/phases/hero.py` | ovl28 | `move_hero` 0000, `pick_up` 0427, `site_at` 056d, `temple_ordinal` 0600, `blessing_flag` 063c, `hero_table` 065d, `go_site_or_item` 07ea, `go_city` 0b75, `quest_city` 0cf3, `choose` 0efc, `score_sites` 0fda, `score_items` 11f8, `score_cities` 1348, `site_ok` 1637, `item_ok` 1736, `share_items` 17db, `hand_out` 1a3d | move executor and clean city need `pick_up`; clean city needs `share_items` |
 
-Engine work the AI needs that is not an AI module: the move executor 0a8b:0001 / 0c4f / 04c8
-with its callbacks into the AI (ovl28:0427, ovl22:15c3, ovl26:0000, ovl29:1771) and the
-distance map 0555:1ab9 with limit/mode/mask arguments (§5, §10).
+**Status (M8b1 engine part done):** `GameState.ai` is `model/ai.py` `AiState`: the eight
+`AiBlock`s with every field of §3.1 (names of §3.1 / A.2, task forces `TaskForce` of §6.13,
+`memory[r][a]` = +0x3bc + 0x10·r + 2·a), the `NeighbourTable`, DS:0832 (`allocated`), DS:0836
+(`turn_active`), DS:40f2 (`solidarity[p]`), DS:40ee (`locked`), DS:40c0 / 07c6
+(`neutral_source` / `neutral_last`) and the 1851 result (`raze_target`); the blocks and the
+table are saved (serialize FORMAT 9), the DGROUP words are the run's `AiProcess` (not saved;
+Changelog "M8b1 review"). Written: `ai/state.py` (`block`, `ai_turn_active`, `is_computer_now`
+09ab, `quest_city`, `set_city_role`), `ai/cards.py` (`init_block` 084d, `apply_card` 0d7b,
+`setup_all` 0519, `load_draws` for §3.4, `card_reader` / `card_name` ovl48:006a / ovl57:21c1),
+`ai/tables.py` (`build_neighbours` 0398, `nearest_six` 0749, `is_neighbour` 0656), `ai/util.py`
+(the row above; 14d3 re-uses `rules.movement.select_list`, 103d's scoring
+`rules.setup._choose_production`, 15c5 `rules.combat.simulate_selection`; `best_target(state,
+flag, dm)` and `nearest_ring(state, c, dm, flag)` take the distance table T as the
+`rules.pathfinding.distance_map` result), `ai/base.py` (`computer_turn` 0000 with the phase
+table `PHASES` naming the modules / functions above, `pre_turn` 0386, `hero_city` 0919,
+`after_raze` 1851, `record_battle` 09d7). Wiring: `rules.setup` HOOKS `ai_setup` (Begin, with
+`new_game(cards=...)`) and `ai_neighbours` (start of ovl30:0000); `rules.turn._require` asks
+`computer_turn.require` (strict: the phases must exist before End Turn changes anything);
+`rules.ruins` HOOKS `ai_sage` -> `ai.phases.quick_attack:sage` (M8b4). The phase modules are
+M8b2–4: each is called as `f(state) -> list[Event]`, `evaluate(state, side)`.
+**M8b4 done:** `ai/phases/diplomacy.py` (ovl18 + ovl27:0e04), `assault.py` (ovl19, capture
+choice 1864 / 199c / 1a2a: 1864 razes with `rules.city.raze` and calls `ai.base.after_raze`
+once, reading `state.ai.raze_target`), `assault_xx.py` (ovl27), `quick_attack.py` (ovl26: the
+phase, `captured`, `after_battle`, `sage` - the three rules hooks resolve here) and
+`evaluate.py` (ovl21); helper calls that return a value give `(value, events)`.
+
+**Raze contract** (one 1851 per raze, never two): `ai.base:after_raze(state, city)` = ovl29:1851
+runs the distance map and 1885 in full (15c5 per reachable candidate: it draws rnd) and stores
+its result (next target city or −1) in `state.ai.raze_target`. The computer's raze is
+`assault.capture_choice` (1864): `rules.city.raze` (ovl32:016b), the infamy draw, then
+`after_raze` once, called by 1864 itself; `assault.attack_city` (0f1b) reads the result.
+`rules.city.capture` (the CaptureChoice command) calls the same hook after a computer raze
+for a pending capture question, which the AI path never raises. The hook signature `-> None`
+is sufficient; the two other callers of 1864 (ovl26:0000, ovl26:038d) discard the result
+[V §2.2]. When 0f1b razes, DS:5e62 is null (0a8b:0001 keep = 0 ends with 0b62:08b3): 1851's
+distance map is off the map and 1885 runs on the previous table DS:3f86 (Changelog "Selection
+holes").
+
+**Engine work the AI needs that is not an AI module** (each item is a rules change, listed once):
+1. The move executor 0a8b:0001 / 0c4f / 07f9 / 04c8 / 0254 / 0476 (§7a.1, §7a.2, §7a.6) with its
+   callbacks into the AI (ovl28:0427, ovl22:15c3, ovl26:0000, ovl29:1771). What the engine already
+   has and what is missing (third review, compared with rules/pathfinding.py, movement.py,
+   selection.py):
+   * Present and equal to the listing: `pathfinding.find_path` = 0555:000a for modes 0/1/2 and
+     masks 0..3 | 8 (cache 1508/16f0, shortcut 020e, 08bf/0373/117b incl. the DI/CX octant,
+     0bde patch/restore) — except the store bug in item 7; `path_costs` / `reach_this_turn` =
+     18be/19e4; `movement.stack_mode` = 0c8c:0529's mode/mask; the walk inside `movement.move`
+     = 07f9 + 04c8 + 0d1a (statuses 0/2/3/4/5, `ahead` = DS:5dc8/5dc6, pend rule, relation
+     overflow, embark/land, 0b62:01a7 as `_clear_left`, computer pick-up); `selection.selection_step`
+     = 0529's hero / goto copy; `selection.mark_done` = ovl67:08fb.
+   * Missing entry points: (a) `0c4f(x, y, quiet=1)` on the **current** selection:
+     `movement.move` takes a command group and calls `selection.adopt` (leader = first id),
+     while the AI's selection comes from ovl29:14d3 / 0ae7 / ovl67:06eb, and it reports "no path"
+     as status 0 + `no_path` where 0c4f returns 1; (b) a public `pick_up(state, x, y)` =
+     ovl28:0427 on DS:5e5e (`movement._pick_up` is private and runs only per step, but 0001
+     also calls it before every 0c4f with the leader's square); (c) the 0001 loop with the stale
+     `n` (§7a.1), 0254, 0476 → ovl36:124a(x, y, 1) (item 2) and 0c8c:0529 after a battle; (d) the
+     DS:5dfe / 5e00 / 2bda / 5e5e values 0529 leaves for the AI readers (ovl29, ovl22).
+   * **Done (M8b engine prep):** `rules.movement` `walk_selection(state, x, y)` = (a) (returns
+     (status, DS:5dc8/5dc6 or None, events), "no path" = 1); `pick_up(state, x, y)` = (b);
+     `execute_move(state, x, y, keep=0)` = 0001, `attack_stack(state, x, y)` = 0476,
+     `attack_order_city(state, c, x, y, goto)` = 0254 (returns (result, goto, events)) = (c),
+     with the stale `n` reproduced; a round of the stale case that leaves the state unchanged
+     raises RuntimeError instead of hanging (as `combat.fight` does for 08a6); `set_selection(state,
+     leader, members)` (DS:5e62 / 5e3e + 0529) and `selection_values(state)` (DS:5dfe, 5e00, 2bda,
+     5e5e, 5dfc, 5dfa) = (d). AI calls go through `rules.movement.HOOKS` (ai_quest_city =
+     AI[+0x46], ai_set_role = AI[+0x56+c], ai_retarget = ovl29:1771, ai_search_on_arrival =
+     ovl22:15c3, ai_captured = ovl26:0000); the order byte +0xe is `Army.order`.
+2. The AI's real battle ovl36:124a(x, y, 1) in the order of §7a.7 — treachery 20a8 called
+   directly when its conditions hold, city +0x30 mask, prelude 0522, battle 08a6, ovl25:09d7 at
+   1502, casualties 0a6b, map army bit, (messages), medals 2274, ovl62:0000, quest check
+   ovl01:1ded(0, 0, 0, 0, 0) at 1697, then ovl26:038d at 16a3. rules/combat.py has only the
+   human attack ovl36:0000 and the simulation.
+   **Done:** `rules.combat.ai_battle(state, x, y)`; ovl26:038d is HOOKS `ai_after_battle`. Found
+   on the way [V ovl36:124a 1311 / 1466, ovl36:0211]: the set-up runs **before** the prelude (a
+   land unit attacking Water fights at its strength, not aboard at 4), and the prelude charges
+   DS:4160, which only the human attack ovl36:0000 writes (0 before any human attack, else the
+   last human attack's cost; `state.battle_work.attack_cost`). Open (rules/heroes.py, not this
+   change): ovl36:2274 tests DS:5e5e for non-null only (23e3); after an AI battle DS:5e5e still
+   names the attacking stack's hero, also when it died, while `heroes.award_medal` tests
+   `live(...)`, so a won battle whose hero died skips the medal draws the original makes.
+3. `combat.simulate` for 15c5 and the advisor, on the current selection, keeping
+   `state.battle_work` (§7).
+   **Done:** `combat.selection_group(state)` = ovl38:0293..02ea's attackers, `simulate_selection(state,
+   x, y)`; `simulate(state, group, x, y)` stays for the advisor dialog.
+4. The distance map 0555:1ab9 with limit / mode / mask arguments and the path cache (§7a.3,
+   §7a.4, §3.4). The path cache exists (`state.path_cache`); the distance map does not:
+   `_Search.flood` ignores mask 0x10 and `find_path` always uses the cache and the backtrace. A
+   `distance_map(state, limit, x, y, mode, mask)` must run `_Search` with src = dst = (x, y),
+   mask | 0x10, R = limit in **both** passes with r reset to 0 at each pass, return at r == R
+   (result 1) or on a round without progress (0), no start stop, no backtrace, no cache lookup or
+   store, the 0bde patch / restore and DS:3f6e as usual, and expose the signed field (§7a.4
+   encoding) to ovl21:0a85 and the other readers.
+   **Done:** `pathfinding.distance_map(state, limit, x, y, mode, mask)` -> `DistanceMap(found,
+   field)` (field indexed y·112 + x, `.value(x, y)`).
+5. `rules.diplomacy.penalty` (ovl00:1063): the `diplomacy_penalty` hook is called only from the
+   human End Turn (rules/turn.py, ovl61:2087); `ai.base:computer_turn` must call it itself at the
+   end of the computer turn (ovl25:0379, after the AI block is unlocked), §8.2.
+6. Loading a saved game before any Begin consumes the 0d7b draws (§3.4).
+   **Done:** `ai.cards.load_draws(state, cards, process)`, for the load path to call with
+   the session's `AiProcess` (its `allocated`: a Begin or a load happened in this run) (the load ovl49:0414 reads
+   the SCN at 063c and calls ovl29:0dff at 08a4; nothing re-reads the SCN after the cards' fight orders [V]).
+   `rules.saveload.load` calls it as its `ai_read` hook (M10b).
+7. **Engine bug** (rules/pathfinding.py `_store`, tests/engine/test_path_cache.py): the engine
+   copies 201 bytes and writes the last (0xff) into the low byte of the next slot's state word;
+   0555:16f0 copies 200 (si = 199..0 at 17b7..17e3, slot +0xe..+0xd5) and never touches the next
+   slot. Effect: free slots look used, so far paths go to slots 1, 3, 5, … instead of 1, 2, 3, …
+   and, once full, the "phantom" (0,0)→(0,0) slots (distance 0) are replaced first — the slot
+   chosen differs from the original, which changes which cached path a later lookup returns.
+   Failing scenario: fresh cache, `find_path((10,10), (14,10))` → original slot 1 state 0, engine
+   0xff; eleven far paths from (10,10) → original slots 1..11, engine 1,3,…,19,2. Not fixed here;
+   tests/engine/test_path_cache.py lines 31, 52 and 64 assert the 201st byte and must change with
+   the fix.
+   **Fixed** (200 bytes; tests updated and the two scenarios added). The 201 came from reading
+   the copy loop `mov si, 0xc8; jmp 17de; ... 17de: mov ax, si; dec si; or ax, ax; jne 17c6` as
+   si = 200..0; the test is on the value before the decrement, so the body runs for si = 199..0.
+   000a's 0xff fill (0063..007a) is the same loop (200 bytes, not 201).
 
 ## 10. Remaining work
 
 ### 10.1 Not traced (function by function)
 
-* ovl19: done (§6.5); open: argument roles noted [I] there.
+* ovl19: done (§6.5); the former [I] arguments are closed (§10.2).
 * ovl20: done (§6.10).
 * ovl21: done (§6.8).
 * ovl22, ovl23: done (§6.6, §6.6a).
 * ovl27: done (§6.1a, §6.13, §6.16a); ovl27:1052 / 122f / 0e73 / 0eeb in the dump are Ghidra fragments of 0e04, not functions.
 * ovl28: done (§6.2).
 * ovl29: 16ae reads the road layer 19d9 bit 0x20 [I segment].
-* Resident: done as far as the AI uses it (§7a). Not read: 0b62:01a7 / 0e9b (per-step map
-  army-bit bookkeeping in 0a8b:04c8).
+* Resident: done as far as the AI uses it (§7a), including 0b62:01a7 / 0e9b (§7a.2, third review).
 
 ### 10.2 [U] list
 
 * AI words whose writers are known but whose purpose beyond the code is not: +0x22 (ovl22:0284),
   +0x24 (explorer count, gate < 5; ovl22:0284, ovl24:023f), +0x4c (ovl28), +0x0e (ovl28:065d) —
   the ovl28 ones close with the hero trace.
-* Whether 0d28:011f zeroes new blocks (fields not set by 084d: +0x14, +0x3a..+0x40, +0x4e..+0x55)
-  — not checked.
-* 0555:000a at 01a4 tests an uninitialised local against 0xd (debug path display that writes the
-  view centre); no game effect [I].
-* Whether the display calls made when 2c04:0159 ≠ 0 (ovl64:0565 / 006c, ovl63:1fed) draw rnd() —
-  ovl64 not checked (077b:005f does not).
-* Sign of distance-table entries (0a85 takes |d|) — encoding inside 0555:000a, see §7a.4.
-* ovl62:044a returning −1 for a capital square without a city: callers then read city record −1
-  (ovl18:0917, ovl19:00ca, ovl27:0e04) — what that memory holds is not established.
-* ovl28:17db / 1a3d read empty item-row bytes 0xff as item −1, whose type byte is 2c04:0ce0
-  (inside site 39's name); assumed never a type 1/2/5..8 [I], scenario data not checked.
+* (closed) 0d28:011f does not zero new blocks; +0x3a..+0x40 are zeroed by ovl21:01b3 before use,
+  no reader of +0x14 / +0x4e..+0x55 found [V allocator listing; I for the readers], §3.1.
+* (closed) 0555:000a at 01a4 tests its never-written local [bp-2] against 0xd (13e4: debug path
+  display that writes the view centre 2c04:017d/017f). For every movement caller that slot holds
+  the return offset of the 0555:1868 call made just before (0a8b:0c4f: 0x0c7e, 0c8c:0529: 0x07a3,
+  0c8c:0125: 0x011c), never 0xd; 1ab9 never reaches 01a4 (mask 0x10) [V stack layout; a hardware
+  interrupt in the five instructions between the two calls is the only way to change it]. Only
+  ovl12 (random-map roads) leaves real garbage there.
+* (closed) The display calls made when 2c04:0159 ≠ 0 (ovl64:0565 / 006c, ovl63:1fed) draw no
+  rnd(): there is no rnd site in ovl64, and ovl63's sites are in 232b / 2785 (called only from
+  ovl01:111f, ovl35:0b0b, ovl49, ovl57) [V rnd inventory, call sites].
+* (closed) Sign of distance-table entries: positive = expanded, negative = reached in the last
+  ring or outside the box but not expanded, 30000 unreached, 0x7531 impassable; readers take |d|
+  [V 0373], §7a.4.
+* (closed) ovl62:044a returning −1 for a capital square without a city: callers read city record
+  −1 = relation-matrix bytes (owner = 2c04:1551, x/y = words 2c04:153c/153e), §6.1 [V].
+* (closed) ovl28:17db / 1a3d read empty item-row bytes 0xff as item −1, whose type byte is 2c04:0ce0
+  (site 39's name byte 18): 0x00 in every shipped .SCN, never written in play, so never a type
+  1/2/5..8 [V data, §6.2].
 * The fifth and later temples get blessing mask 0x6353 (bytes after DS:0958) in ovl28:063c [V];
   effect on real heroes' flag words not established.
-* Arguments marked [I] in §6.5 (0f1b's fallback distance, the two zero arguments of 13b2 in 16fd).
+* (closed) The [I] arguments of §6.5: 0f1b's fallback distance is dist(L[0], target) [V
+  0fcc..0ff3]; 16fd's 13b2 zero arguments are one `push dword 0` (sub 0, kind 0) [V 17f1].
 
 ## Appendix A. State tables of the move, evaluate phases
 
@@ -2779,7 +3289,7 @@ distance map 0555:1ab9 with limit/mode/mask arguments (§5, §10).
 | AI[+0x46] | excluded city: order to it is dropped (0000), skipped in 0f3c and ovl20:01f6; 0254 attacks it directly when a hero is in the stack [V] |
 | AI[+0x56+c] role | R 7 (0284 hero release, 0f3c own-city bonus, 11a6 −80, 10e3 skip); W 13 (10e3), W 1 (0254 after taking a neutral city) [V] |
 | AI[+0x11e+c] bit 0 | city skipped (05ff, 0f3c) [V] |
-| AI[+0x11e+c] bit 0x20 | city sends hero+flyer explorers (10e3) [V read; U writer] |
+| AI[+0x11e+c] bit 0x20 | city holds a hero (written by ovl24:023f, §6.9); read by 10e3 [V] |
 | city +0x15 owner, terrain at corner | intact / owner tests everywhere |
 | site +0x18 kind | 1 temple (ignored by 11a6, quest in 15c3), 5 allies ruin (15c3) |
 | map high byte 0x40 | site searched (11a6, 15c3) |
@@ -2827,11 +3337,399 @@ distance map 0555:1ab9 with limit/mode/mask arguments (§5, §10).
 | AI[+0x11e+c] bits 3/6/7 | W | 01b3 | `CF_TF_MEDIUM` / `CF_TF_FLYER` / `CF_TF_FAST` | V code, V pairing (ovl27:0b72) |
 | AI[+0x24a] w | R | 01b3, 0a7a | number of task-force records | V |
 | TF[k].+0 w | R | 01b3, 0a7a | active | V |
-| TF[k].+4 w | R | 0a7a | target city | V |
+| TF[k].+4 w | R | 0a7a | staging city (AI[+0x250+0x5c·k]; the target list is +0x0e = AI[+0x25a]) | V |
 | TF[k].+0x58 w | W | 01b3 H | `min_moves` 8/12/16 (ovl27:0b72 uses it as a moves threshold) | V write, I name |
 | TF[k].+0x5a w bits 3/4/5 | W | 01b3 H | `TF_FAST` (8) / `TF_MEDIUM` (0x10) / `TF_FLYER` (0x20) | V write, V use in ovl27:0b72 |
 | NB[c*6+i], NB[600+c*6+i] | R | ovl20:01f6 | neighbour ids / distances | V |
 | 19d9:[y*0x70+x] bit 0x20 | R | 0b95 | explored square | V read, meaning from 00_shared |
 | DS:07d8, 2b04, 2b16 | R | 0a85, 0a8b:0b4d | ring walk / direction tables (values in §2.7) | V |
 | DS:45c4[6t], 45c9[6t] | R | 09cf, 01b3 | flies / w15 | V |
+
+## Changelog
+
+### M8b UI: present points and the view words (rules/present.py; ovl36:124a, 0a8b:0254 / 0476 / 04c8, ovl64:0565 / 0629 re-read)
+
+* The display calls of the AI's battle and walk that write game state are engine work now: the
+  view words SCN 0x175..0x17f of ovl64:0565 -> 0629 after every step of a computer stack (0a8b:05f2,
+  not gated), and with SCN 0x159 before (0a8b:029a / 03dd / 0489) and after (02c4 / 0433 when
+  DS:5e62 is set) the battle; ovl65:0227(x, y) at ovl36:1474 when `show` (`rules.combat.
+  ai_battle_gates`, `set_view_words`).  DS:3254 is kept as `AiProcess.single_view` (ovl68:0074,
+  cleared at ovl68:0267).  Nothing in the engine reads the view words (only ovl24:10a1's display
+  test), so no roll or decision changes; the human turn start rewrites all six (ovl64:0629 at
+  ovl68:039c / 047c).
+* Everything else these routines do is drawn by `states/phases/computer.py` at the present
+  points (EL addition "M8b UI"), from the state as it is there.
+
+
+### Selection holes, the search table DS:3f86 and the null-leader raze (M8b4 review B1, M8b review holes)
+
+[V listing unless noted]
+* **DS:3f86, the search table T.** 0555:02f2 allocates it (0x8880 bytes = 112 × 156 words,
+  indexed x·0x9c + y: 0555:0113..012c `imul 0x138`). Only 0555:000a writes it: 08bf (init), the
+  target word (0168), 0373 (flood); 117b reads it; 0d9e, 1508 and 18be lock the handle but
+  never address it (no `[0x3f7a]` / `[0x3f7c]` use in them); the AI reads it through 0555:1b0a
+  (ovl21:0a85 via ovl19:0b49, ovl22:0f3c, ovl29:1885). 000a returns before the lock for a
+  target off the map (0034..0056), a cache hit (1508, 008f / 00ae) and the direct step (020e,
+  00cb); every other search, path or distance map, rewrites it, also one that finds nothing.
+  So the "previous table" a distance map off the map leaves is the field of the last such
+  search, whichever caller made it (path searches of the executor 0a8b:0c87, of 0c8c:0125 /
+  07ab, ovl12:0c58's road builder, the distance maps of ovl19 / ovl22 / ovl29). Engine:
+  `GameState.dist_table` (serialised, FORMAT 10), written by `rules.pathfinding.find_path` and
+  `distance_map`; `distance_map` off the map returns it. The AI callers that refused a leader
+  off the map (ovl19:0996, ovl29:1771) now score on it as the EXE does.
+* **B1, ovl19:0f1b raze → ovl29:1851 with DS:5e62 null.** 0f1b calls 0a8b:0001(goto, keep = 0)
+  (10fa / 1108, push 0); its tail 022a..023d runs ovl67:08fb and 0b62:08b3(1, 1, 1), whose 08be
+  writes dword DS:5e62 = 0. Between 1108 and 1864 (11dd) only ovl19:1251 runs (no DS:5e62
+  write), nor do ovl31:07d0, ovl32:016b, the infamy draw or ovl24:10a1 inside 1864. 1851 at 1856
+  (`les bx, [0x5e62]`, `mov si, es:[bx]`, `mov di, es:[bx+2]`) reads x = word 0000:0000, y = word
+  0000:0002: the offset and segment of int 0. The Borland start-up (res_0000:017d..01bf) saves
+  ints 0, 4, 5, 6 and sets int 0 to its divide-error handler CS:0174 (01b2..01bc: AX = 2500h, DS = CS,
+  DX = 0x174); no other code of the EXE sets int 0 (the only other int 21h / 25h setters are
+  res_0e8f:0018 for ints 9, 0x1b, 0x23, 0x24 and the overlay manager's res_15de:0162 for its own
+  vector) [I: no resident program or debugger rewrites int 0 while the game runs]. x = 0x174 ≥
+  0x70, so 0555:000a returns at 0042..0051 whatever the segment, before T is touched (1ab9 only
+  wrote DS:3f70 = 15); 1885(x, y, 1) then runs on the previous T (x / y are only its outputs'
+  slots), with the stale DS:5e00 and the DS:5e3e / 2bda / 5dfe that 08b3 leaves (15c5's
+  set-up). The engine's `ai.base.after_raze` does exactly that (`IVT_INT0_OFFSET`); a stack of
+  one army has DS:2bda clear, so 15c5's set-up then takes the null DS:5e62 itself (plan
+  register X38). ai.md §2.2's table row for 1885 via 1851 and the raze contract are corrected.
+* **Selection holes.** `Selection.moving` is DS:5e3e slot by slot (−1 = null, trailing nulls not
+  stored). Writers: ovl29:14d3 (`rules.movement.select_list`: a −1 entry leaves its slot null in
+  place when more than one entry; one entry not in slot 0 makes DS:5e3e[0] = DS:5e62 the pointer
+  computed from −1, 1e1d:886a "record −1" = the map words of (101..111, 155), kept null in the
+  engine, X38), ovl29:0ae7 (`ai.util.order_stack`: holes in place, DS:5e62 kept when no byte
+  beats −1 — null after such a 14d3; unreachable with the shipped fight orders, all bytes 0..28),
+  ovl36:0a6b (dense survivors, 0afd..0b58). Readers and what they do on a null slot: 0c8c:0529
+  skips it (058f..0597) and with a null DS:5e62 sets DS:5e5e to the first hero by slot (0566's
+  type test reads 0000:0004, both outcomes null) and copies the words 0000:0012 / 0014 into
+  the members' goto — the only such caller, ovl22:0c5b (0e81), overwrites them in 0ae7 or
+  deletes the armies in ovl24:00ca, so the copy is not modelled; 0a8b:04c8 / 07f9 / 0d1a / 0476,
+  ovl67:08fb, ovl24:0000 skip null slots (the engine's `_group_records`, `_members`,
+  `delete_selection`); ovl38:0293..02ea copies slots 0..DS:5dfe−1 without a test, so a hole
+  takes a null slot into the battle and leaves the last live slots out (reproduced), and the
+  set-up and battle then read the null attacker's fields from the interrupt vector table:
+  plan register X38 (stand-in: the null slot is left out of the attacking side). Holes arise in
+  ovl22:0c5b (walkers dropped, 0f3c's 15c5 and the march), ovl20:06c7 (members killed in a
+  chain capture, the next link's 15c5 and march) and ovl19:0f1b (members killed in the skirmish
+  0c32 or in an earlier pass of the raze loop, the next march's battles) — all reached in
+  normal play. The engine's dense copies (`_dense` in move.py / neutral.py) are gone.
+
+### M8b1 review (ai/{base,state,cards,tables,util}.py, model/ai.py, model/serialize.py, rules/pathfinding.py; ovl25, ovl29, ovl47, ovl68, 0d28 listings re-read)
+
+* §6.18 ovl25:0919 (hero city) reads the roles through **DS:40ee** (les bx at 0953 / 0964 /
+  0975). Its writers are ovl25:0091 / 0095 (the side on turn, ovl25:0000) and 0542 / 0546
+  (0519, p = 7..0, so block 0 last); ovl21:0ca9 is unreachable; the unlock 0371 leaves DS:40ee
+  as it is. 0919 is called at ovl47:01ed inside ovl47:0000, which ovl68:0000 runs at 019b,
+  before ovl25:0000 at 01e3: it sees the block of the **last side that ran ovl25:0000**, or
+  block 0 after Begin / a load that ran 0519. The engine read the side's own block (a different
+  number of rnd(1,100,·) draws); now `AiState.locked` (`ai.base.hero_city`). [I] 0d28:0a84 can
+  swap out an unlocked block when a swap handler (DS:3292) is registered, and 069a then locks
+  it at a new address while DS:40ee keeps the old one; the engine takes the block as not moved.
+  0a8b:0318 / 02f8 (quest city / set role) read DS:40ee too, but 0a8b:0254 is reached only from
+  0a8b:0001, whose callers are all AI overlays (ovl19 / 20 / 22 / 26 / 28): the side on turn.
+* §3.3 / §3.4 process state: ovl29:0da9 saves (and 0dff reads) only the eight blocks and the neighbour table.
+  DS:0832, 0836, 40f2[8], 40ee, 40c0 / 07c6 (ovl20:06c7's chain, 0xffff in the EXE image) and
+  the raze result are the running program's: a load in a fresh run finds them as the EXE
+  image has them (DS:40f2 has the single writer ovl25:0386; readers ovl18:0000, 0a6e), and
+  ovl25:04c5 allocates the blocks once per run and never frees them (DS:0832 has no other
+  writer), so a second Begin reuses the first game's heap blocks (words 084d does not write
+  keep their values) and sees stale DS:40f2. Now `model.ai.AiProcess`, held by the caller
+  (`App.ai_process`) and handed to `rules.setup.new_game(process=)` and
+  `ai.cards.load_draws(state, cards, process)`; not saved (serialize FORMAT 9), not hashed;
+  `GameState.copy` and `serialize.snapshot` / `restore` keep its words.
+* §3.1 unwritten fields are read before their first writer: ovl24:023f reads the old
+  +0x182 + c (028e) before writing it (030d / 03af) and draws rnd(1, 6, −1) (058c) when the new
+  count equals it (057f); ovl28:0a19 / 0c6e / 0f78 read it in the hero phase, which runs before
+  clean city on a side's first computer turn. The heap's initial bytes are unknown: the engine's
+  stand-in is 0 for the first game of a run [I], the previous game's bytes after that.
+* The app never passed the card source to new_game: Begin drew no ovl25:0519 dice and the
+  blocks were never set up. `states.game.Game.start_engine` now passes
+  `ai.cards.card_reader(gd)`; the test kit's `movekit.scenario_state` too (`cards=False` for the
+  synthetic `flat_state`).
+* §5 ovl29:0ae7 handles holes: a −1 entry makes DS:5e3e[i] null in place (0b59..0b64). The engine's
+  DS:5e3e keeps the non-null entries in slot order (every reader skips nulls), so
+  `ai.util.order_stack` now takes the live entries instead of refusing (M8b4's open item).
+  [Superseded: not every reader skips nulls (ovl38:0293 copies them); DS:5e3e now keeps the
+  holes, Changelog "Selection holes".]
+* ovl29:15c5 is imul / cwd / idiv on 16-bit words (`win_odds`); ovl25:09d7's memory words are
+  kept signed, a first attacker with owner −1 (it would add at +0x3ba + 0x10 r) is refused as
+  unreachable. ovl29:0e5a with vec != 0 always ends with vectoring off: 0fd5 sees +0x2d equal to
+  the slot's time that 0e5a has just written. 0e5a / 0f10 write +0x31 as a word (+0x32 is
+  zeroed; model.city has no such byte); 0f10's (−2, −2) tests the source index, not dest.
+  ovl29:11d5's slot −1 (every slot at strength ≥ 10) cannot happen with the stock army tables
+  (only type 10 has w15 = 1, strength 4; set-up caps slot strengths at 9): refused [I for
+  modded tables].
+* 0555:0373 is now written for speed (precomputed neighbour indices, flat index): the same
+  fields, CX / radius, paths, path cache and neighbour tables as the plain version
+  (`tests/engine/test_flood_fast.py` keeps it), about 2× faster (ovl29:0398 on ERYTHEA
+  2.24 s -> 1.09 s); the process-wide memo of `ai.tables` is gone.
+
+### M8b4 (ai/phases/{diplomacy,assault,assault_xx,quick_attack,evaluate}.py; ovl18, ovl19, ovl21, ovl26, ovl27 listings re-read)
+
+Every function of ovl18, ovl19, ovl26, ovl27 and ovl21:0000 / 01b3 was re-read in the listing
+while writing the modules; DS:0932 / 0940 / 094c read from the EXE image ({5,8,6,4,14,7},
+{5,8,6,4,14}, {5,8,6,4,14}). Corrections and precisions [V listing]:
+* §6.13 / §3.1 ovl27:06a0: the bonus +0x2e / +0x30 / +0x32 / +0x34 is chosen by the **side on
+  turn** (SCN 0x0d0[cur] == 0 human, else 0x0c0[cur] 2 / 1 / 0, 06b9..0715), not by the enemy's
+  level (model/ai.py's field comment says "by the enemy's level"). The gold test is the signed
+  low word 2c04:0185 + 0x14·cur < 100 (0776).
+* §6.1a ovl27:0e04: the "I am the Greatest" zeroing hits every alive computer p when **vs[cur] or
+  vs[p]** (14a6..14c3), i.e. all of them once the side itself is at war with a non-computer; vs[s]
+  needs an alive side h with 0x0d0[h] != 1 (not only humans). 0e04 runs before ovl18 resets the
+  proposals, so a war proposal left from the side's last turn zeroes every side it proposed
+  peace to (13a8 `any_war`).
+* §6.13 ovl27:058a: a pass marks every reached city done with the D it has at that moment, so
+  a shorter path found later in the same pass is never propagated further (test: chain 0→1→2
+  plus a long edge 0→2 gives D = 35 at the far end where the shortest is 25).
+* §6.5 ovl19:0f1b: after a skirmish with casualties 0c32 sets the dead entries of L to −1 and
+  0b49 passes that L to 0f1b(k, L, near); 0f1b drops nothing more and 0ae7 then writes DS:5e3e
+  with **holes** (null entries before live ones). The original's next battle set-up (ovl38:0293,
+  DS:5e3e[0..DS:5dfe−1]) would then read a null far pointer. ai.util.order_stack refuses such a
+  list (IllegalCommand), so the engine stops there instead of reading garbage [divergence by
+  refusal; needs a decision at the frame: Selection.moving cannot hold a hole]. [Superseded:
+  Changelog "Selection holes".]
+* §6.5 ovl19:00ca: the capital test reads the record of ovl62:044a(first capital) also when it is
+  −1 (owner byte = relation byte [2][6]); ovl19:0000 writes role 7 on TF.staging without an owner
+  or range test (an active task force always has one).
+* §6.11 ovl26:053f: p is stored in a byte array and re-read zero-extended (0759..075e); no effect
+  for 0..100. DS:5dca / 5dda (income / upkeep) are computed now, as M8b2 does (cache, ai.md M8b2).
+* §6.8 ovl21:0b95: the engine raises when y0 − 1 < 0 (the original reads 64 KiB past the layer);
+  x = −1 / 0x70 read the neighbouring row as in the original.
+* The 8-entry side arrays of ovl18 / 0e04 are indexed by owner / claim bytes; an index outside 0..7
+  (only possible through the record −1 or a corrupt claim) reads other locals in the original and
+  raises here.
+
+Checked and found as documented: ovl18:0000 (steps A–I incl. the unreachable war branches),
+0851, 0917, 0a6e; ovl27:0000, 01bb, 03ff (AI[+0x11d]), 04d2, 06a0 draws, 07f8, 083e, 08ba (the
+words +0x1a.. / +0x52.. are not written), 09ca (empty targets keep their word), 0a7a, 0aed, 0b72,
+0e04; ovl19:0000, 00ca, 02ed, 041c, 0607, 066d, 06e9, 08b2, 0996, 0b49, 0c32, 0f1b, 1251, 134c,
+1579, 16fd, 1864, 199c, 1a2a; ovl26:0000, 0080, 038d, 04ba, 053f; ovl21:0000, 01b3, 09cf, 0b55,
+0b95, 0c1c. ovl24:10a1 (called by 1864) is a view redraw only (ovl64:006c when the square is in
+view); ovl32:016b does not read its third argument; ovl63:2200 (sage redraw) only draws.
+
+### M8b3 (ai/phases/{hero,move,neutral}.py; ovl20, ovl22, ovl28 and ovl34:0000 listings re-read)
+
+No pseudocode of §6.2, §6.6 or §6.10 was found wrong; every block was confirmed against the
+listing. Additions and precisions [V listing unless noted]:
+* ovl28 (§6.2): DS:0958 bytes in the EXE are `02 00 04 00 08 00 10 00 53 63` (0x6353 for the
+  fifth temple, confirmed). 07ea with kind 3 and S+0x34 == −1 would read site record −1 at
+  080a..0832, but only for the debug distance (no effect). 1348 returns at 141c straight to 1633
+  when 13b2 finds nobody, leaving the −1 / −1 written at 136f. 0b75's dist at 0bf9 reads city
+  S+0x38, harmless (0efc picks 4 only when it is ≠ −1). The 0b75 stale [bp-2] == j was re-derived
+  from the frame sizes (0efc 5 words, 0b75 6). Jump table 1a2d (17db) = 1896, 1896, 18a8, 18a8,
+  189b, 18a0, 18a5, 1896 for types 1..8.
+* ovl22:05ff (§6.6): the Hidden-Map explore loop re-reads DS:5e3e[s] each round (07c2..0821),
+  and ovl20:0e4b reselects through ovl29:0ae7([j]) (and possibly ovl67:06eb in 1581), so after
+  the first explorer only what DS:5e3e then holds is sent — in practice the first member alone
+  [V reads; I effect].
+* ovl22:0c5b (§6.6): the walkers dropped at 0dfc..0e4e leave −1 holes in the list; 14d3 (0e61)
+  and 0ae7 (0f0c) copy it slot by slot, so DS:5e3e holds nulls and DS:5e62 = DS:5e3e[0] is null
+  when slot 0 was a walker; 0529 at 0e81 then reads hero / goto from a null leader; 00ca (0f30)
+  gets the list with its holes. Engine: the dense live entries in slot order give the same
+  members, hero and leader; the only difference is that, when no entry's fight-order byte beats
+  −1, 0ae7 would keep the null DS:5e62. [Superseded: also 0f3c's 15c5 copies the null slot;
+  the holes are kept now, Changelog "Selection holes".]
+* ovl34:0000 (Search, called by 15c3 and ovl20:12eb): moves test `+7 > 0` signed (0017);
+  terrain 11 without a site record counts as terrain 7 (0081), so nothing happens; with a hero
+  the searched bit (0x4000) is tested before the kind (00ef), so a hero on a searched temple
+  does nothing.
+* A.1 "+0xc 0x80 set by other phases [U]": one writer is ovl20:06c7 (0ae7 flags 0x80, also
+  10a8's 0ae7([a], 1, c, 0x80)).
+* ovl20:00b5: the skip after "no neutral neighbour" is SCN 0x128 (Quick Start) or role != 5 or
+  ovl61:225b > 5 (jg, = "≥ 6"); clean city is 023f(c, 1) at 0111; 01f6 gets a null dists
+  pointer (0124).
+* ovl20:03aa: keep's memory term is Σ AI[+0x40c + 2p] for p = 7..0 (row 5), a signed 16-bit sum
+  capped by `jle 2`, so a negative sum lowers keep (0435..045e); the "keep == 0" stop reads the
+  original keep (di), not the copy decremented while skipping (0663); groups are taken from the
+  sorted list in order, `per` at a time (05fe..065d); ret starts as HiddenMap != 0 (03e3).
+* ovl20:06c7: before 01f6, group entries whose owner (cwde) != cur become −1 in the group list
+  itself (06df..071d); only then, with Neutral Cities, 14d3. p = 100 is set once on entry (06cf),
+  not per link. [bp−6] (p of the best) is written and never read. **Engine divergence:** members
+  killed in a chain capture leave −1 holes before live entries; the original's 14d3 / 0ae7 keep
+  those null slots in DS:5e3e and ovl38:008b (02bd..02e2) would copy a null attacker into the next
+  link's 15c5. The engine cannot hold holes: neutral.py compacts the list (same leader, members
+  and order); the null-attacker read is not reproduced [V code; whether a later simulation then
+  differs is I]. [Superseded: Changelog "Selection holes".]
+* ovl20:0b19: tf = any of TF k = 3..0 active (0b5b..0b82); the keep == 0 / Hidden Map / 0a3e < 15
+  test is made again before each explorer (0d9d..0e36).
+* ovl20:0e4b: steps = moves (signed byte) idiv 5 + 1; the loop makes up to steps + 1 calls of 0f46
+  (0e98..0f3d).
+* ovl20:0f46: found with kind 1 → 10a8, kind 2 → 12eb, a non-zero result ends the step; a zero
+  result or kind 0 goes to 1581 on the frontier square (0f73..0fbe). 177f's result is `found`, so
+  kind 1 / 2 with found == 0 takes the not-found path. The fallback clear is +0xe &= 0xf0,
+  +0xf &= 1, flags &= ~0x20, goto (−1, −1), +0x11 = 0 (1047..109e).
+* ovl20:12eb: the owner test reads the map owner nibble of (x, y) (1375..138c), the temple test is
+  `test flags, 063c(s)` (1344); r == 1 from 0a8b:0001 returns 0 before the tail (13de).
+* ovl20:177f: home = city record (signed byte) a.+9 (17c4..17fc; record −1 lies in the relation
+  matrix, words 2c04:153c / 153e as x / y); the hills skip needs mode ≠ 2, no road, mask bit 0 clear
+  and terrain 5 (1996..19e4); the cost-0 skip applies only when mode ≠ 2 (1a05..1a3c).
+* DS:07c6 is initialised data, 0xffff (file offset 0x2000 + 0x31250 + 0x7c6); DS:40c0 reads 0 in the
+  image. Neither has a field in model/ai.py yet (neutral.py keeps them as attributes of
+  `state.ai`, not saved; see the M8b3 report).
+
+### M8b2 (ai/phases/{production,vectoring,rebuilding,clean_city}.py; listing re-read)
+
+Checked against the listing and found as documented: ovl25:06d4 (incl. the switch table 0847:
+roles 0/1 and ≥ 14 fall to kind 3 through the unsigned `ja`; role 8 writes +0x2d = 0 only),
+085f, 0af2, 0bd1 (strict `gold > price + 30`, unlike 11d5's `>=`), 0c83 (table 0daf); ovl24:01f1,
+023f, 0a3d, 0b5c, 015e, 10a1; DS:0814 / 081c / 0824 re-read from the EXE image.
+Added [V listing]:
+* §6.9 0000 / 00ca: slot orders (0..7 / 7..0), what 0000 clears (5e3e, 5e5e, 5e62 only), the
+  last-square redraw and the closing ovl62:0000 (doc said only "delete every army").
+* §6.9 0a3d reads relation[cur][owner]; no caller uses 023f's result.
+* §6.17: AI[+0x0a]·count is a 16-bit product sign-extended by cwd before the idiv.
+* §6.9 / §6.16: DS:5dca / 5dda are caches (writers ovl62:0372 / 02bf only; refresh sites listed in
+  §6.9). **Engine divergence, open:** the engine has no such cache (`rules.economy` computes
+  income / upkeep when asked), so clean city's `income < 2·upkeep` and production's
+  `income < upkeep` use current values where the original uses the values of the last refresh
+  (the turn-start settlement, before the turn's new units, or the last battle / capture / raze).
+  They differ when the side's armies changed since (new units of ovl43:0000, 015e disbands,
+  embarking, items picked up). Needs a per-side cache refreshed at those call sites.
+
+### M8b1 implementation (listing re-read for ai/{state,cards,tables,util,base}.py)
+
+Corrections [V listing]:
+* §6 / ovl25:045e: the Settings call is ovl33:0000(0) at 0479 (doc said "ovl64:...:0000(0)");
+  the key test is `0000:0417 & 8` or `& 3`.
+* §3.1 +0x0c: the card sets bit 0 with an OR (1045..104b), so personalities 1 and 2 keep it
+  whatever the card says (doc read as "bit 0 = card +0x0a ≠ 0").
+* §4.2: 0398's temporary owner is SCN 0x110 (= 0 after 03f2), and the restore sets the four
+  owner nibbles to owner & 0xf, not to their previous value; 0749 writes only the picks.
+  ovl25:0656 compares the id byte with a word: d = 255 matches an empty entry.
+* §5.2 0ae7: DS:5e62 is kept when no row byte beats −1; −1 entries leave holes in DS:5e3e.
+* §5.8 11d5: 1ae9 = −1 makes 1299 write the city's owner byte and slot-3 bytes (no range test).
+* §3.4: also the fight-order rows of 0d7b stay in the loaded SCN image (copied after
+  ovl49:0ae3 read it), so a load before any Begin replaces the saved fight order of every
+  live computer side by its card's.
+
+Checked and found as documented: ovl21:084d, 0d7b (all three personalities, card offsets, draw
+order), 0a85; ovl25:0000, 0386, 04c5, 0519, 056c, 05b9, 05e6, 063d, 0919, 09ab; ovl29:0398, 0749,
+0a27, 0c7e, 0d88, 0e5a, 0f10, 0fd5, 103d, 11d5, 12c9, 13b2, 1626, 16ae, 1771, 1851, 1885, 1a4d,
+1ae9; ovl44:0000, 1128, 1299, 138f; ovl48:006a; ovl57:21c1; ovl47:01dc..01f3 (09ab, 0919),
+0301; ovl01:0d7a's computer type order (4 / 5 by rnd(1,5,−1), then 3, then 6, 6 kept).
+
+### Third review (the part the second pass left on one trace; listing + engine code compare)
+
+Errors found and fixed [V listing]:
+* 0555:117b: the octant is `0ae4(DI, CX, target)` with DI/CX **registers** (1224): DI = 1 and
+  CX = 0373's leftover on the first step, then the last candidate tried from the previous square
+  ((base + 4) % 8). Doc said `0ae4(current square, target)`. The engine already does this.
+* 0555:0373: the relax compare is signed (jle at 0847), not unsigned; the box restricts expansion
+  only (cells just outside it get relaxed); with DS:00e0 pass 1 returns 0 at once (the R = 20 is
+  dead code). CX on return documented (117b reads it).
+* 0555:08bf: under Hidden Map for a human side, mode 2 exempts the target's row and column like
+  mode 0 (doc said mode 0 only). 0bde restore: cost 1 for own squares, port bit lost (doc said
+  "as in 0d9e").
+* 0555:19e4: the 0x80 stop flag is set by a non-crossing square whose water bit differs from
+  aboard (mask & 8), not by a water ↔ land change between squares.
+* 0a8b:0001: 0476 and 0254 share one register n (DI), zeroed only on entry; in case 5 with an own
+  order city the stale n loops again, for ever when nothing changes (doc: no loop when the city is
+  own). Case 4 looks for the site on the hero's square (doc: on (x, y)). 0b62:08b3 has three
+  arguments (1, 1, 1). The early return (null leader / off-map goto, e.g. a −1 goto) marks
+  nothing done and does not deselect (doc: "every exit of 0001 marks the stack done", §7a.1/§7a.6).
+* 0a8b:04c8: 0b62:01a7 gets the square just left and clears map bits 0x10 and 0x20 when no army
+  record is left there; 0b62:0e9b is empty (doc: "[I] map army bits", §10.1 "not read").
+* §7a.4: encoding of T after 1ab9 (sign, 30000, 0x7531) and 1ab9's return value ([U] closed).
+* §3.1 / §10.2: 0d28:011f does not zero (0d28:027c is the clearing allocator); ovl21:01b3
+  zeroes +0x3a..+0x40 first ([U] closed). 0555:000a's [bp-2] is the return offset of the 1868
+  call made just before, never 0xd, so 13e4 is never called ([I] closed).
+* §9: engine entry points the AI still lacks (0c4f on the current selection, public pick-up,
+  distance map with mask 0x10) and the engine path-cache store bug (item 7, not fixed).
+* ovl28:0b75 (fork A): the stay test compares AI[+0x182+hc] with the never-written local [bp-2],
+  which holds 0efc's saved DI = j, the hero's slot in S. Doc said `== n` ("the whole garrison").
+* ovl28 item −1 (fork A): byte 2c04:0ce0 is 0 in every shipped .SCN and never written in play,
+  [I] → [V data].
+* ovl20:0a3e (fork B): it has no x ≠ −1 / owner ≠ 0xff test (0a56..0acc), so with side == −1
+  freed army records (0b62:03be: owner 0xff, x = y = −1) count as armies at (−1, −1). Once any
+  record was freed the result is at most trunc(√((x+1)² + (y+1)²)). Doc said "nearest army not
+  neutral and not cur's".
+* ovl20:0935 / 0981 (fork B): return values stated. 0935 returns 0xff also when 01f6 finds none,
+  and its test is a signed byte `< 3`. 0981 returns the distance, not the city.
+* ovl24:023f (fork B): the army scan has no owner or x test before the signed box test. A
+  foreign army deleted there by 015e(a, 1) is still counted, its flags are read through type −1
+  (DS:45be / DS:45c2), and it enters L [V 039e..04a6; whether it is reachable is I].
+* ovl21:0b95 (fork B): y0 − 1 = −1 wraps to 19d9:ff90 + x (past the layer, not before it).
+
+Checked and found as documented: 0555:000a, 020e, 02f2, 0350, 1508 / 1595 / 165c / 16f0 slot
+rules, 1868, 18be, 1ab9, 1b0a, 1b2e; 0a8b:0ae4, 0c4f, 07f9, 0d1a, 04c8 embark / land and map
+mark, 0254, 0476; 0c8c:0529 in full; ovl28:07ea, 0cf3, 0efc, 0fda, 11f8, 0427, 0600 / 063c, 17db,
+1a3d; ovl22:0458, 0b4d, 10e3, 15c3; ovl21:09cf, 0b55, 0c1c; ovl20:0000, 00b5; ovl24:01f1 and 023f
+outside the corrected scan. rules/pathfinding.py and the walk in rules/movement.py match these
+listings except `_store` (§9 item 7).
+
+### Second review (review findings + second-pass verification against the listings)
+
+Review findings applied (each re-checked in out/asm first):
+* §8 restructured: 8.1 AI sites, 8.2 rules code reached from AI phases that draws rnd (ovl00:1063
+  at ovl25:0379; ovl34:0cd6 from the sage; ovl34:0000 / ovl01:0d7a from 15c3 and 12eb; 1771; the
+  real battle 124a(1): 20a8, 08a6, 2274, ovl01:1ded → 1909 / 1c02; 1864 from ovl26), 8.3 per-phase
+  order incl. 023f flyer exploring (force = 1 callers too), Search / Explore / specials, load.
+* **Changed from the review**: ovl58:0000 (music, rnd(1,100,0)) is *not* reached during a
+  computer turn — ovl01:1ded calls it only when ovl25:09ab() is false (ovl01:2723..272e). The
+  quest-completion path draws through 1909 and ovl01:1c02 (allies: ovl34:12e6) instead.
+* §7a.7 new: step order of ovl36:124a(x, y, 1), with one step the review list did not have
+  (city +0x30 |= DS:0cbe[2·cur], 1423..1437) and the display gating ([bp-6]/[bp-8]/[bp-0xa]);
+  §7a.6: flag 1 = real is [V] (1319). §9 lists it as engine work.
+* §5.12: exact 15c5 / 124a(0); a simulation with an empty side draws nothing (08a6 08c4..08e1).
+* §7: which selection a simulation uses (ovl38:0293..02ea) and who sets it; advisor vs AI win
+  tests; leftover battle arrays read by ovl01:1ded(−1) at ovl68:01d9.
+* §2.2 / §5.14 / §9: only 0f1b uses 1864's return; raze contract (one 1851 per raze) and
+  `after_raze` moved to ai/base.py to match rules/city.py; ai_sage path mismatch stated;
+  `diplomacy_penalty` must be called by computer_turn.
+* TF +0x250 called "staging" everywhere (§6.6 0284 note, §6.8 0a7a, §6.9 0b5c, §6.17a 085f, A.2).
+* §6.6 0f3c note: DS:07d8 walks the 12-square ring (was [I] "2×2 squares"); returns the cap with
+  x = y = −1. §6.6 10e3 / A.1: bit 0x20 writer = ovl24:023f.
+* §5.15 1a4d: effective strength (+2 when w15 == 1). §4.1: +0x41c is cleared (ovl21:09a3).
+* §6.17 0bd1 and §5.8 11d5: ovl44:1299 gets ovl44:138f's return (record index), price = that
+  record's +0x1e. (The review's "+0x1e" is the record offset; the `add [bp-8], 0x1e` that follows
+  is the +30 margin.)
+* §6.5 0f1b: fallback = dist(L[0], target) before the terrain test (0fcc..0ff3); record −1 =
+  relation-matrix bytes (closed [U], §6.1 / §10.2); §6.1 step F tests written exactly.
+* §3.4: loading with DS:0832 == 0 runs 0519 / 0d7b (rnd) before the file overwrites the blocks.
+* §2.2: 28 far call sites of ovl25:09ab. Tool caveats added under the tool table.
+* §9: neutral.py and evaluate.py filled.
+* rules/combat.py docstrings: DS:412c..4132 (listing ovl36:1323..136f), not 41cc..41d2 (the
+  decompile prints these words as 451b:01cc..01d2).
+
+Second-pass errors found and fixed [V listing]:
+* ovl20:0f46 / 1581: 1581 moves the stack with the **leader's** goto (0a8b:0001(DS:5e62.goto));
+  ovl67:06eb → 0c8c:0529 copies the leader's goto to every member (0c8c:0737..0766), so a's new
+  goto survives only when a is the leader. Was "0a8b:0001(goto)".
+* ovl20:177f / 1bab / 1c9d: a later foreign city in scan order overwrites an earlier kind 1 or 2;
+  a site is taken only while kind == 0; the rnd(1,10,0) comes after both dist calls (1b0e..1b31).
+* ovl20:10a8: the first qualifying city (highest index) is taken; a flagged one is skipped only if
+  0b95 leaves it flagged (was "the scan continues").
+* ovl20:12eb: exact branches; the kind-5 test uses the value read before the search; a non-hero
+  reaches ovl34:0000 only at a temple; 0x40 is set only when the army is not on the site.
+* ovl20:164e: any owner (no owner test); ovl20:03aa / 0b19: allowance ≤ 0 is dropped by the sort.
+* ovl20:06c7: when 01f6(from) finds no candidate it returns at once (the Hidden-Map order-only
+  tail runs only after a scan that found none acceptable); `*ret = 0` is written for every
+  unflagged candidate before the sent ≥ 3 test; thresholds are d > 40 / d > 50 (same as ≥ 41 /
+  ≥ 51).
+* ovl19:041c: slot rule written exactly (worst starts 0, largest > 0, NB distance stored).
+* ovl19:0b49: no intact / flag test, 15c5 drawn only for d < 50 and d < DS:5e00.
+* ovl19:0996: 13b2 minallow is 0 (was "·"); "last member" = first non-empty slot from 7 down.
+* ovl19:0f1b: `L[0] != -1` (was "L non-empty"); the retarget is not repeated after a raze;
+  capital = 2c04:0193/0195 + 0x14·cur; no 134c when 1864 keeps the city.
+* ovl19:1579: a target added from T's neighbours keeps a stale distance word (+0x272).
+* ovl19:16fd: 13b2(…, 0, 0, TF[+0x58]) is [V] (17f1 `push dword 0`); order i = 0..5.
+* ovl19:02ed, 08b2: tie rules stated (NB slot 5..0; strongest strict >, highest slot).
+* ovl22:0c5b: limit is 10·⌊strength/2⌋, not 5·strength; "max_moves" is the allowance +6.
+* ovl24:0b5c: pseudocode rewritten exactly (elif chain of the bonuses, pool tests, `taken`
+  update for heroes, minmv from the lowest matching TF index).
+* ovl26:038d: ovl01:1ded takes five words (2/4, 0, 0, 0, 0); the forced 1864 still sacks at
+  value ≥ 400.
+* ovl29:1771 / 1885: rnd(1,4,−1) also when ok is already 1; 1885's x, y are scratch outputs.
+* ovl18 step F: the third loop has no p ≠ cur test (prop(cur,cur) is cleared too).
+
+Checked in the second pass and found as documented: ovl19:0000, 00ca, 0607, 066d, 06e9, 0c32,
+134c, 1251, 1864, 199c, 1a2a; ovl20:0e4b, 03aa, 0b19 (apart from the sort note); ovl21:01b3
+phases D–H; ovl22:0284, 05ff, 0888, 11a6; ovl24:0a3d, 023f flyer block (07cd..08a0); ovl27:01bb,
+03ff, 04d2, 058a, 09ca, 0a7a; ovl28:1348; 0a8b:0001 (dispatch and the case-4 clear); ovl38:008b
+attacker list; ovl25:04c5 / 056c / 0bd1; ovl00:1063.
+
+Not re-verified in this pass (still as the first trace left them): 0555 path search / cache
+internals (§7a.3), 0a8b:07f9 / 04c8 / 0c4f walking details (§7a.2), 0c8c:0529 except the goto copy,
+ovl28:07ea / 0b75 / 0cf3 / 0fda / 11f8 / 0427 / 17db / 1a3d, ovl22:0458 / 0b4d / 10e3 / 15c3,
+ovl21:09cf / 0b95 / 0c1c, ovl20:00b5 / 0935 / 0a3e / 0981, ovl24:023f outside the flyer block.
 

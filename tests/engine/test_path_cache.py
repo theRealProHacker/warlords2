@@ -28,7 +28,7 @@ def test_flat_map_tail_versus_fresh_search(game):
     codes = P.find_path(st, (10, 10), dst, LAND, 0)
     s1 = st.path_cache[1]
     assert (s1.valid, s1.src, s1.dst, s1.codes[:len(codes)]) == (2, (10, 10), dst, codes)
-    assert st.path_cache[2].valid == 0xFF                  # 201st byte of the store (16f0)
+    assert st.path_cache[2].valid == 0                     # 16f0 copies 200 bytes (17b7..17e3)
     cells = P.cells((10, 10), codes)
     differs = 0
     for k in range(1, len(cells) - 1):
@@ -45,23 +45,47 @@ def test_flat_map_tail_versus_fresh_search(game):
     assert differs                                         # the reviewer's measured effect
 
 
-def test_near_store_marks_next_slot(game):
-    """A near path goes into slot 0; its 201st byte (0xff) lands in slot 1's validity word."""
+def test_near_store_leaves_the_next_slot(game):
+    """A near path goes into slot 0; 0555:16f0 copies 200 bytes (si = 199..0, asm 17b7..17e3)
+    into +0x0e..+0xd5 of the 0xd6-byte slot, so slot 1 keeps its state word 0."""
     st = flat_state(game)
-    P.find_path(st, (10, 10), (14, 10), LAND, 0)
-    assert st.path_cache[0].valid == 2 and st.path_cache[1].valid == 0xFF
+    codes = P.find_path(st, (10, 10), (14, 10), LAND, 0)
+    s0, s1 = st.path_cache[0], st.path_cache[1]
+    assert s0.valid == 2 and s0.codes == codes + [0xFF] * (200 - len(codes))
+    assert (s1.valid, s1.codes, s1.src, s1.dst) == (0, [0] * 200, (0, 0), (0, 0))
 
 
 def test_far_slot_choice_and_replacement(game):
-    """16f0: the first empty slot 1..19 (every store marks the next one), then the slot with the
-    smallest stored distance (the phantom slots: (0,0) -> (0,0)) when below the new distance."""
+    """16f0: the first slot 1..19 with state word 0 (1773..1746), so eleven far paths fill
+    slots 1..11 in order."""
     st = flat_state(game)
     used = []
     for i in range(11):
         dst = (40 + i, 60 + 2 * i)
         P.find_path(st, (10, 10), dst, LAND, 0)
         used.append(next(k for k, s in enumerate(st.path_cache) if s.dst == dst))
-    assert used == [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 2]
+    assert used == list(range(1, 12))
+    assert all(s.valid == 0 for s in st.path_cache[12:])
+
+
+def test_full_cache_replaces_the_shortest_stored_path(game):
+    """All 19 far slots used: the slot with the smallest stored start-destination distance
+    (strict < from 10000, first on ties, 175c..176e) is replaced when that distance is below
+    the new one (178e..1799), else the path is not stored (179c..17a2)."""
+    st = flat_state(game)
+    far = [(10 + 2 * k, 40 + k) for k in range(19)]           # distances 30, 31, 32, ... (strictly growing)
+    for dst in far:
+        P.find_path(st, (10, 10), dst, LAND, 0)
+    assert [s.dst for s in st.path_cache[1:]] == far
+    shortest = min(range(1, 20), key=lambda k: (P.distance(st.path_cache[k].src,
+                                                             st.path_cache[k].dst), k))
+    assert shortest == 1
+    new = (60, 60)                                             # distance 70 > 30: replaces slot 1
+    P.find_path(st, (10, 10), new, LAND, 0)
+    assert st.path_cache[1].dst == new and [s.dst for s in st.path_cache[2:]] == far[1:]
+    before = [(s.src, s.dst) for s in st.path_cache]
+    P.find_path(st, (10, 10), (10, 25), LAND, 0)               # distance 15 < 31: not stored
+    assert [(s.src, s.dst) for s in st.path_cache] == before
 
 
 def test_cleared_slot_is_a_path_of_zeros(game):

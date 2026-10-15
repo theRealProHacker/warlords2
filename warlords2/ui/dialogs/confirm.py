@@ -9,7 +9,11 @@ Evidence: ovl56:0088(title, l1..l4, yes, no) and its draw ovl56:01ad:
   (07be:04d8 -> ovl56:0312(1 / 0)); 191 (the text field of the input variant
   ovl56:0000) is switched off;
 * the box is not modal in the EXE: it returns and the button dispatcher calls back.
-  Here it is a Dialog that closes with True / False.  Keyboard answers: none traced.
+  Here it is a Dialog that closes with True / False;
+* keys: ovl56:0088 sets DS:166a = 1 (008b), so 07be:0064's pop-up rules apply (`ui.keys`):
+  Esc presses the first live id of DS:1514, which holds 190 and not 189 (no), Return the
+  first live id of DS:155c, which holds 189 and not 190 (yes); 'A'..'Z' nothing; every other
+  key the chord; a right press over a button its help (ovl15:0000).
 Text positions are read from the EXE.
 """
 from __future__ import annotations
@@ -20,6 +24,7 @@ from ...assets.exe import ds_words
 from ...assets.fonts import CHANCE17, CHANCE36
 from .. import registry
 from ..dialog import Dialog
+from ..keys import popup_input
 from ..widgets import ButtonRow, kit, text_centred
 
 POPUP, SCREEN = 1, 5
@@ -29,8 +34,10 @@ INK, SHADOW = 15, 0
 
 
 class Confirm(Dialog):
-    def __init__(self, k, title: str, lines: list[str], on_close=None):
+    def __init__(self, k, title: str, lines: list[str], on_close=None, host=None):
         super().__init__(on_close)
+        if host is not None:
+            self.host = host
         if not 1 <= len(lines) <= 4:
             raise ValueError("a confirmation has one to four body lines")
         self.kit, self.title, self.lines = k, title, list(lines)
@@ -41,10 +48,11 @@ class Confirm(Dialog):
         self.buttons = ButtonRow([lay.button(YES), lay.button(NO)], k.picture)
 
     def update(self, events, dt) -> None:
-        for e in events:
-            hit = self.buttons.event(e)
-            if hit in (YES, NO):
-                return self.close(hit == YES)
+        popup_input(self, events, self.buttons, self.kit.exe, self.press)
+
+    def press(self, id: int) -> None:
+        if id in (YES, NO):
+            self.close(id == YES)
 
     def draw(self, fb: pygame.Surface) -> None:
         f = self.kit.fonts
@@ -57,4 +65,4 @@ class Confirm(Dialog):
 
 @registry.dialog("confirm")
 def confirm(host, title: str, lines: list[str], on_close=None):
-    return Confirm(kit(host.app), title, lines, on_close)
+    return Confirm(kit(host.app), title, lines, on_close, host=host)

@@ -2,6 +2,7 @@
 
 The screens run in a headless App; the hand-off to the game state (M3) is checked on the
 request the setup screen records.  Game text is never compared literally."""
+import dataclasses
 import os
 import struct
 
@@ -75,10 +76,9 @@ def test_scenario_list_is_the_six_records(app):
 def test_load_game_and_random_map_inert(app):
     frames(app, 2)
     menu = app.manager.current_state()
-    assert not registry.has_action(101) and not registry.has_action(102)
+    assert registry.has_action(101) and not registry.has_action(102)    # 101: M10b's Load Game
     assert menu.buttons.state[101] == DISABLED                # no saves (ovl49:0e25)
     assert menu.buttons.state[102] == NORMAL
-    menu.on_button(101)
     menu.on_button(102)
     frames(app, 1)
     assert app.manager.current_state_str() == "menu" and not menu.dialogs
@@ -260,7 +260,7 @@ def voice_app(game, tmp_path):
 
 
 @gamedata
-def test_greeting_face_rolls_from_the_menus_own_dice(voice_app, monkeypatch):
+def test_greeting_face_is_the_first_roll_of_the_run(voice_app, monkeypatch):
     from warlords2.audio import voice
     from warlords2.rules.rng import Rng
     got = []
@@ -359,3 +359,76 @@ def test_quit_in_a_game_asks_first(app):
     registry.run_action(registry.MENU_ID["quit"], host)
     host.dialogs.top.close(True)                             # yes: ovl49:0072, no face (voice off)
     assert not app.running
+
+
+def _settle(app, name):
+    """Step until state `name` is current, no dialog (a face, the scrolls) is open and the
+    screen is ready."""
+    for _ in range(400):
+        st = app.manager.current_state()
+        if app.manager.current_state_str() == name and not st.dialogs and getattr(st, "ready", True):
+            return st
+        app.step([])
+    raise AssertionError("dialogs still open")
+
+
+def _expected(seed, source, rolls):
+    from warlords2.rules.rng import Rng
+    r = Rng(seed, source)
+    for roll in rolls:
+        r.rnd(*roll)
+    return r
+
+
+@gamedata
+@pytest.mark.parametrize("source", ["python", "borland"])
+def test_game_start_face_rolls_first_in_the_one_stream(game, tmp_path, monkeypatch, source):
+    """ovl60:0109 -> ovl58:026f(2) -> rnd(1, 30, 10) (094c) comes before the loader's 256
+    rnd(1,3,1) (ovl63:2479); the setup screen's Main Menu (ovl57:0ee0 -> ovl60:0000(1)) rolls
+    a face again and the next visit continues the stream (DS:2678: seeded once); Begin hands
+    the stream to new_game (NewGameConfig.rng_state)."""
+    from warlords2.rules.constants.setup import LOADER_TILE_ROLLS
+    from warlords2.rules.setup import new_game
+    from warlords2.formats.scenario import load_scenario
+    from warlords2.formats.tables import parse_armytypes
+    monkeypatch.setattr(NewGameConfig, "rng", source)
+    a = App(parse_args(["--data", game, "--headless", "--seed", "7", "--user-dir", str(tmp_path / "u")]))
+    try:
+        face, (count, load) = (1, 30, 10), LOADER_TILE_ROLLS.value
+        frames(a, 2)
+        menu = _settle(a, "menu")
+        menu.on_button(103)
+        setup = _settle(a, "setup")
+        first = list(setup.rolls)                            # the quotation
+        assert setup.rng_state == _expected(7, source, [face]).state()
+        setup.on_button(142)                                 # Main Menu: ovl60:0000(1), a face
+        frames(a, 2)
+        _settle(a, "menu").on_button(103)
+        setup = _settle(a, "setup")
+        before = [face] + [load] * count + first + [face]
+        assert setup.rng_state == _expected(7, source, before).state()
+        got = []
+        setup.request = lambda name, **kw: got.append(kw["new_game"])
+        setup.on_button(141)
+        for _ in range(400):                                 # Begin's face, then the request
+            if got:
+                break
+            a.step([])
+        cfg = got[0]
+        assert cfg.rng == source and cfg.rng_state == setup.rng_state and cfg.setup_rolls[-1] == face
+        types = list(parse_armytypes(a.gd.read("TERRAIN0/ARMYTYPE.DAT")))
+        st = new_game(load_scenario(a.gd, cfg.scenario), cfg, types)
+        r = _expected(7, source, before)
+        assert st.overview_mountain_rolls == [r.rnd(*load) for _ in range(count)]
+        fresh = new_game(load_scenario(a.gd, cfg.scenario), dataclasses.replace(cfg, rng_state=None), types)
+        assert fresh.overview_mountain_rolls != st.overview_mountain_rolls
+    finally:
+        a.close()
+
+
+@gamedata
+def test_no_face_no_roll_before_the_loader(app):
+    """With the talking advisor off (ovl58:0293) the loader's rolls start the stream."""
+    from warlords2.rules.rng import Rng
+    setup = to_setup(app)
+    assert setup.rng_state == Rng(7, NewGameConfig.rng).state()

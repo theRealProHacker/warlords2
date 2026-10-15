@@ -1,0 +1,370 @@
+{
+ "note": "Order -> Fight Order by its key 'i' (menu 506, 07be:01e8 -> ovl38:0de1): popup 0x0b with the 27 slots of the Knights' row; slot 1 chosen (ovl38:1379, ring SCN 0x110 + 2, arrows 428 disabled / 429 normal), moved down twice (429, ovl38:1294) and released (its own button again); slot 5 chosen and swapped with slot 9 (ovl38:1379); a right press on slot 2 shows the army-type panel (word2 46 -> ovl38:1475 -> ovl46:032a), on Reset its static HLP popup; Reset (427, ovl38:116a, neutral row); Return = OK (425). Then reopened, a swap, Esc = Cancel (426, ovl38:111c: the copy restored).  (Retimed by M5b for the turn-1 hero offer (M7b) and production screen (M6b) with their tutorial pages.)",
+ "args": [
+  "--scenario",
+  "TUTORIA",
+  "--seed",
+  "3",
+  "--controls",
+  "HCCCCCCH",
+  "--no-voice"
+ ],
+ "steps": [
+  [
+   2,
+   {
+    "wait_dialog": "progress",
+    "frames": 5
+   }
+  ],
+  [
+   50,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 30
+   }
+  ],
+  [
+   84,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   85,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 4
+   }
+  ],
+  [
+   90,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   92,
+   {
+    "wait_dialog": "hero_offer",
+    "frames": 4
+   }
+  ],
+  [
+   95,
+   {
+    "press_button": 287
+   }
+  ],
+  [
+   96,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 4
+   }
+  ],
+  [
+   102,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   106,
+   {
+    "press_button": 192
+   }
+  ],
+  [
+   107,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 4
+   }
+  ],
+  [
+   112,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   118,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   120,
+   {
+    "key": "i"
+   }
+  ],
+  [
+   121,
+   {
+    "wait_dialog": "fight_order",
+    "frames": 2
+   }
+  ],
+  [
+   123,
+   {
+    "shot": "01_open"
+   }
+  ],
+  [
+   124,
+   {
+    "press_button": 430
+   }
+  ],
+  [
+   126,
+   {
+    "shot": "02_slot1_chosen"
+   }
+  ],
+  [
+   127,
+   {
+    "press_button": 429
+   }
+  ],
+  [
+   128,
+   {
+    "press_button": 429
+   }
+  ],
+  [
+   130,
+   {
+    "shot": "03_moved_down_twice"
+   }
+  ],
+  [
+   131,
+   {
+    "press_button": 432
+   }
+  ],
+  [
+   132,
+   {
+    "press_button": 434
+   }
+  ],
+  [
+   133,
+   {
+    "press_button": 438
+   }
+  ],
+  [
+   135,
+   {
+    "shot": "04_swapped_5_9"
+   }
+  ],
+  [
+   136,
+   {
+    "drag": [
+     [
+      224,
+      143
+     ],
+     [
+      224,
+      143
+     ]
+    ],
+    "button": 3,
+    "frames": 6
+   }
+  ],
+  [
+   137,
+   {
+    "wait_dialog": "info/army_type",
+    "frames": 2
+   }
+  ],
+  [
+   139,
+   {
+    "shot": "05_rclick_slot2"
+   }
+  ],
+  [
+   144,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": "FightOrder"
+    }
+   }
+  ],
+  [
+   146,
+   {
+    "drag": [
+     [
+      512,
+      361
+     ],
+     [
+      512,
+      361
+     ]
+    ],
+    "button": 3,
+    "frames": 6
+   }
+  ],
+  [
+   148,
+   {
+    "shot": "06_rclick_reset_help"
+   }
+  ],
+  [
+   154,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": "FightOrder"
+    }
+   }
+  ],
+  [
+   155,
+   {
+    "press_button": 427
+   }
+  ],
+  [
+   157,
+   {
+    "shot": "07_reset"
+   }
+  ],
+  [
+   158,
+   {
+    "key": "return"
+   }
+  ],
+  [
+   160,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   161,
+   {
+    "shot": "08_closed"
+   }
+  ],
+  [
+   162,
+   {
+    "key": "i"
+   }
+  ],
+  [
+   163,
+   {
+    "wait_dialog": "fight_order",
+    "frames": 2
+   }
+  ],
+  [
+   164,
+   {
+    "press_button": 430
+   }
+  ],
+  [
+   165,
+   {
+    "press_button": 431
+   }
+  ],
+  [
+   167,
+   {
+    "shot": "09_swapped_before_cancel"
+   }
+  ],
+  [
+   168,
+   {
+    "key": "escape"
+   }
+  ],
+  [
+   170,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   171,
+   {
+    "key": "i"
+   }
+  ],
+  [
+   172,
+   {
+    "wait_dialog": "fight_order",
+    "frames": 2
+   }
+  ],
+  [
+   174,
+   {
+    "shot": "10_after_cancel"
+   }
+  ],
+  [
+   175,
+   {
+    "key": "escape"
+   }
+  ],
+  [
+   177,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ]
+ ]
+}

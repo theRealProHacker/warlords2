@@ -162,3 +162,20 @@ QUEST_CHECK_CAPTURE = Const((0, 0, 0, 0x75, 0x3024), "asm ovl36:04d7..04e2: even
                             "continuation 3024:0075 = ovl36:04f7 (capture choice) in DS:3f64")
 QUEST_CHECK_ITEMS = Const((3, 0, 0, 0, 0), "asm ovl40:0b47..0b4f (item dialog closed), "
                           "ovl34:1951..1959 (search result: take)")
+MEDAL_TEXT_COUNTS = Const((7, 4), "STRING.DAT groups 158 / 160 have 7 / 4 entries: the medal pop-up's "
+                                  "rolls ovl36:2524 then 2581, index -1 (tests re-read the counts)")
+MEDAL_TEXT_HUMAN = Const(0, "asm ovl36:24a5..24ba: SCN word 0xd0 + 2 * DS:41fa (the battle's attacking "
+                            "side) == 0 (human) -> pop-up and its rolls, else return")
+ITEM_RECORDS = Const(0x16, "asm ovl51:05bc..062e: the item lists scan records 0..0x15 (cmp si, 0x16)")
+TAKE_ALL_LIST_MODE = Const(3, "asm ovl34:18b3: ovl51:03d9(3, x, y): mode 3 = case 05bc, items 0..0x15 with "
+                              "+0x16 == 1 and +0x19 / +0x1b == the hero's square, table order")
+QUEST_PAGE_TYPES = Const((2, 3), "asm ovl01:03c8 jump table cs:0d57 (cases 06fe, 0788): only quest types "
+                                 "2 and 3 reach ovl63:158d (ovl01:0842..0845)")
+QUEST_ITEM_TYPE = Const(1, "asm ovl01:03c8 jump table cs:0d57 case 0591: the item quest's page; "
+                           "an item in state 2 marks its site shown (0682..06a9)")
+NO_QUEST_GROUP = Const(20, "asm ovl01:0244: push 0xffff0014 -> ovl59:04f0(20, -1)")
+NO_QUEST_COUNT = Const(4, "STRING.DAT group 20 has 4 entries: the roll rnd(1, 4, -1) of ovl59:052f "
+                          "(tests re-read the count)")
+ARMY_BITS_SKIP_HIDDEN = Const(0x124, "asm ovl63:159a..15c5: SCN 0x124 (Hidden Map) set, SCN 0xd0[SCN 0x110] "
+                                     "!= 0 (computer) and SCN 0x159 == 0 -> ovl63:158d returns at once")
+ARMY_BITS_SKIP_UNLESS = Const(0x159, "asm ovl63:15bd: SCN word 0x159 != 0 lifts the Hidden-Map skip")

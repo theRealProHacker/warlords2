@@ -143,20 +143,21 @@ class Minimap:
             fb.fill(BOX_COLOUR, (x, y + d, BOX_LEN, 1))
             fb.fill(BOX_COLOUR, (x + d, y, 1, BOX_LEN))
 
-    def compose(self, state) -> None:
-        """ovl63:0000's bitmap copy and ovl63:0ed7's markers into `buf`."""
+    def compose(self, state, seen_bit: int = SEEN, markers: bool = True) -> None:
+        """ovl63:0000's bitmap copy and (`markers`) ovl63:0ed7's markers into `buf`; the fog
+        from road bit `seen_bit` (0x80 in the map-view mode DS:3254, ovl63:0ff8)."""
         self.drawn = True
         w = state.world
         hidden = bool(state.options.hidden_map)
         px = self.pixels
         if hidden:
-            seen = (np.array(w.roads, np.uint8).reshape(MAP_H, MAP_W).T & SEEN) != 0
+            seen = (np.array(w.roads, np.uint8).reshape(MAP_H, MAP_W).T & seen_bit) != 0
             px = np.where(np.repeat(np.repeat(seen, 2, 0), 2, 1), px, 0).astype(np.uint8)
         pygame.surfarray.blit_array(self.buf, px)
-        for c in state.cities:
+        for c in state.cities if markers else ():
             if w.terrain(c.x, c.y) != Terrain.CITY:
                 continue
-            if hidden and not any(w.roads[(c.y + dy) * MAP_W + c.x + dx] & SEEN
+            if hidden and not any(w.roads[(c.y + dy) * MAP_W + c.x + dx] & seen_bit
                                   for dx in (0, 1) for dy in (0, 1)):
                 continue
             u = 2 * c.x - 1

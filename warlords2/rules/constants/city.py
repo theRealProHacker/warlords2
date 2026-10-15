@@ -79,3 +79,6 @@ QUEST_OCCUPY = Const((4, 0, 0, 0x4D, 0x3005), "asm ovl31:041c..0427: ovl01:1ded 
 NAME_MAX = Const(15, "decomp ovl45:2013: the text editor 7b13:0000 gets 15 (low word of 0x80000f) "
                      "for the name at city +0x04; the field ends at +0x13 (+0x14 is the defence)")
 NAME_ENCODING = Const("cp437", "city names are DOS bytes (scenario.md city record)")
+CHOOSE_NONE = Const(-1, "asm ovl45:01f2 / ovl44:01d3: DS:0e9e = -1 (no production remembered); "
+                       "ovl44:00ff with it picks the first slot of type byte 0xff (ovl44:0000)")
+REDIRECT_MAX = Const(4, "asm ovl44:07aa..07b3: sources n + cities at the new destination m > 4 -> nothing")

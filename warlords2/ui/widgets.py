@@ -9,6 +9,8 @@ The picture per type is chosen by code in ovl17:0000:
     0x10-0x13 -> 56-59, 0x14 -> 12, 0x15 -> 14, 0x16 -> 13, 0x18-0x1b -> 64-67,
     every other type -> 25 marble.
 
+The copy reads the picture as 0997:0129 does (`picture_blit`): a rectangle wider than the
+picture runs on into its next rows (type 0x0a, 576 px over MARBLE's 480).
 Types 0x0d and 0x17 are blitted keyed and get no frame; the others are an opaque copy of
 the picture's (0, 0, w, h) with a colour-0 outline on (x-1, y-1, w+2, h+2) and a 2-px
 drop shadow: lines at y+h+1 and y+h+2 from x+1 (length w+2), at x+w+1 and x+w+2 from
@@ -88,7 +90,7 @@ class Kit:
         if t in KEYED_POPUPS:
             fb.blit(pic, (x, y))
             return self.popup_pos[t]
-        blit_opaque(fb, pic, (x, y), (0, 0, w, h))
+        picture_blit(fb, pic, (x, y), (0, 0, w, h))              # 0x0a: 576 px over MARBLE's 480
         pygame.draw.rect(fb, 0, (x - 1, y - 1, w + 2, h + 2), 1)
         fb.fill(0, (x + 1, y + h + 1, w + 2, 2))
         fb.fill(0, (x + w + 1, y + 1, 2, h + 2))
@@ -128,6 +130,28 @@ def blit_opaque(fb: pygame.Surface, pic: pygame.Surface, dest, src=None) -> None
     fb.blit(pic, dest, src)
     if key is not None:
         pic.set_colorkey(key)
+
+
+def picture_blit(cv, pic: pygame.Surface, dest, src) -> None:
+    """0997:0129 (opaque) as its blitter (0f00:03a1) reads the picture: row y of the source rectangle
+    starts at y * width + x of the picture's rows laid end to end, so a rectangle wider than
+    what is left of a row goes on with the next row (no clipping to the picture's width; the
+    source pointer advances by the picture's row length, res_0f00:05f8..0624)."""
+    sx, sy, w, h = src
+    pw, ph = pic.get_size()
+    if sx + w <= pw:
+        blit_opaque(cv, pic, dest, src)
+        return
+    import numpy as np
+    from .screen import IDENTITY
+    flat = pygame.surfarray.array2d(pic).T.reshape(-1)
+    idx = (np.arange(sy, sy + h)[:, None] * pw + sx + np.arange(w)[None, :])
+    if idx.max() >= flat.size:
+        raise ValueError("source rectangle %r runs past the end of the picture" % (src,))
+    tmp = pygame.Surface((w, h), depth=8)
+    tmp.set_palette(IDENTITY)
+    pygame.surfarray.blit_array(tmp, flat[idx].T)
+    cv.blit(tmp, dest)
 
 
 def draw_pointer(app, fb: pygame.Surface, dialogs) -> None:

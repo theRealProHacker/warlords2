@@ -1,0 +1,678 @@
+{
+ "note": "M9b package M on ERYTHEA, the Sirians human, the other sides computer. '?' -> About (ovl49:0084: BSCROLL popup 0x17, ovl61:1471's lines 2, 4, 5, 6; the heap figures are the X39 stand-in), a key closes it; Alt-U -> the shortcut editor (ovl14:0000: popup 0, JOIN screen 14): slot 3 (318), record 2 by a click at x 270 (296), a click at x 350 of row 3 hits 300 (BUTTON.DAT's third column at x 300 overlaps the second, the last record wins), Return presses Done 294: the user-dir UDB.CUR is written and the palette's third shortcut button shows the new art. The hero stack in the side's city is selected, Alt+click on the sign square sets its path, 'm' Move All walks it there (0c8c:04c4). 'x' -> Signpost (ovl13:01a4, JOIN screen 24): 422 edits line 1 and then line 2 (ovl13:042d), Return presses OK 421 (EditSign); 'q' Disband (0b62:06bf -> ovl56:0088 with the heroes line): Esc = No (nothing changes), 'q' again and Return = Yes (the hero is gone); a right press on the sign square shows the new lines (ovl46 sign panel). 'r' Resign (ovl49:150d, JOIN screen 33): Esc presses 489 (keep playing, nothing changes), 'r' and 487 (graciously): the three one-line and the two-line message, then the cities burn (Resign(True)); 'r' opens the dialog again (the burning runs no ovl62:03f9, so DS:5dea still counts the cities, ovl49:151c), Esc keeps playing; 488 (ungraciously) is covered by tests/test_m9b_misc.py.",
+ "args": [
+  "--scenario",
+  "ERYTHEA",
+  "--seed",
+  "1",
+  "--controls",
+  "HCCCCCCC",
+  "--no-voice"
+ ],
+ "steps": [
+  [
+   53,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 10
+   }
+  ],
+  [
+   64,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   66,
+   {
+    "wait_dialog": "hero_offer",
+    "frames": 10
+   }
+  ],
+  [
+   78,
+   {
+    "press_button": 287
+   }
+  ],
+  [
+   80,
+   {
+    "wait_dialog": "production",
+    "frames": 10
+   }
+  ],
+  [
+   92,
+   {
+    "press_button": 192
+   }
+  ],
+  [
+   96,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   97,
+   {
+    "state_hash": "start"
+   }
+  ],
+  [
+   98,
+   {
+    "key": "/",
+    "text": "?"
+   }
+  ],
+  [
+   100,
+   {
+    "wait_dialog": "about",
+    "frames": 2
+   }
+  ],
+  [
+   102,
+   {
+    "shot": "01_about"
+   }
+  ],
+  [
+   104,
+   {
+    "key": "space"
+   }
+  ],
+  [
+   106,
+   {
+    "assert_state": {
+     "dialog": null
+    }
+   }
+  ],
+  [
+   108,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   109,
+   {
+    "key": "u"
+   }
+  ],
+  [
+   110,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   112,
+   {
+    "wait_dialog": "shortcuts",
+    "frames": 2
+   }
+  ],
+  [
+   114,
+   {
+    "shot": "02_shortcuts"
+   }
+  ],
+  [
+   116,
+   {
+    "press_button": 318
+   }
+  ],
+  [
+   118,
+   {
+    "click": [
+     270,
+     115
+    ]
+   }
+  ],
+  [
+   120,
+   {
+    "shot": "03_shortcuts_slot3_record2"
+   }
+  ],
+  [
+   122,
+   {
+    "click": [
+     350,
+     175
+    ]
+   }
+  ],
+  [
+   124,
+   {
+    "shot": "04_shortcuts_overlap_col3"
+   }
+  ],
+  [
+   126,
+   {
+    "key": "return"
+   }
+  ],
+  [
+   128,
+   {
+    "assert_state": {
+     "dialog": null
+    }
+   }
+  ],
+  [
+   130,
+   {
+    "shot": "05_palette_new_shortcut"
+   }
+  ],
+  [
+   131,
+   {
+    "state_hash": "after_shortcuts"
+   }
+  ],
+  [
+   132,
+   {
+    "click": [
+     196,
+     210
+    ]
+   }
+  ],
+  [
+   136,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   137,
+   {
+    "click": [
+     116,
+     290
+    ]
+   }
+  ],
+  [
+   138,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   140,
+   {
+    "shot": "06_path_to_sign"
+   }
+  ],
+  [
+   142,
+   {
+    "key": "m"
+   }
+  ],
+  [
+   190,
+   {
+    "shot": "07_moved_all"
+   }
+  ],
+  [
+   191,
+   {
+    "state_hash": "after_move_all"
+   }
+  ],
+  [
+   192,
+   {
+    "key": "x"
+   }
+  ],
+  [
+   194,
+   {
+    "wait_dialog": "signpost",
+    "frames": 2
+   }
+  ],
+  [
+   196,
+   {
+    "shot": "08_signpost"
+   }
+  ],
+  [
+   198,
+   {
+    "press_button": 422
+   }
+  ],
+  [
+   200,
+   {
+    "wait_dialog": "hero_name",
+    "frames": 2
+   }
+  ],
+  [
+   202,
+   {
+    "key": "n",
+    "text": "N"
+   }
+  ],
+  [
+   203,
+   {
+    "key": "o",
+    "text": "o"
+   }
+  ],
+  [
+   204,
+   {
+    "key": "r",
+    "text": "r"
+   }
+  ],
+  [
+   205,
+   {
+    "key": "t",
+    "text": "t"
+   }
+  ],
+  [
+   206,
+   {
+    "key": "h",
+    "text": "h"
+   }
+  ],
+  [
+   208,
+   {
+    "shot": "09_line1_typing"
+   }
+  ],
+  [
+   210,
+   {
+    "key": "return"
+   }
+  ],
+  [
+   212,
+   {
+    "key": "f",
+    "text": "F"
+   }
+  ],
+  [
+   213,
+   {
+    "key": "o",
+    "text": "o"
+   }
+  ],
+  [
+   214,
+   {
+    "key": "r",
+    "text": "r"
+   }
+  ],
+  [
+   215,
+   {
+    "key": "d",
+    "text": "d"
+   }
+  ],
+  [
+   217,
+   {
+    "shot": "10_line2_typing"
+   }
+  ],
+  [
+   218,
+   {
+    "key": "return"
+   }
+  ],
+  [
+   220,
+   {
+    "shot": "11_signpost_edited"
+   }
+  ],
+  [
+   222,
+   {
+    "key": "return"
+   }
+  ],
+  [
+   224,
+   {
+    "assert_state": {
+     "dialog": null
+    }
+   }
+  ],
+  [
+   225,
+   {
+    "state_hash": "after_signpost"
+   }
+  ],
+  [
+   236,
+   {
+    "key": "q"
+   }
+  ],
+  [
+   238,
+   {
+    "wait_dialog": "disband_confirm",
+    "frames": 4
+   }
+  ],
+  [
+   240,
+   {
+    "shot": "13_disband_confirm"
+   }
+  ],
+  [
+   242,
+   {
+    "key": "escape"
+   }
+  ],
+  [
+   244,
+   {
+    "assert_state": {
+     "dialog": null
+    }
+   }
+  ],
+  [
+   245,
+   {
+    "state_hash": "disband_no"
+   }
+  ],
+  [
+   246,
+   {
+    "key": "q"
+   }
+  ],
+  [
+   248,
+   {
+    "wait_dialog": "disband_confirm",
+    "frames": 4
+   }
+  ],
+  [
+   250,
+   {
+    "key": "return"
+   }
+  ],
+  [
+   254,
+   {
+    "assert_state": {
+     "dialog": null
+    }
+   }
+  ],
+  [
+   255,
+   {
+    "shot": "14_disbanded"
+   }
+  ],
+  [
+   256,
+   {
+    "state_hash": "disband_yes"
+   }
+  ],
+  [
+   257,
+   {
+    "drag": [
+     [
+      196,
+      210
+     ],
+     [
+      196,
+      210
+     ]
+    ],
+    "frames": 6,
+    "button": 3
+   }
+  ],
+  [
+   260,
+   {
+    "shot": "12_sign_panel"
+   }
+  ],
+  [
+   268,
+   {
+    "key": "r"
+   }
+  ],
+  [
+   270,
+   {
+    "wait_dialog": "resign",
+    "frames": 2
+   }
+  ],
+  [
+   272,
+   {
+    "shot": "15_resign"
+   }
+  ],
+  [
+   274,
+   {
+    "key": "escape"
+   }
+  ],
+  [
+   276,
+   {
+    "assert_state": {
+     "dialog": null
+    }
+   }
+  ],
+  [
+   277,
+   {
+    "state_hash": "resign_kept"
+   }
+  ],
+  [
+   278,
+   {
+    "key": "r"
+   }
+  ],
+  [
+   280,
+   {
+    "wait_dialog": "resign",
+    "frames": 2
+   }
+  ],
+  [
+   282,
+   {
+    "press_button": 487
+   }
+  ],
+  [
+   284,
+   {
+    "wait_dialog": "message",
+    "frames": 2
+   }
+  ],
+  [
+   286,
+   {
+    "shot": "16_graciously_1"
+   }
+  ],
+  [
+   288,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   290,
+   {
+    "shot": "17_graciously_2"
+   }
+  ],
+  [
+   292,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   294,
+   {
+    "shot": "18_graciously_3"
+   }
+  ],
+  [
+   296,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   298,
+   {
+    "shot": "19_graciously_4"
+   }
+  ],
+  [
+   300,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   310,
+   {
+    "assert_state": {
+     "dialog": null
+    }
+   }
+  ],
+  [
+   311,
+   {
+    "shot": "20_burnt"
+   }
+  ],
+  [
+   312,
+   {
+    "state_hash": "resigned"
+   }
+  ],
+  [
+   314,
+   {
+    "key": "r"
+   }
+  ],
+  [
+   316,
+   {
+    "wait_dialog": "resign",
+    "frames": 2
+   }
+  ],
+  [
+   318,
+   {
+    "shot": "21_resign_again"
+   }
+  ],
+  [
+   320,
+   {
+    "key": "escape"
+   }
+  ],
+  [
+   322,
+   {
+    "assert_state": {
+     "dialog": null
+    }
+   }
+  ]
+ ]
+}

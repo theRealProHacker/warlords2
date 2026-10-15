@@ -3,7 +3,8 @@
 Records what a reviewer needs to trust the frames without rerunning the session: git
 commit, EXE hash, seed, script hash, the command line, per-shot SHA-256, the video
 segments (per-frame SHA-256; each decoded MP4 frame nearest to its own, with PSNR), check
-results, and the final engine state hash (null until the game state exists, M3/M4a).
+results (with the `state_hash` steps' hashes), and the final engine state hash (null without a
+game state).
 """
 from __future__ import annotations
 
@@ -31,7 +32,8 @@ def sha256_file(path: Path) -> str:
 
 
 def manifest(*, gd: GameDir, script: Path, argv: list[str], seed: int, shots: list[dict],
-             segments: list[dict], checks: list[dict], frames: int, error: str | None) -> dict:
+             segments: list[dict], checks: list[dict], frames: int, error: str | None,
+             state_hash: str | None = None) -> dict:
     exe = gd.path(EXE_NAME)
     return {
         "git_commit": git_commit(),
@@ -44,7 +46,7 @@ def manifest(*, gd: GameDir, script: Path, argv: list[str], seed: int, shots: li
         "shots": shots,
         "segments": segments,
         "checks": checks,
-        "engine_state_hash": None,
+        "engine_state_hash": state_hash,
         "error": error,
     }
 

@@ -30,7 +30,7 @@ from ..model.ids import HERO_TYPE, NO_OWNER, Terrain
 from . import heroes as H
 from .bonuses import carried_items
 from .constants import history as K
-from .economy import city_count, s16
+from .economy import cached_cities, refresh_cities, s16
 from .movement import type_flag
 from .reports import scores
 
@@ -78,10 +78,13 @@ def record_round(state) -> list:
         state.history.clear()
     owners = [c.owner & 0xFF if state.world.terrain(c.x, c.y) == Terrain.CITY else 0xFF
               for c in state.cities]
+    gold = [s16(p.gold) for p in state.players]
+    score = scores(state)                        # asm ovl41:0ef3 (ovl42:0947, its own 03f9)
+    refresh_cities(state)                        # asm ovl41:0efb (ovl62:03f9)
     state.history.append({
-        "gold": [s16(p.gold) for p in state.players],
-        "score": scores(state),
-        "cities": [city_count(state, p) for p in range(N_SIDES)],
+        "gold": gold,
+        "score": score,
+        "cities": [cached_cities(state, p) for p in range(N_SIDES)],
         "owners": owners,
         "events": news_events(state),
     })

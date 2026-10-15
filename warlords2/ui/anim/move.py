@@ -4,7 +4,9 @@ Evidence: 0c8c:01fd -> 0a8b:0c4f -> 07f9 -> 0a8b:04c8(path, n) at 0a8b:09f2 (0c8
 called from the UI: ovl46:015a, 07be:0324 / 04ff, ovl61:0bd3).  0a8b:0c4f builds the path-mark
 list from the stack's square before the move (0a8b:0cb8..0ccd -> 0c8c:0963: DS:6475 squares,
 at most 200 (0c8c:09a8), DS:2ea6 count, DS:2ea8 = 0) and 07f9 sets DS:2eaa = 0555:18be(path,
-budget) with budget DS:5e00 for a group, the leader's +7 alone (0a8b:0837..0867).  Per step
+budget) with budget DS:5e00 when DS:2bda is set, else the leader's +7 (0a8b:0820..0867); the
+search 0555:1868 takes DS:5dfc / 5dfa (18ae..18b8).  All are the words 0c8c:0529 stored
+(`Selection.mode` / `mask` / `moves` / `group` of the scene), not recomputed.  Per step
 04c8 (asm 0a8b:04c8..060b): t0 = BIOS ticks (0000:1bcf), one square on (0a8b:0b4d, every
 DS:5e3e member with DS:2bda), the old square's bits cleared (0b62:01a7), DS:2ea8 + 1 (05ac),
 the reveal ovl64:1298, the view centred on the stack (ovl64:0565 -> 0629: the centre clamped
@@ -14,14 +16,14 @@ boundary; the original's real wait is 2..3 ticks depending on where in a tick t0
 wait also ends after 10000 (0x2710) polls of 151d:008a, a cap that depends on the CPU speed
 and is not modelled.  No sound in 04c8.  The main loop does not run during the walk, so no
 selection frame is drawn (077b:005f / 011f are not called).  No path (Moved info "no_path"):
-nothing moves and the list is left as it was (0a8b:0c8f..0cb7).  The scene is the state before
+nothing moves and the list is left as it was (0a8b:0c8f..0cb7).  An attack's Moved (info
+"attack", rules.combat._prelude) is no walk: ovl36:0522 puts the stack on the target without
+one, so `walk` returns None for it.  The scene is the state before
 the command with the moved group's goto already set to the destination (the human phase sets
 it on its copy, as 0a8b:0c4f writes +0x12 / +0x14 before the search).
 
-Computer sides walk through the same steps: 0a8b:0001 (called from the AI overlays ovl19,
-ovl20, ovl22, ovl26, ovl28) -> 0c4f -> 07f9 -> 04c8, with the same per-step wait; only the
-drawing is skipped when the side is a computer and Observe (SCN 0x159) is off (ovl64:006c,
-0083..0098).  `walk` returns None for a computer side: that presentation is M8b's.
+A computer side's walk is not played from events: the engine stops at every step (present point
+"step", 0a8b:05f2) and `states.phases.computer` draws it from the state then.
 """
 from __future__ import annotations
 
@@ -30,7 +32,6 @@ from ...model.ids import Control
 from ...rules import pathfinding as P
 from ...rules.bonuses import s8
 from ...rules.mapwords import refresh_map
-from ...rules.movement import stack_mode
 from ...rules.visibility import reveal
 from .. import registry
 from ..animate import wait
@@ -51,14 +52,17 @@ def walk(host, ev):
     anim = getattr(phase, "animator", None)
     scene = anim.scene if anim is not None else None
     st = host.state
-    if scene is None or ev.info.get("no_path") or st.players[st.current].control != Control.HUMAN:
+    if scene is None or ev.info.get("no_path") or ev.info.get("attack"):
         return None
+    if st.players[st.current].control != Control.HUMAN:
+        return None                                                # states.phases.computer
     members = [scene.armies[i] for i in ev.info["armies"]]
     src = tuple(ev.info["from"])
     lead = members[0]
-    mode, mask = stack_mode(scene, members)
+    sel = scene.selection                                          # the stored words of 0c8c:0529
+    mode, mask = sel.mode, sel.mask                                # DS:5dfc / 5dfa (0555:1868)
     codes = P.find_path(scene, src, lead.goto, mode, mask)        # the goto the move searched for
-    budget = min(s8(a.moves_left) for a in members) if len(members) > 1 else s8(lead.moves_left)
+    budget = sel.moves if sel.group else s8(lead.moves_left)      # 0a8b:0820..0847
     if codes is not None:
         phase.display.set(P.cells(src, codes), P.reach_this_turn(scene, src, codes, mode, mask, budget))
     return _steps(host, phase, scene, members, ev.info["path"], mode == MODE_FLY)

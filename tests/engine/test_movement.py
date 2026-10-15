@@ -218,6 +218,52 @@ def test_sink(st):
     assert M.sink(st, 23, 20) == [] and g.x == 23
 
 
+def test_sink_clears_the_selection_when_anything_sank(st):
+    """0b62:0ea0 11ef..1228: a count > 0 nulls DS:5e5e / 5e62 / 5e3e[0..7] and zeroes DS:2bda /
+    5dfe; DS:5e00, 5dfc / 5dfa and the palette stay.  Nothing sunk: nothing changes."""
+    foot = type_with(st, flag16=0, flag17=0, flag18=0, flag19=0)
+    paint(st, 20, 20, Terrain.WATER)
+    add_army(st, foot, 5, 5)                                        # index 0
+    h = add_army(st, HERO_TYPE, 20, 20)
+    a = add_army(st, foot, 20, 20)
+    sel = st.selection
+    sel.selected, sel.hero, sel.moving, sel.palette = h.id, h.id, [h.id, a.id], [h.id, a.id]
+    sel.group, sel.count, sel.moves, sel.mode, sel.mask = 1, 2, 7, 1, 3
+    paint(st, 21, 20, Terrain.WATER)
+    assert M.sink(st, 21, 20) == [] and sel.selected == h.id and sel.count == 2
+    assert M.sink(st, 20, 20)[0].info["armies"] == (a.id,)
+    assert (sel.selected, sel.hero, sel.moving, sel.group, sel.count) == (-1, -1, [], 0, 0)
+    assert (sel.moves, sel.mode, sel.mask, sel.palette) == (7, 1, 3, [h.id, a.id])
+
+
+@pytest.mark.parametrize("one_square", [True, False])
+def test_sink_refreshes_the_map_and_centres_on_the_square(st, one_square):
+    """0b62:0ea0 with anything sunk: the clear (11fd..1228) in both forms, then ovl62:0000 (122b:
+    the emptied square loses its army bit and owner), and only for x, y >= 0 (the select
+    ovl67:0728; not the turn start's -1, -1) ovl64:0629(x, y) at 1288 (SCN 0x175..0x17f)."""
+    from warlords2.model.ids import MAP_ARMY, MAP_W, NO_OWNER
+    from warlords2.rules.constants import turn as KT
+    from warlords2.rules.mapwords import refresh_map
+    foot = type_with(st, flag16=0, flag17=0, flag18=0, flag19=0)
+    paint(st, 40, 40, Terrain.WATER)
+    add_army(st, foot, 5, 5)                                        # index 0
+    a = add_army(st, foot, 40, 40)
+    refresh_map(st)
+    sel = st.selection
+    sel.selected, sel.moving, sel.group, sel.count = a.id, [a.id], 0, 1
+    i = 40 * MAP_W + 40
+    assert st.world.flags[i] & MAP_ARMY
+    view = {k: st.flags.get(k) for k in KT.SCN_VIEW.value}
+    ev = M.sink(st, 40, 40) if one_square else M.sink(st)
+    assert ev[0].info["armies"] == (a.id,) and (sel.selected, sel.moving, sel.count) == (-1, [], 0)
+    assert not st.world.flags[i] & MAP_ARMY and st.world.flags[i] & 0x0F == NO_OWNER
+    top, left, bottom, right, cx, cy = KT.SCN_VIEW.value
+    if one_square:
+        assert (st.flags[cx], st.flags[cy], st.flags[left], st.flags[top]) == (40, 40, 36, 36)
+    else:
+        assert {k: st.flags.get(k) for k in KT.SCN_VIEW.value} == view
+
+
 def test_computer_hero_picks_up_items(game):
     st = flat_state(game, controls=(Control.COMPUTER,) * 8)
     st.players[0].control = Control.COMPUTER

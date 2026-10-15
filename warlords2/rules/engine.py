@@ -6,7 +6,10 @@ editing this file.  Every target is called as `f(state, cmd)` and returns a list
 it raises `IllegalCommand` for a command that is not legal now.  A target that does not
 exist yet raises `NotImplementedCommand` naming the owning milestone.
 
-While `state.pending` holds a question event, only its answering command is legal.
+While `state.pending` holds a question event, only its answering command is legal, except the
+view and speech settings (`ANYTIME`), which answer nothing: the walk that led to a pending
+question scrolled the view before the question came up in the original, while here the animation
+replays that walk (and its scrolls, `SetView`) after the engine has already set the question.
 """
 from __future__ import annotations
 
@@ -50,14 +53,27 @@ DISPATCH = {
     C.SetVector: ("M6a", R + "vectoring:set_vector"),
     C.RenameCity: ("M6a", R + "city:rename"),
     C.RazeOwnCity: ("M6a", R + "city:raze_own"),
-    C.EditSign: ("unassigned", R + "signs:edit_sign"),
+    C.EditSign: ("M9b", R + "signs:edit_sign"),
     C.Propose: ("M9a", R + "diplomacy:propose"),
     C.SetControl: ("M8a", R + "turn:set_control"),
     C.SetEnhance: ("M8a", R + "turn:set_enhance"),
     C.SetObserve: ("M8a", R + "turn:set_observe"),
+    C.SetSpeech: ("M8a", R + "turn:set_speech"),
+    C.SetView: ("M8a", R + "turn:set_view"),
     C.AcceptSurrender: ("M9a", R + "victory:accept_surrender"),
+    C.CloseVictory: ("M9b", R + "victory:close_victory"),
     C.Resign: ("M9a", R + "victory:resign"),
     C.EndTurn: ("M8a", R + "turn:end_turn"),
+    # review fixes of M5b / M6b / M7b (X34, X35, X09)
+    C.SetPalette: ("M5b", R + "selection:set_palette"),
+    C.Advise: ("M5b", R + "advisor:advise"),
+    C.TakeAll: ("M7b", R + "heroes:take_all"),
+    C.SortSlots: ("M6b", R + "city:sort_slots"),
+    C.ChooseProduction: ("M6b", R + "city:choose_production"),
+    C.ScreenTutorial: ("M6b", R + "selection:screen_tutorial"),
+    C.RedirectVectors: ("M6b", R + "vectoring:redirect_vectors"),
+    C.QuestPage: ("M9b", R + "quests:quest_page_command"),
+    C.ReportPage: ("M9b", R + "reports:report_page_command"),
 }
 assert set(DISPATCH) == set(C.COMMANDS)
 
@@ -68,9 +84,13 @@ ANSWERS = {
     E.SageOffered: (C.SageChoice,),
     E.TreacheryPrompt: (C.ConfirmTreachery,),
     E.SurrenderOffered: (C.AcceptSurrender,),
+    E.Victory: (C.CloseVictory,),
     E.DisbandPrompt: (C.ConfirmDisband,),
 }
 assert set(ANSWERS) == set(E.PENDING)
+
+# Commands legal with or without a pending question (the view words, the speech switch).
+ANYTIME = (C.SetView, C.SetSpeech)
 
 
 class IllegalCommand(Exception):
@@ -108,19 +128,24 @@ def resolve(cmd_cls):
 def apply(state, cmd) -> list:
     """Apply one command; returns the events it produced.  Atomic: when the handler raises
     (IllegalCommand, an Unverified value, any error), the state is put back as it was before
-    the call (same hash), in place, so references into the state stay valid.
+    the call (same hash), in place, so references into the state stay valid; the production
+    report block (`GameState.production_report`, not in the snapshot) is put back too.
     Evidence: plan §1.3 (single entry point, pending questions); no game rule."""
     from ..model.serialize import restore, snapshot
     snap = snapshot(state)
+    report = state.production_report.copy()
     try:
         return _dispatch(state, cmd)
     except BaseException:
         restore(state, snap)
+        state.production_report.data[:] = report.data
         raise
 
 
 def _dispatch(state, cmd) -> list:
-    if state.pending is not None:
+    if isinstance(cmd, ANYTIME):
+        pass
+    elif state.pending is not None:
         allowed = ANSWERS[type(state.pending)]
         if not isinstance(cmd, allowed):
             raise IllegalCommand("%s pending; expected %s"

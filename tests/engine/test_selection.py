@@ -335,6 +335,7 @@ def test_move_all_order_and_exclusions(st):
     asleep = army(st, 6, 6, flags=0, goto=(8, 6))
     done = army(st, 7, 7, flags=AWAKE | DONE, goto=(9, 7))
     sel(st).selected, sel(st).moving = first.id, [first.id]
+    S.selection_step(st)                  # the selection's 0c8c:0529 (ovl67:06eb would run it)
     ev = engine.apply(st, C.MoveAll())
     order = [e.info["armies"][0] for e in ev if isinstance(e, E.Moved)]
     assert order == [first.id, near.id, far.id]
@@ -352,6 +353,36 @@ def test_move_all_out_of_moves_marks_done_and_deselects(st):
     sel(st).next_ref = (10, 10)
     engine.apply(st, C.MoveAll())
     assert a.flags & DONE and sel(st).selected == -1 and 10 < a.x < 40
+
+
+def test_build_palette_reads_the_stored_words(st):
+    """ovl66:0d30 tests the stored DS:2bda (0d40): clear -> DS:5dfe = 1 and DS:5e3e[0] = DS:5e62,
+    slots 1..7 stay; the selected marks come from slots 0..DS:5dfe-1 only (0db4)."""
+    a, b, c = stack(st, 3)
+    s = sel(st)
+    s.selected, s.moving, s.group, s.count = a.id, [c.id, b.id], 0, 2
+    S.build_palette(st)
+    assert s.moving == [a.id, b.id] and s.count == 1
+    assert [p for p, m in zip(s.palette, s.palette_selected) if m] == [a.id]
+    s.selected, s.moving, s.group, s.count = a.id, [a.id, b.id, c.id], 1, 2
+    S.build_palette(st)
+    assert s.moving == [a.id, b.id, c.id] and s.count == 2
+    assert sorted(p for p, m in zip(s.palette, s.palette_selected) if m) == sorted([a.id, b.id])
+
+
+def test_adopt_compares_with_the_stack_of_the_stored_2bda(st):
+    """The order routines act on DS:5e3e with the stored DS:2bda, else DS:5e62 alone (ovl67:03ba,
+    0b62:06d3): a command naming that stack leaves the selection and its words as they are."""
+    a, b = stack(st, 2)
+    s = sel(st)
+    s.selected, s.moving, s.group, s.count, s.moves = a.id, [a.id, b.id], 0, 1, 50
+    S.adopt(st, [a.id])                                      # 2bda clear: the stack is a alone
+    assert (s.moving, s.count, s.moves) == ([a.id, b.id], 1, 50)
+    s.moving, s.group = [a.id, -1, b.id], 1
+    S.adopt(st, [b.id, a.id])                                # 2bda set: the non-null slots
+    assert (s.moving, s.count, s.moves) == ([a.id, -1, b.id], 1, 50)
+    S.adopt(st, [a.id])                                      # another stack: adopted, 0529 words
+    assert s.moving == [a.id] and (s.count, s.group) == (1, 0) and s.moves != 50
 
 
 def test_move_adopts_group_as_selection(st):
@@ -404,7 +435,8 @@ def test_disband_question_then_no_then_yes(st):
     engine.apply(st, C.ConfirmDisband(True))
     assert a.owner == b.owner == 0xFF and a.x == -1
     assert not st.world.flags[5 * MAP_W + 5] & 0x10
-    assert sel(st).selected == -1 and sel(st).moving == [] and sel(st).hero == -1
+    assert sel(st).selected == -1 and sel(st).hero == -1 and sel(st).group == 0
+    assert sel(st).moving == [a.id, b.id]                       # 087d..088f leave DS:5e3e
     with pytest.raises(IllegalCommand, match="no pending"):
         engine.apply(st, C.ConfirmDisband(True))
 
@@ -564,3 +596,50 @@ def test_order_fuzz(game, name, seed):
     assert errs == []
     assert sum(counts[n] for n in ("Next", "Defend", "LeaveGroup", "GroupAll", "MoveAll")) > 0
     assert st.hash() == st2.hash()
+
+
+# ----------------------------------------------------------------------------- SetPalette (Stack OK)
+
+
+def test_set_palette_applies_the_dialog_arrays_as_they_are(st):
+    """ovl66:14d3 -> 000a(0): the edited DS:6862 / 6852 / 6842 go to the apply step unchanged
+    (no sort).  Two Select Army presses that split a run: [0, 0, 1] / [1, 1, 0] makes the
+    selected pair one awake run (a free id) and the third army alone (0)."""
+    a, b, c = stack(st, 3, group=4)
+    engine.apply(st, C.SelectStack(5, 5))
+    pal = list(sel(st).palette)
+    engine.apply(st, C.SetPalette(tuple(pal), (0, 0, 1), (1, 1, 0)))
+    assert sel(st).palette == pal and sel(st).palette_group == [0, 0, 1]
+    assert sel(st).moving == pal[:2] and sel(st).selected == pal[0]
+    assert st.armies[pal[2]].group == 0
+    assert st.armies[pal[0]].group == st.armies[pal[1]].group >= 2
+
+
+def test_set_palette_equals_apply_palette_on_the_same_arrays(st):
+    from warlords2.model.serialize import dump
+    stack(st, 2, group=3)
+    stack(st, 2, group=6)
+    engine.apply(st, C.SelectStack(5, 5))
+    pal = list(sel(st).palette)
+    arrays = (tuple(reversed(pal)), (0, 1, 1, 2), (0, 1, 1, 0))
+    ref = st.copy()
+    ref.selection.palette, ref.selection.palette_group, ref.selection.palette_selected = \
+        map(list, arrays)
+    S.apply_palette(ref)
+    engine.apply(st, C.SetPalette(*arrays))
+    assert dump(st) == dump(ref)
+
+
+def test_set_palette_refusals(st):
+    stack(st, 3)
+    engine.apply(st, C.SelectStack(5, 5))
+    pal = tuple(sel(st).palette)
+    h = st.hash()
+    for cmd in (C.SetPalette(pal[:2], (0, 0), (1, 1)),                 # not the palette
+                C.SetPalette((pal[0],) * 3, (0, 0, 0), (1, 1, 1)),
+                C.SetPalette(pal, (0, 0, 8), (1, 1, 1)),               # index > 7
+                C.SetPalette(pal, (0, 0, 0), (1, 2, 1)),
+                C.SetPalette(pal, (0, 0, 0), (0, 0, 0))):              # none selected
+        with pytest.raises(IllegalCommand):
+            engine.apply(st, cmd)
+    assert st.hash() == h

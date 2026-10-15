@@ -16,9 +16,14 @@ fourth of its four lines is drawn in mode 2, asm 0997..0a1e).  Modes 0 and 2 onl
 Info area ovl66:05a3 (no selected stack, DS:30f8 = 1): the marble strip ovl61:0aeb (MARBLE
 (0, 60, 360, 66) at (16, 403)), SetFont(2, 15, 0, 3), four ABITS 40x20 icons and left-aligned
 (ovl59:00bf) "%d" (DS:3128) / "%dgp" numbers: cities DS:5dea[p], gold 2c04:0185 + 0x14 p,
-income DS:5dca[p], upkeep DS:5dda[p].  The three DGROUP words are caches of ovl62:03f9 and the
-economy (`rules.economy` computes the same values); when they are refreshed is not traced, so
-they are shown as computed now.
+income DS:5dca[p], upkeep DS:5dda[p] (`GameState.city_counts` / `income_cache` / `upkeep_cache`,
+written where rules/economy.py lists, so they can be stale).  The numbers are pixels the EXE
+draws only when ovl66:0356 runs (05a3 is its no-selection branch): the commands that end in it
+(`rules.selection.redraw_palette`, counted in `GameState.palette_draws`), ovl61:011f(x, y, 1)
+and ovl61:0000(x, 0) (`states.game.Game.palette_drawn`).  ovl61:011f(0, 0, 0), the close of
+the reports, the history, the item and diplomacy dialogs, ..., skips it (0140 / 014b / 0162),
+so the area keeps what it showed (`Painter.info`), e.g. the upkeep from before Report > Gold
+refreshed DS:5dda.
 
 Stack palette ovl66:0356 (a selected stack): when the info area was showing, the marble strip
 first (DS:30f8 != 0 -> ovl61:0aeb); slot i of the palette (DS:6862, count DS:30f6) at DS:2fc6[i]
@@ -92,7 +97,6 @@ GROUP_LABEL, MOVE_LABEL = ((0, 30, 32, 8), (344, 420)), ((32, 30, 32, 8), (344, 
 GROUP_MOVES_AT, GROUP_MOVES_FMT = 0x303E, 0x313D          # character points, "%02d"
 KIND_AT, KIND_W, KIND_H = 0x306E, 32, 10
 KIND_FLY, KIND_BOAT, KIND_BOTH, KIND_FOREST, KIND_HILLS = (184, 30), (424, 30), (216, 30), (248, 30), (152, 30)
-LOWEST_START = 100                            # 0c8c:0912
 ABOARD = 0x1000
 INFO = (((344, 0), (32, 425), (72, 425)), ((344, 20), (120, 425), (144, 425)),
         ((384, 0), (200, 425), (232, 425)), ((384, 20), (280, 425), (320, 425)))
@@ -149,13 +153,10 @@ def one_group(state) -> bool:
 
 
 def lowest_moves(state) -> int:
-    """0c8c:0912: DS:5e00 = min(+7) over the selected palette armies, from 100."""
-    sel, low = state.selection, LOWEST_START
-    for aid, c in zip(sel.palette, sel.palette_selected):
-        a = _live(state, aid)
-        if c and a is not None:
-            low = min(low, s8(a.moves_left))
-    return low
+    """The number ovl66:070d prints (0773): DS:5e00 (`Selection.moves`), which the draw has
+    just recomputed through 0c8c:0912 (0750); the engine stores that write at every draw the
+    commands end in (`rules.selection.redraw_palette`), so the stored word is the printed one."""
+    return state.selection.moves
 
 
 def selected_armies(state) -> list:
@@ -202,6 +203,11 @@ class Painter:
         self.moves_fmt = ds_str(exe, MOVES_FMT)
         self.group_fmt = ds_str(exe, GROUP_MOVES_FMT)
         self.info_fmts = [ds_str(exe, o) for o in INFO_FMTS]
+        self.info: tuple | None = None            # the numbers ovl66:05a3 drew last
+
+    def palette_drawn(self, state) -> None:
+        """ovl66:0356 ran: the info area's numbers as they are now (`info_values`)."""
+        self.info = info_values(state)
 
     def number(self, fb, x: int, y: int, text: str) -> None:
         """ABITS digits, 8 px apart (ovl64:09bf..0a1c, ovl66:070d)."""
@@ -225,12 +231,12 @@ class Painter:
         blit_opaque(fb, self.marble, STRIP_AT, STRIP_SRC)
 
     def info_area(self, fb, state) -> None:
-        """ovl66:05a3."""
-        from ..rules import economy
-        p = state.current
+        """ovl66:05a3 as the last ovl66:0356 drew it (the numbers of `palette_drawn`; before the
+        first one, the state's)."""
+        if self.info is None:
+            self.info = info_values(state)
+        values = self.info
         self.strip(fb)
-        values = (economy.city_count(state, p), state.players[p].gold, economy.income(state, p),
-                  economy.upkeep(state, p))
         f = self.k.fonts[CHANCE17]
         for (src, at, text_at), fmt, v in zip(INFO, self.info_fmts, values):
             blit_opaque(fb, self.abits, at, (*src, *INFO_ICON))
@@ -274,6 +280,15 @@ class Painter:
             self.stack_palette(fb, state)
 
 
+def info_values(state) -> tuple:
+    """What ovl66:05a3 prints for the side on turn: DS:5dea[p], gold, DS:5dca[p], DS:5dda[p]
+    (asm ovl66:05f0, 0645, 0695, 06e4)."""
+    from ..rules import economy
+    p = state.current
+    return (economy.cached_cities(state, p), state.players[p].gold, economy.cached_income(state, p),
+            economy.cached_upkeep(state, p))
+
+
 def painter_for(host) -> Painter:
     """The host's Painter (the human phase sets it), made once when there is none."""
     p = getattr(host, "painter", None)
@@ -295,7 +310,7 @@ def shortcut_ids(app) -> list[int]:
     """UDB.CUR: the four menu action ids of the shortcut slots (the user-dir copy when there
     is one, else the game's own file)."""
     import struct
-    p = app.user.path("UDB/UDB.CUR")
+    p = app.user.root / "UDB/UDB.CUR"                     # a read: no directory made
     data = p.read_bytes() if p.is_file() else app.assets.read("UDB/UDB.CUR")
     return list(struct.unpack_from("<4H", data))
 
@@ -321,11 +336,18 @@ class ActionPalette:
         self.host = host
         k = kit(host.app)
         self.k = k
-        self.shortcuts = shortcut_ids(host.app)
-        sheet = shortcut_sheet(k, self.shortcuts)
         self.all = list(k.layouts.screen(SCREEN).buttons)
-        self.row = ButtonRow(self.all, lambda n: sheet if n == BUTTON_PCK else k.picture(n))
+        self.row = ButtonRow(self.all, k.picture)
+        self.reload_shortcuts()
         self.hidden: set[int] = set()
+
+    def reload_shortcuts(self) -> None:
+        """UDB.CUR read again and the bar art rebuilt (ovl14:0032 after the shortcut editor's
+        Done: 047b writes UDB.CUR, 030a copies the art); the button states stay."""
+        k = self.k
+        self.shortcuts = shortcut_ids(self.host.app)
+        sheet = shortcut_sheet(k, self.shortcuts)
+        self.row.picture = lambda n: sheet if n == BUTTON_PCK else k.picture(n)
 
     def refresh(self, state, marks_left: bool) -> None:
         """ovl61:0174."""

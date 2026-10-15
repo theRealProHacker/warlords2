@@ -190,6 +190,7 @@ def advice_state(cities, bucket=0, mode=0, turn=7, gold=500, heroes=1):
     hero = SimpleNamespace(type_id=28, owner=0)
     return SimpleNamespace(current=0, flags={0x100: mode, 0x108: bucket}, turn=turn,
                            cities=[city] * cities, armies=[hero] * heroes,
+                           city_counts=[cities] + [0] * 7,          # DS:5dea (ovl58:02b7 reads it)
                            players=[SimpleNamespace(gold=gold)])
 
 
@@ -264,11 +265,12 @@ def test_event_sounds(game, tmp_path, monkeypatch):
     assert fire(E.ItemDropped({"army": 0, "lost": False})) == []
     assert fire(E.Moved({"no_path": True})) == ["chord"]
     assert fire(E.Moved({})) == []
-    assert fire(E.TurnStarted({})) == ["turn"]
+    assert fire(E.TurnStarted({"human": True})) == ["turn"]                  # ovl68:0415 only
+    assert fire(E.TurnStarted({"human": False})) == []
     state.current = 1                                                         # computer side
     assert fire(E.ItemDropped({"army": 1, "lost": True})) == ["splash"]     # dead hero
     assert fire(E.ItemDropped({"army": 0, "lost": True})) == []
-    assert fire(E.Moved({"no_path": True})) == [] and fire(E.TurnStarted({})) == []
+    assert fire(E.Moved({"no_path": True})) == [] and fire(E.TurnStarted({"human": True})) == ["turn"]
     assert fire(E.Sunk({"count": 2})) == ["splash"]
     a.settings.effects = False
     assert fire(E.Sunk({"count": 2})) == [] and effects.war(app) == 0

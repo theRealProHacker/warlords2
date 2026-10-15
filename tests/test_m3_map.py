@@ -228,7 +228,7 @@ def _site_rule(site, p, quests):
 @pytest.mark.gamedata
 @pytest.mark.parametrize("quests", [0, 1])
 @pytest.mark.parametrize("name", SCENARIOS)
-def test_loop_pass_rewrites_site_tiles_and_their_overview_squares(kit, name, quests):
+def test_pass_top_rewrites_site_tiles_and_their_overview_squares(kit, name, quests):
     """ovl61:217d ovl35:09f2(SCN 0x110) before the first map frame; with Quests on each site's
     overview square is redrawn by ovl63:2785(0, x, y) from the new tile byte, remap DS:5e72."""
     from warlords2.rules.ruins import site_tiles
@@ -294,10 +294,44 @@ def test_planted_standard_slots_and_moving_army(kit):
     the path ghost (ovl64:238e); MapView.square_at."""
     gd, store, sp = kit
     for i in (0, 8, 9, 10, 14):
-        assert sp.standard(i).get_size() == (32, 29)
-    for i in (11, 12, 13, 15):
-        with pytest.raises(NotImplementedError):
+        assert sp.standard(i).get_size() == (32, 29) and not sp.is_mask_standard(i)
+    from warlords2.rules.constants import UnverifiedError, allowing_unverified
+    for i in (11, 12, 27, 28):                             # cache group 8: register X44
+        with pytest.raises(UnverifiedError, match="X44"):
             sp.standard(i)
+        with pytest.raises(UnverifiedError, match="X44"):
+            sp.draw_standard(pygame.Surface((40, 40), depth=8), i, (0, 0))
+        with allowing_unverified():                        # provisional: nothing drawn
+            dst = pygame.Surface((40, 40), depth=8)
+            dst.fill(6)
+            assert sp.standard(i) is None
+            sp.draw_standard(dst, i, (0, 0))
+            assert (pygame.surfarray.array2d(dst) == 6).all()
+    for i, name in ((13, "ashadow.pck"), (15, "road.pck")):  # mask records: plane 0 only
+        assert sp.is_mask_standard(i) and sp.is_mask_standard(i + 16)
+        x, y, w, h = S.STANDARD
+        want = pygame.surfarray.array2d(store.picture(name))[x:x + w, y:y + h] == store.entry(name).key
+        assert (sp.standard_bit0(i) == want).all()
+        dst = pygame.Surface((40, 40), depth=8)
+        for fill in (0x0A, 0x0B):                          # bits 1 and 3 set, bit 0 clear / set
+            dst.fill(fill)
+            sp.draw_standard(dst, i, (4, 3))
+            px = pygame.surfarray.array2d(dst)
+            cell = px[4:4 + w, 3:3 + h]
+            put = ~sp.standard_mask
+            assert (cell[~put] == fill).all()              # M = 1: the OS bitmap kept
+            assert (cell[put] == np.where(want, 0x0B, 0x0A)[put]).all()   # only bit 0 replaced
+            assert (px[:4, :] == fill).all() and (px[:, :3] == fill).all()
+        sp.draw_standard(dst, i, (30, 30))                 # clipped, no error
+    real = sp.standard_bit0
+    try:                                                   # a cleared bit clears bit 0 too
+        sp.standard_bit0 = lambda i: np.zeros((32, 29), bool)
+        dst.fill(0x0F)
+        sp.draw_standard(dst, 15, (0, 0))
+        cell = pygame.surfarray.array2d(dst)[:32, :29]
+        assert (cell[~sp.standard_mask] == 0x0E).all() and (cell[sp.standard_mask] == 0x0F).all()
+    finally:
+        sp.standard_bit0 = real
     st = _state(gd, "DRAGON")
     n, a = next((n, a) for n, a in enumerate(st.armies) if a.owner < 8 and a.x >= 0)
     st.world.flags[a.y * MAP_W + a.x] |= V.FORTIFIED
@@ -314,3 +348,47 @@ def test_planted_standard_slots_and_moving_army(kit):
     view.centre(a.x, a.y)
     assert view.square_at((16, 30)) == (left, top) and view.square_at((16 + 359, 30 + 41)) == (left + 8, top + 1)
     assert view.square_at((15, 30)) is None and view.square_at((376, 30)) is None
+
+
+@pytest.mark.gamedata
+def test_item_11_can_lie_alone_on_a_planted_square(kit):
+    """X44 reachability: Plant (ovl47:09f7 sets road bit 0x40), a computer hero's step
+    (ovl28:0427) takes the standard without clearing the bit, a drop (ovl47:0943) of item 11
+    there makes ovl64:2d7c draw planted-standard slot 11."""
+    from warlords2.model import commands as C
+    from warlords2.model.ids import HERO_TYPE, ROAD_STANDARD, ItemState
+    from warlords2.rules import heroes, movement
+    gd, _, sp = kit
+    st = _state(gd, "ERYTHEA")
+    p = st.current
+    a = next(a for a in st.armies if a.owner == p and a.x >= 0)
+    b = next(b for b in st.armies if b.owner != p and b.x >= 0 and b is not a)
+    a.type_id = HERO_TYPE
+    x, y = next((x, y) for y in range(10, 150) for x in range(10, 100)
+                if st.world.terrain(x, y) not in (2, 3, 10, 11) and st.city_at(x, y) < 0
+                and not st.world.roads[y * MAP_W + x] & ROAD_STANDARD)
+    a.x, a.y = x, y
+    for i in (p, 11):
+        st.items[i].state, st.items[i].holder = int(ItemState.CARRIED), a.id
+    heroes.plant_flag(st, C.PlantFlag(a.id))
+    movement._pick_up(st, b, x, y)                         # the computer hero's step
+    assert st.items[p].holder == b.id and st.world.roads[y * MAP_W + x] & ROAD_STANDARD
+    heroes.drop(st, C.DropItem(a.id, 11))
+    left, top = x - 4, y - 4
+    assert V.compose(st, left, top, sp)[4][4].standard == 11
+
+
+@pytest.mark.gamedata
+def test_group8_slots_are_15_of_49_and_empty_in_the_image(kit):
+    """X44: slots 11 / 12 are the mask / bitmap records of 15 of the 49 group-8 pictures, and
+    zero in the image (+0x34 = 0 planes: 0f00:0c4d draws nothing from them)."""
+    from warlords2.assets.exe import ds_bytes
+    gd, store, sp = kit
+    group8 = [e.index for e in store.pictures if e.group == 8]
+    assert len(group8) == 49
+    share = {S.SLOTS + S.SLOT_STEP * i: kind for i, kind in zip(S.GROUP8_SLOTS, ("mask", "bitmap"))}
+    for slot, kind in share.items():
+        owners = sp.slot_pictures[slot]
+        assert sorted(k for k, _ in owners) == [45, 46, 50, 54, 62, *range(69, 79)]
+        assert {kd for _, kd in owners} == {kind} and set(k for k, _ in owners) <= set(group8)
+        assert not any(ds_bytes(gd.read("WARLORD2.EXE"), slot, S.SLOT_STEP))

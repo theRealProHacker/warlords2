@@ -6,7 +6,7 @@ addresses given.  SCN offsets are 2c04 offsets (the segment is the SCN image, EL
 """
 from __future__ import annotations
 
-from . import Const
+from . import Const, Unverified
 
 # ---------------------------------------------------------------- per-round record (ovl41:0d60)
 FIRST_TURN = Const(2, "asm ovl41:0d69..0db5: ovl61:225b() == 2 -> the history file FILE.DAT (6, 0) "
@@ -41,8 +41,33 @@ REPORT_ARMIES, REPORT_CITIES, REPORT_GOLD, REPORT_PRODUCTION, REPORT_WINNING = (
     Const(2, "case 0453: player record +0 (gold)"),
     Const(3, "case 04b8: ovl43:07e5 (the production report list)"),
     Const(4, "case 04c2: the winning score"))
+
+# ---------------------------------------------------------------- production report (ovl43)
+ENTRY_ARRIVED, ENTRY_VECTORED, ENTRY_PLACED = (
+    Const(0, "asm ovl43:01fa (city) / 03b6 (standard): a vectored army that arrived"),
+    Const(1, "asm ovl43:05dd: made in a city with word +0x31 (vectoring) set "
+             "(0x15ae = record 0x157d + 0x31)"),
+    Const(2, "asm ovl43:0609: made and placed in its city"))
+ENTRY_STANDARD = Const(100, "asm ovl43:05ec..05f3: no city at the vector target -> SCN 0x110 + 0x64; "
+                            "an arrival's +0xf >> 1 holds the same 100 + side (ovl43:0f50..0f5f, 0430); "
+                            "the report text tests dest >= 0x64 (ovl43:096f)")
+REPORT_CITY_OUTSIDE = Unverified(
+    "production report restart of a city byte outside the city table", "X40", None,
+    "asm ovl43:06df..0744: past 100 entries the slots alias (model.state.ProductionReport) and "
+    "06bd may restart 'city' -1 .. -128 or >= SCN 0x157b: it writes SCN byte 0x157d + 0x41 c + 0x2d "
+    "(relations, other SCN words) with a slot time read from the same stray record; provisional: "
+    "the entry is skipped")
+
+# ---------------------------------------------------------------- winning score (ovl42:04c2)
 SCORE_INCOME = Const(5, "asm ovl42:052d: income DS:5dca * 5")
 SCORE_DIV = Const(30, "asm ovl42:053c: idiv 0x1e")
 SCORE_RANGE = Const((1, 500), "asm ovl42:054e..056f: > 0x1f4 -> 0x1f4, < 1 -> 1")
 SCORE_SCALE = Const(5, "asm ovl42:05b1: every score idiv 5 after the rank")
 SCORE_TOP = Const(100, "asm ovl42:05e9: DS:0e40 = 0x64 (the bar scale of the winning report)")
+REPORT_ROW_OUTSIDE = Unverified(
+    "production report row naming a city or army type outside the tables", "X40", None,
+    "asm ovl43:086e: past 100 entries the slots alias (model.state.ProductionReport) and a row's "
+    "signed type / city / dest byte may lie outside the tables: the name is read from 2c04:1581 + "
+    "0x41 c (09a7, 09d3, 09f1) and the icon from the army sheet by type (ovl64:08be) wherever that "
+    "points, other SCN / picture memory of the original machine; provisional: the name or icon is "
+    "left out")

@@ -56,6 +56,12 @@ FORCED_ROLLS = Const((0, 100), "asm ovl36:096c/0971: defender roll 0, attacker r
 ATTACK_COST_MIN = Const(2, "EL §3.1 decomp 067a70 (ovl36:0205): DS:4160 = max(2, DS:1274[t])")
 MOVES_NEEDED = Const(1, "decomp 067a70: stack moves (DS:5e00) or army +7 < 1 -> refused")
 OWNER_BITS = Const((1, 2, 4, 8, 16, 32, 64, 128), "DS:0cbe (read from the EXE): city +0x30 |= DS:0cbe[p] (asm ovl36:02a9)")
+WAR_BITS = Const(2, "asm ovl36:1411..141c: relation byte 2c04:153b[side * 8 + city owner] & 3 == 2 "
+                       "(war) -> no treachery call in ovl36:124a")
+ATTACK_VIEW_MARGIN = Const(4, "asm ovl36:075c..07bf: recentred view = leader square -4 .. +4")
+ATTACK_VIEW_CAP = Const((0x70, 0x9C), "asm ovl36:0793 / 07b0: right <= 0x70, bottom <= 0x9c on a recentre")
+ATTACK_SCROLL_LIMIT = Const((0x6F, 0x9B), "asm ovl36:07e4 / 084f: scroll right / down only while "
+                                          "right < 0x6f / bottom < 0x9b")
 CITY_TILE_DX = Const((0, 1, 0, 1), "DS:0d46 (read from the EXE), city 2x2 offsets")
 CITY_TILE_DY = Const((0, 0, 1, 1), "DS:0d4e (read from the EXE)")
 
@@ -69,3 +75,12 @@ EXP_DEFENDER = Const(1, "asm ovl36:0c8e..0c95: a surviving defender i +1 when DS
 # ---------------------------------------------------------------- advisor (ovl36:1f19, 2065)
 ADVISOR_RUNS = Const(19, "asm ovl36:2094 cmp di, 0x13: 19 simulated battles (ovl36:124a mode 0)")
 ADVISOR_DIVISOR = Const(2, "asm ovl36:2099..20a0: verdict = attacker-survivor runs / 2 (0..9)")
+
+# ---------------------------------------------------------------- text rolls (ovl59:052f index -1)
+TEXT_ROLL_ADD = Const(-1, "asm ovl59:058b..0595: index < 0 -> ovl59:02bf(1, count, -1)")
+FLED_GROUP_COUNT = Const(4, "STRING.DAT group 0x8d has 4 entries (count word read by ovl59:0584; "
+                            "tests/engine/test_move_executor.py re-reads it): roll at ovl36:0316")
+CAPTURE_GROUP_COUNTS = Const((4, 3), "STRING.DAT groups 0x42 / 0x43 have 4 / 3 entries: the rolls at "
+                                     "ovl31:0039 then 005a (tests re-read the counts)")
+ADVISOR_TEXT_COUNTS = Const((5, 5), "STRING.DAT groups 0x7c / 0x7d have 5 / 5 entries: the advisor's "
+                                    "rolls ovl36:1ff0 then 200e, index -1 (tests re-read the counts)")

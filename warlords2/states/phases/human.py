@@ -55,8 +55,10 @@ square in view and the centre not on the goto: centre on the goto, else on the l
 Backspace -> ovl61:0fe9 (the gotos -1, DS:2ea6 = 0); 188 -> help pages; 224-231 -> ovl66:0963,
 232-239 -> ovl66:0910, 240 / Space -> ovl66:0a55, 241 -> ovl66:0a99; 320-327 / arrows ->
 ovl64:0723(id - 320 / 0, 6, 2, 4): the centre one square on, clamped by ovl64:0629 to
-4..0x6b, 4..0x97.  Keys (07be:0064): nothing while DS:1174, 1176, 1172 or 3700 is set
-(007d..00a2; the menu keys 1372:0047 come after that test); Esc / Return press the first live
+4..0x6b, 4..0x97.  A left press on a disabled or pressed palette button chords (08a9:012c ->
+07be:0e26 -> 0e7b).  Keys (07be:0064): nothing while a palette button is held (DS:166c, 006f)
+or DS:1174, 1176, 1172 or 3700 is set (007d..00a2; the menu keys 1372:0047 come after that
+test); Esc / Return press the first live
 button of DS:1514 / DS:155c (175 / 174 on this screen), with none live they go on through the
 tables and end in the chord; '1'-'9' (07be:0444, 0c8c:0197): '5' centres on the leader
 (ovl64:0565), the others move the stack one square (0c8c:041f: '8' N, '9' NE, '6' E, '3' SE,
@@ -80,7 +82,7 @@ square + (16, 13); the last entry gets the ghost (`ui.mapview.path_ghost`); only
 DS:2ea6 > 0 and DS:2ea8 < DS:2ea6.
 
 Selected stack on the map (077b:0020 / 01a1, from ovl64:006c via ovl62:0afd (single army) /
-0b27 (group)): CURS.PCK frame f = DS:125c[kind] + phase (kind 1 single, 2 group: frames 0-3
+0b27 (group) as the stored DS:2bda is clear / set, ovl64:020a): CURS.PCK frame f = DS:125c[kind] + phase (kind 1 single, 2 group: frames 0-3
 and 4-7), source ((f % 4) * 64, (f / 4) * 40), 40x40 at the square, for each VGA plane k the
 source plane 0 where bit k of the colour (the word table DS:2b6c[SCN 0x110], ovl62:0b05 /
 0b2f) is set, else plane 1, under the picture's mask: pixels of value 1 take that colour,
@@ -107,11 +109,11 @@ from ...rules import pathfinding as P
 from ...rules.bonuses import s8
 from ...rules.constants.movement import DIR_DX, DIR_DY, TERRAIN_COST
 from ...rules.engine import IllegalCommand, NotImplementedCommand
-from ...rules.movement import stack_mode
 from ...ui import registry
 from ...ui.anim.move import clamp_centre
 from ...ui.animate import Animator, ticks_at
 from ...ui.info import in_map, square_centre, visible
+from ...ui.keys import EXTENDED, K_BACKSPACE, K_DEL, K_END, K_HOME, K_TAB, left_press
 from ...ui.layout import NORMAL
 from ...ui.mapview import AREA, VIEW
 from ...ui.menubar import with_codes
@@ -140,10 +142,7 @@ ESC, RETURN = 0x1B, 0x0D
 KEY_LISTS = {ESC: 0x1514, RETURN: 0x155C}     # 07be:00da / 0112
 KEY_DIRS = {"8": 0, "9": 1, "6": 2, "3": 3, "2": 4, "1": 5, "4": 6, "7": 7}   # 0c8c:0197
 ARROWS = {0x148: 0, 0x14B: 6, 0x14D: 2, 0x150: 4}                            # 07be:04a4
-K_HOME, K_END, K_DEL, K_BACKSPACE, K_TAB, K_SPACE = 0x147, 0x14F, 0x153, 0x08, 0x09, 0x20
-EXTENDED = {pygame.K_HOME: K_HOME, pygame.K_END: K_END, pygame.K_DELETE: K_DEL,
-            pygame.K_BACKSPACE: K_BACKSPACE, pygame.K_TAB: K_TAB,
-            pygame.K_KP7: K_HOME, pygame.K_KP1: K_END, pygame.K_KP_PERIOD: K_DEL}
+K_SPACE = 0x20
 ATTACK_RESULTS = (3, 5)                       # 0c8c:041f
 FLY = 2
 OWN_CITY, ANY_CITY, NO_CITY = 2, 0, 4         # ovl45:0000 modes (ovl46:0144 / 0148 / 0118)
@@ -172,26 +171,27 @@ class PathDisplay:
 
 
 def group_of(state) -> tuple:
-    """DS:5e3e with DS:2bda, else DS:5e62 alone."""
+    """The non-null DS:5e3e slots with DS:2bda (the stored word, `Selection.group`), else
+    DS:5e62 alone: the stack the order routines act on (`rules.selection.adopt`)."""
     sel = state.selection
-    return tuple(sel.moving) if len(sel.moving) > 1 else (sel.selected,)
-
-
-def lowest(state, ids) -> int:
-    return min(s8(state.armies[i].moves_left) for i in ids)
+    return tuple(i for i in sel.moving if i != -1) if sel.group else (sel.selected,)
 
 
 def path_preview(state, ids, dest):
     """(squares, reach) of the path from the group's square to `dest` on a copy of the
-    state (find_path writes the path cache and patches the cost map), or None."""
+    state (find_path writes the path cache and patches the cost map), or None.  As 0c8c:0007:
+    the search 0555:1868 takes the stored words DS:5dfc / 5dfa (18ae..18b8), the reach budget
+    is DS:5e00 when DS:2bda is set, else the leader's +7 (0c8c:0151..0165): `Selection.mode`,
+    `mask`, `moves`, `group` as 0c8c:0529 left them."""
     cp = state.copy()
-    members = [cp.armies[i] for i in ids]
-    lead = members[0]
-    mode, mask = stack_mode(cp, members)
-    codes = P.find_path(cp, (lead.x, lead.y), tuple(dest), mode, mask)
+    sel = cp.selection
+    lead = cp.armies[ids[0]]
+    codes = P.find_path(cp, (lead.x, lead.y), tuple(dest), sel.mode, sel.mask)
     if codes is None:
         return None
-    budget = lowest(cp, ids) if len(ids) > 1 else s8(lead.moves_left)
+    a = cp.armies[sel.selected] if 0 <= sel.selected < len(cp.armies) else lead
+    budget = sel.moves if sel.group else s8(a.moves_left)
+    mode, mask = sel.mode, sel.mask
     return P.cells((lead.x, lead.y), codes), P.reach_this_turn(cp, (lead.x, lead.y), codes, mode, mask, budget)
 
 
@@ -386,7 +386,7 @@ class Human(Phase):
         a = leader(st)
         sel = a is not None
         dist = P.distance((x, y), (a.x, a.y)) if sel else 0
-        mode = stack_mode(st, [st.armies[j] for j in group_of(st)])[0] if sel else 1
+        mode = st.selection.mode if sel else 1                     # DS:5dfc (08a9:0a59 / 0af2 / 0b54)
         under = w.terrain_of_tile[w.tiles[a.y * MAP_W + a.x] & 0xFF] if sel else int(Terrain.PLAIN)
         cost = TERRAIN_COST.value[t] if sel and mode != FLY else 1
         if w.roads[i] & ROAD_PIECE_MASK:
@@ -433,6 +433,9 @@ class Human(Phase):
         """DS:1176 or DS:1172 (DS:1174 is an open panel: the phase does not step then)."""
         return self.map_drag is not None or self.stack_drag is not None
 
+    def busy(self) -> bool:
+        return self.animator.busy
+
     def step(self, events, dt):
         self.poll += 1
         if self.animator.busy:
@@ -441,14 +444,18 @@ class Human(Phase):
                 self.refresh()
             return None
         g = self.game
-        for e, code in with_codes(events, g.app.input):
-            if g.dialogs or self.animator.busy:
+        batch = list(with_codes(events, g.app.input))
+        for n, (e, code) in enumerate(batch):
+            if g.dialogs:                                    # opened by an earlier event of this batch:
+                g.dialogs.update([x for x, _ in batch[n:]], dt)   # the queue goes on to it (ovl59:0142
+                break                                        # has no flush before its wait)
+            if self.animator.busy:
                 break
             if e.type == pygame.MOUSEBUTTONDOWN and e.button == 3:
                 self.right_press(e.pos)
             elif e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
                 if self.palette.row.at(e.pos):
-                    self.palette.row.event(e)
+                    left_press(g.app, self.palette.row, e)          # 08a9:012c -> 07be:0e26(1)
                 else:
                     self.left_press(e.pos)
             elif e.type == pygame.MOUSEBUTTONUP and e.button == 1:
@@ -478,8 +485,15 @@ class Human(Phase):
             self.ants_shown, self.ants_phase = self.ants_phase, (self.ants_phase + 1) % ANTS_PHASES
 
     def held(self, inp) -> None:
-        """The polls of 0726:0009 while the left button is held."""
-        if 1 not in inp.buttons or self.dispatched == self.poll:   # the press was this poll
+        """The polls of 0726:0009 while the left button is held.  A poll that finds the button
+        up with a drag still set ends it as the release does (0726:0030..008a): so when a pop-up
+        opened during the press took the release (a tutorial page, ovl61:10fb waits for mask
+        0xd4 and so closes on that release), the drag state does not outlive it (M8a)."""
+        if 1 not in inp.buttons:
+            if self.held_mode():
+                self.left_release(inp.pos)
+            return
+        if self.dispatched == self.poll:                     # the press was this poll
             return
         pos = inp.pos
         if self.map_drag is not None:                        # ovl61:0e04
@@ -604,7 +618,11 @@ class Human(Phase):
         self.drag_last = None
 
     def right_press(self, pos) -> None:
+        """A left press held on a palette button (DS:166c) blocks both the button's help
+        (08a9:0143) and the area panels of the poll 0726:0009 (0016..001f returns 0)."""
         g = self.game
+        if self.palette.row.held is not None:
+            return
         b = self.palette.row.at(pos)
         if b is not None and registry.right_click_handler("button")(g, b.id, pos) is not None:
             return
@@ -647,7 +665,7 @@ class Human(Phase):
     def key(self, e, code) -> None:
         """07be:0064."""
         c = EXTENDED.get(e.key, code)
-        if c is None or self.held_mode():                    # 007d..00a2
+        if c is None or self.palette.row.held is not None or self.held_mode():   # 006f (DS:166c), 007d..00a2
             return
         if 0x41 <= c <= 0x5A:
             return
@@ -740,6 +758,11 @@ class Human(Phase):
     def scene(self):
         return self.animator.scene if self.animator.busy else self.game.state
 
+    def overview_scene(self):
+        """The state the overview shows: `scene`, or the animator's later overview copy."""
+        a = self.animator
+        return a.overview if a.busy and a.overview is not None else self.scene()
+
     def paint_map(self, fb) -> None:
         g = self.game
         st = self.scene()
@@ -760,7 +783,7 @@ class Human(Phase):
             self.ants(fb, st, a, left, top)
 
     def ants(self, fb, st, a, left, top) -> None:
-        kind = 2 if len(st.selection.moving) > 1 else 1
+        kind = 2 if st.selection.group else 1                 # ovl64:020a DS:2bda
         f = ANTS_FIRST[kind] + self.ants_shown
         sx, sy = f % 4 * ANTS_PITCH, f // 4 * ANTS_SIZE
         frame = self._ants_frame(sx, sy, self.ants_colours[st.current])
@@ -782,8 +805,6 @@ class Human(Phase):
 
     def paint(self, fb) -> None:
         g = self.game
-        if self.animator.busy:                               # the overview of the walk's scene
-            g.minimap.draw(fb, self.scene(), *g.view.origin)
         self.painter.draw(fb, self.scene())
         self.palette.draw(fb)
         kit(g.app).cursors.current = self.cursor(g.app.input.pos)

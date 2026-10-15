@@ -4,11 +4,12 @@ The sequence of the original, EL = docs/research/exe_logic.md §9:
 
 1. scenario load ovl57:0194: SCN image verbatim (EL §7); city runtime bytes reset
    (ovl29:0000); ovl63:232b's 256 rnd(1,3,1) draws (overview mountain colours); inactive sides renamed, level 3 (§9.1);
-2. Begin ovl57:0cfe: side words, options (§6.9), AI parameter blocks ovl25:0519 (M8b1, via
-   the `ai_setup` hook), turn order ovl61:1732 and first side ovl61:17f6 (§9.1);
+2. Begin ovl57:0cfe: side words, options (§6.9), AI parameter blocks ovl25:0519 (via the
+   `ai_setup` hook, `ai.cards.setup_all`), turn order ovl61:1732 and first side ovl61:17f6 (§9.1);
 3. new game ovl53:0000 (§9.2): word resets; sites and items ovl35:0000 (§5.5, §9.3); army
    table cleared; cities ovl53:07ca (§9.4); explored map ovl64:113b, AI territories
-   ovl30:0000, garrisons ovl39:00cc (§9.5); view words; map bit clears; infamy (§6.6);
+   ovl30:0000 (first the AI neighbour table ovl29:0398, hook `ai_neighbours`), garrisons
+   ovl39:00cc (§9.5); view words; map bit clears; infamy (§6.6);
    relations ovl00:11bd (§9.6).
 
 Not modelled, because they hold no engine state: ovl48:0000 (per-type flag table derived
@@ -20,6 +21,8 @@ then `rules.pathfinding.rebuild_cost_map` (ovl61:2183 / 2194) before the first c
 """
 from __future__ import annotations
 
+import importlib
+import logging
 from math import isqrt
 
 from ..model.army import ArmyType
@@ -36,14 +39,40 @@ from ..model.state import (SCN_ARMY_HIGH, SCN_CURRENT_PLAYER, SCN_HUMAN_INFAMY, 
                            SCN_TURN_ORDER, SCN_TURN_POS, GameState, Monster)
 from ..model.world import Sign, World
 from .constants import setup as K
-from .movement import alloc_army, type_flag
+from .movement import FREE, alloc_army, type_flag
 from .pathfinding import cost_map
 from .rng import Rng
 
 SCN_OPTIONS_ZEROED = 0x130          # EL §6.9: zeroed at ovl57:0e34
-SCN_WORD_10F3 = 0x10F3              # EL §9.5: 0x10f3[p]
+SCN_WORD_10F3 = 0x10F3              # 2c04:10f3[p], meaning [U]; writers: EL §9.5 ovl30:0000 (-1),
+                                    # asm ovl61:1f54 (surrender declined: the side on turn)
 PLAYER_REC = 0x183                  # player record base in the SCN (scenario.md), stride 0x14
 PLAYER_REC_LEN = 0x14
+
+log = logging.getLogger(__name__)
+
+# name -> (milestone, "module:function", what it must do, EXE address); rules code does not
+# import the AI package, it resolves these by name (as rules.turn / rules.combat do).
+HOOKS = {
+    "ai_setup": ("M8b1", "warlords2.ai.cards:setup_all",
+                 "f(state, cards) -> None: the eight AI blocks at Begin (ovl21:084d / 0d7b, rnd; "
+                 "cards(level, number) -> the .CRD bytes)", "ovl25:0519 at ovl57:0eae"),
+    "ai_neighbours": ("M8b1", "warlords2.ai.tables:build_neighbours",
+                      "f(state) -> None: the AI neighbour table, with the cost map for side 0 "
+                      "(no rnd)", "ovl29:0398 at ovl29:012b (ovl30:0000 -> ovl29:010b)"),
+}
+
+
+def _hook(name):
+    milestone, target, _, _ = HOOKS[name]
+    mod, fn = target.split(":")
+    try:
+        module = importlib.import_module(mod)
+    except ModuleNotFoundError as e:
+        if not (e.name and mod.startswith(e.name)):
+            raise
+        return None
+    return getattr(module, fn, None)
 
 
 def _rec(p: int, off: int) -> int:
@@ -84,10 +113,16 @@ def _header_flags(scn: dict) -> dict[int, int]:
 
 def _city(c: dict) -> City:
     """City record after the load reset ovl29:0000 (EL §9.1): +0x2c..+0x40 = 0, +0x2f = +0x15.
-    Empty slots keep type 0xff; their other bytes are never read (EL §9.4) and are 0 here."""
-    slots = [Slot() for _ in range(4)]
-    for s in c["production"]:
-        slots[s["slot"]] = Slot(s["army_id"], s["turns"], s["strength"], s["moves"], s["cost"])
+    Every slot keeps the file's five bytes (+0x16 / +0x1a / +0x1e / +0x22 / +0x26 + slot): the
+    new game rewrites only the statistics of filled slots (EL §9.4), so an empty slot keeps the
+    file's time byte, which ovl44:00ff reads (`rules.city.choose_production` with type -1)."""
+    raw = c.get("slot_bytes")
+    if raw is not None:
+        slots = [Slot(EMPTY_SLOT if b[0] == 0xFF else b[0], *b[1:]) for b in raw]
+    else:
+        slots = [Slot() for _ in range(4)]
+        for s in c["production"]:
+            slots[s["slot"]] = Slot(s["army_id"], s["turns"], s["strength"], s["moves"], s["cost"])
     return City(c["index"], c["x"], c["y"], c["name"], owner=c["owner"], owner2=c["owner"],
                 defence=c["level_14"], slots=slots, income=c["income"], current=0, turns_left=0,
                 attacked_by=0, vectoring=0, vector_to=(0, 0), tail=[0] * 11)
@@ -339,13 +374,22 @@ def _explored_map(state: GameState) -> None:
                         w.explored[i] |= 1 << p
 
 
+explored_map = _explored_map        # public name (rules.saveload: the load's ovl64:113b)
+
+
 def _territories(state: GameState) -> None:
     """ovl30:0000 -> ovl29:010b (EL §9.5): AI territory byte city +0x2f, 0x10f3[p] = -1.
-    ovl29:010b starts with ovl29:0398 (call at ovl29:012b), the AI per-city tables (M8b1, not
-    modelled), which sets SCN 0x110 = 0 and builds the cost map for side 0 (asm ovl29:03f2..0402)
-    before restoring 0x110; only that cost map is kept here (ovl61:2194 rebuilds it before the
-    first command)."""
-    state.cost_map = cost_map(state, 0)
+    ovl29:010b starts with ovl29:0398 (call at ovl29:012b), the AI neighbour table (HOOKS
+    ai_neighbours, ai.tables.build_neighbours), which sets SCN 0x110 = 0 for its run, builds
+    the cost map for side 0 (asm ovl29:03f2..0402) and searches it from every city; that cost
+    map is what is left here (ovl61:2194 rebuilds it before the first command)."""
+    build = _hook("ai_neighbours")
+    if build is None:
+        log.warning("AI neighbour table (%s) not available; only the cost map is built",
+                    HOOKS["ai_neighbours"][1])
+        state.cost_map = cost_map(state, 0)
+    else:
+        build(state)
     players, rng = state.players, state.rng
     mark = [False] * N_PLAYERS
     anchor = {}
@@ -469,7 +513,7 @@ def _turn_order(state: GameState) -> None:
 
 
 def new_game(sc: dict, cfg, armytypes: list, *, unused_name: str | None = None,
-             hero_names: list | None = None, ai_setup=None) -> GameState:
+             hero_names: list | None = None, cards=None, process=None, run=None) -> GameState:
     """A started game from a loaded scenario (`formats.scenario.load_scenario`), the Game
     Setup choices (`model.newgame.NewGameConfig`) and the army table chosen by
     `cfg.army_set` (`formats.tables.parse_armytypes` records or ArmyType).  `unused_name`
@@ -481,9 +525,23 @@ def new_game(sc: dict, cfg, armytypes: list, *, unused_name: str | None = None,
     (ovl47:0c67: FILE.DAT group 20 entry SCN 0x110 formatted with SCN 0x161, read, then
     rnd(1,100,0)), with no die before the read, so caching the files here changes no order;
     without it the table stays empty and a hero offer raises ValueError.
-    `ai_setup(state)` is called where Begin builds the AI parameter blocks (ovl25:0519; owned
-    by M8b1), so its dice come in the original order.
-    Evidence: EL §9 (set-up sequence), §5.2, §5.5, §6.6, §6.9, §7."""
+    `cards(level, number) -> bytes` reads a computer side's .CRD file (`ai.cards.card_reader`);
+    with it Begin builds the AI blocks where the original does (ovl25:0519, HOOKS ai_setup), so
+    its dice (3 per side, 5 more per live computer side, sides 7..0) come in the original order.
+    Without it (None) the blocks are left unset (`state.ai.allocated` 0), no dice are drawn
+    there, and a computer turn is refused (ai.base.computer_turn).
+    `process` is the run's `model.ai.AiProcess` (DS:0832, 0836, 40f2, 40ee and the AI heap
+    blocks, which outlive a game in the original); the caller keeps it for the whole run and
+    hands it to every new game, which starts its blocks from the previous game's
+    (`AiState.attach`).  None: a fresh run.
+    The dice continue `cfg.rng_state` (the run's one ovl59:02bf stream as the setup screen's
+    loader found it: the Game Start faces' rolls come before it), else start at `cfg.seed`.
+    `run` is `rules.saveload.run_part` of the run's previous game (None: the first Begin of a
+    run, the EXE image's values): the new game keeps that game's run memory as the EXE does
+    (`rules.saveload.begin_carry`: path cache, search field, battle arrays, selection words,
+    caches, DS:16a6, army type table, report block, the army records but owner / x / y), and
+    `run.process` stands in for `process` when that is None.
+    Evidence: EL §9 (set-up sequence), §5.2, §5.5, §6.6, §6.9, §7, §10.7."""
     scn = sc["scn"]
     if scn["runtime_nonzero"]["223_60b"] or scn["runtime_nonzero"]["101b_157b"]:
         raise ValueError("SCN runtime regions 0x223-0x60a / 0x101b-0x157a are not zero; "
@@ -500,7 +558,7 @@ def new_game(sc: dict, cfg, armytypes: list, *, unused_name: str | None = None,
         raise ValueError("army table must hold type ids 0..%d" % HERO_TYPE)
 
     # load, ovl57:0194 (EL §9.1)
-    rng = Rng(cfg.seed, cfg.rng)
+    rng = Rng(cfg.seed, cfg.rng) if cfg.rng_state is None else Rng.from_state(cfg.rng_state)
     count, roll = K.LOADER_TILE_ROLLS.value
     mountain_rolls = [rng.rnd(*roll) for _ in range(count)]         # ovl63:232b / 2479
     for r in cfg.setup_rolls:                       # the setup screen's rolls (ovl57:0fe8, 20af)
@@ -537,6 +595,11 @@ def new_game(sc: dict, cfg, armytypes: list, *, unused_name: str | None = None,
         relations=[[0] * N_PLAYERS for _ in range(N_PLAYERS)], rng=rng, flags=flags,
         overview_mountain_rolls=mountain_rolls,
         hero_names=[[[int(f), str(n)] for f, n in side] for side in hero_names or []])
+    if run is not None:                             # the run's memory (EL §10.7)
+        from .saveload import begin_carry
+        begin_carry(state, run)
+        if process is None:
+            process = run.process
 
     # Begin, ovl57:0cfe (EL §9.1)
     for p in players:
@@ -553,8 +616,13 @@ def new_game(sc: dict, cfg, armytypes: list, *, unused_name: str | None = None,
     for off, w in zip(SCN_WORD, opts.to_words()):
         flags[off] = w
     flags[SCN_OPTIONS_ZEROED] = 0
-    if ai_setup is not None:                        # ovl25:0519 (M8b1)
-        ai_setup(state)
+    if process is not None:                         # the run's AI words and heap blocks
+        state.ai.attach(process, carry=True)
+    if cards is not None:                           # ovl25:0519 at ovl57:0eae
+        setup = _hook("ai_setup")
+        if setup is None:
+            raise RuntimeError("AI set-up %s missing" % HOOKS["ai_setup"][1])
+        setup(state, cards)
     _turn_order(state)                              # ovl61:0000 -> 1732, 17f6
 
     # new game, ovl53:0000 (EL §9.2)
@@ -565,12 +633,17 @@ def new_game(sc: dict, cfg, armytypes: list, *, unused_name: str | None = None,
             flags[off] = w
     humans = sum(1 for p in players if p.control == Control.HUMAN)
     shown = 0 if opts.hidden_map and humans >= 1 else 1
-    state.reveal_at_first_human_turn = int(bool(opts.hidden_map) and humans == 1)
+    if opts.hidden_map and humans == 1:             # ovl53:006f..007c, else DS:16a6 is kept
+        state.reveal_at_first_human_turn = 1
     for p in players:
         p.shown = shown
         if not p.alive:
             p.gold = 0
     scatter_sites_and_items(state.sites, state.items, players, sc["items"], world, bool(opts.quests), rng)
+    for a in state.armies:                          # ovl53:00c1..00fe, records 999..0
+        a.owner, a.x, a.y = FREE, -1, -1
+    sel = state.selection                           # ovl53:0100..0120: the pointers only
+    sel.selected, sel.hero, sel.moving = -1, -1, []
     _cities(state)
     _explored_map(state)
     _territories(state)

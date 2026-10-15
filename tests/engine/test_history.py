@@ -198,7 +198,7 @@ def test_army_and_city_reports(mode, values):
     assert r["values"] == values and r["scale"] == 2 and r["own"] == values[0]
     assert r["dead"] == [0, 0, 0, 1, 0, 0, 0, 0]
     with pytest.raises(ValueError):
-        R.report(st, K.REPORT_PRODUCTION.value)
+        R.report(st, 5)                          # ovl42:034c: no case past 4
 
 
 def _no_memory(state, battle):

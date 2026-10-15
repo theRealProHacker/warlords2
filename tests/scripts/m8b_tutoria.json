@@ -1,0 +1,91 @@
+{
+ "note": "TUTORIA with the Knights computer and the Darklords human: Begin runs the loop one computer side per run (ovl61:0000(0, 1) -> 2123: the buttons refreshed (0174), no map drawn: the backdrop); the Knights' turn (ovl68:0000: name ovl61:11d1, bar ground 1291, bar 131b(5); no pointer, 12bf:07a5 at ovl61:21e8; ovl25:0000's bars 131b(10..100)): their hero walks (0a8b:04c8, the map drawn per step by ovl64:0565 -> 0629 -> 006c with the selection frame 077b:005f), attacks the Darklords' stack: a human defender opens the battle display of the AI's battle (ovl36:124a: mark 1836(x, y, 1), STRING 0x94 through 11d1(.., 5), window ovl37:0160(0), kills ovl37:0094, the line 0x96 in the info area and the window (04c5), ovl59:0000(10), no wait for the computer (04f6)), then the map at the view words (1836(x, y, 0)) and the overview ovl63:0000, the Knights' other moves, and the Darklords' Turn 1 pop-up.  Drawn from the engine's state at each present point (rules.present).  The state_hash steps check the engine's hashes recorded by the first runs (want).",
+ "args": [
+  "--scenario",
+  "TUTORIA",
+  "--seed",
+  "3",
+  "--controls",
+  "CCCCCCCH",
+  "--no-voice"
+ ],
+ "steps": [
+  [
+   2,
+   {
+    "wait_dialog": "progress",
+    "frames": 5
+   }
+  ],
+  [
+   53,
+   {
+    "state_hash": "knights_turn_start",
+    "want": "ed0af511af7dc6eb36308c559dd289b26cea2f9186ad172d94cac07bf284e71b"
+   }
+  ],
+  [
+   100,
+   {
+    "shot": "01_knights_turn_walk"
+   }
+  ],
+  [
+   195,
+   {
+    "shot": "02_mark_and_message"
+   }
+  ],
+  [
+   230,
+   {
+    "shot": "03_battle_window_kill"
+   }
+  ],
+  [
+   280,
+   {
+    "shot": "04_result_line"
+   }
+  ],
+  [
+   300,
+   {
+    "shot": "05_result_in_the_window"
+   }
+  ],
+  [
+   320,
+   {
+    "shot": "06_after_the_battle"
+   }
+  ],
+  [
+   321,
+   {
+    "state_hash": "after_the_battle",
+    "want": "7163a75c9362c8c0df0d61b316297a9291e3078188a93215cff039e8afe53b10"
+   }
+  ],
+  [
+   420,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 60
+   }
+  ],
+  [
+   480,
+   {
+    "shot": "07_darklords_turn_1"
+   }
+  ],
+  [
+   481,
+   {
+    "state_hash": "darklords_turn_1",
+    "want": "98941f588976153043bb332c98249612dafe7eb2c3c0f84e15f9e0723bcf354d"
+   }
+  ]
+ ]
+}

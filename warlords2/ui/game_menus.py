@@ -47,7 +47,7 @@ def menu_states(app, state, lead) -> dict[str, bool]:
     terrain = w.terrain_of_tile[w.tiles[i] & 0xFF]
     sel = lead is not None
     hero = sel and lead.type_id == HERO_TYPE
-    cities = economy.city_count(state, p)
+    cities = economy.cached_cities(state, p)                 # DS:5dea (0745 / 0886)
     has_hero = any(a.type_id == HERO_TYPE and a.owner == p for a in state.armies)
     site = next((s for s in state.sites if (s.x, s.y) == (x, y)), None) if terrain == Terrain.SITE else None
     std = state.items[p] if p < len(state.items) else None

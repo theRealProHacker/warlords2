@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from ..model.army import NO_TYPE
 from ..model.ids import HERO_TYPE, MAP_FORTIFIED, MAP_W, NO_OWNER, ItemState, ItemType
 from ..model.state import SCN_BONUS_CAP
 from .constants import combat as K
@@ -70,6 +71,29 @@ def command_items(state, army) -> int:
     return n
 
 
+class RecordBuffer:
+    """The type-record buffer [bp-0x70] of one ovl38:008b call, which the four loops of that
+    call share (side A / B bonuses 073b / 0876, side A / B strengths 0a9d / 0bdc, in that
+    order; each loop fetches once per unit, first thing in its body, before the hero and aboard
+    tests).  ovl44:14ac(cwde(t), buf) copies the 0x3e-byte record whose id word equals the
+    sign-extended type (14b7..14e6); no record has id -1, so for type byte 0xff nothing is
+    copied and the unit uses the record fetched last in this call (X36).  Before the first
+    fetch the buffer holds the stack contents of the caller's frame, which nothing determines:
+    the stand-in is `NO_TYPE` (all words 0, as `GameState.army_type` gives elsewhere); it
+    matters only when side A's first unit in fight order has type 0xff."""
+
+    def __init__(self):
+        self.record = NO_TYPE          # deviation: stack leftovers in the EXE (X36)
+
+    def fetch(self, state, type_id: int):
+        """ovl44:14ac: the record of `type_id`, or the buffer unchanged when no id matches.
+        Evidence: asm ovl44:14b7..14ec (id word compare, 0000:1d02 copy of 0x3e bytes only on a
+        match; loop over the 29 records)."""
+        if (type_id & 0xFF) != (NO_TYPE.type_id & 0xFF):
+            self.record = state.army_type(type_id)
+        return self.record
+
+
 @dataclass
 class SideBonus:
     """What one side contributes to the totals (per-side loop of ovl38:008b)."""
@@ -82,19 +106,23 @@ class SideBonus:
     cancel_stack: bool    # w15 == 3: cancels the other side's stack bonus
 
 
-def side_bonus(state, armies, c: int) -> SideBonus:
+def side_bonus(state, armies, c: int, buf: RecordBuffer | None = None) -> SideBonus:
     """Hero bonus, highest stack bonus, enemy modifier and cancel flags of one side.
     Evidence: asm ovl38:073b..0867 (side A) / 0876..0981 (side B), decomp 06a6ab: the hero best is
     raised only when a hero's strength + battle items exceeds it (cap 9); the stack bonus is the
     maximum of the nonzero w[9+c] starting at 0; the enemy modifier is the minimum of the nonzero
-    w14 starting at 0 (so positive w14 never counts); w15 1/2/3 set the cancel flags."""
+    w14 starting at 0 (so positive w14 never counts); w15 1/2/3 set the cancel flags.  The
+    words w9..w12, w14, w15 come from the record ovl44:14ac left in `buf` (073b / 0876; a type
+    0xff unit keeps the previous one, `RecordBuffer`); the hero tests read the type byte
+    DS:424c / 4254 (074e / 0889 cmp 0x1c), not the record."""
+    buf = buf if buf is not None else RecordBuffer()
     best = 0
     cmd = 0
     stack = 0
     enemy = 0
     flags = set()
     for a in armies:
-        t = state.army_type(a.type_id)
+        t = buf.fetch(state, a.type_id)
         if a.type_id == HERO_TYPE:
             v = s8(a.strength) + battle_items(state, a)
             if v > best:
@@ -151,14 +179,18 @@ def side_total(state, own: SideBonus, other: SideBonus, city: int = 0) -> int:
     return t + other.enemy_mod
 
 
-def unit_strength(state, army, total: int, c: int, terrain: int) -> tuple[int, bool]:
+def unit_strength(state, army, total: int, c: int, terrain: int,
+                  buf: RecordBuffer | None = None) -> tuple[int, bool]:
     """Battle strength of one unit and whether it fights as aboard.
     Evidence: decomp 06a6ab per-unit loops (EL §3.3): aboard (flag 0x1000) on terrain 2/3 -> 4,
     no bonuses; else signed byte s = strength (+8) + total, + battle items for a hero, + own
-    w[5+c], then values >= 16 become 15 (no lower bound here)."""
+    w[5+c], then values >= 16 become 15 (no lower bound here).  w5..w8 come from the record
+    ovl44:14ac left in `buf`, fetched before the aboard test (asm 0a9d..0aad / 0bdc..0bec), so
+    an aboard unit still advances it; a type 0xff unit keeps the previous one (`RecordBuffer`)."""
+    buf = buf if buf is not None else RecordBuffer()
+    t = buf.fetch(state, army.type_id)
     if army.flags & ABOARD_FLAG and terrain in K.ABOARD_TERRAIN.value:
         return K.ABOARD_STRENGTH.value, True
-    t = state.army_type(army.type_id)
     s = s8(army.strength + s8(total))
     if army.type_id == HERO_TYPE:
         s = s8(s + s8(battle_items(state, army)))

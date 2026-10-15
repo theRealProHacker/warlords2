@@ -11,7 +11,8 @@ Sources (re-read by M6a from out/asm/ and out/rea/decomp/):
 * cancelled          ovl36:1016..10b1 (city taken) and ovl32:016b (city razed)
 
 Army +0xf holds the destination in bits 1-7 (`Army.vector_dest` here, bit 0 not modelled);
-+0x10 the transit state 0x65 / 0x66 / 0xff.  Not modelled: ovl44:021d, a second way to target
++0x10 the transit state 0x65 / 0x66 / 0xff.  Redirect of all sources ovl44:072e mode 2
+(`redirect_vectors`).  Not modelled: ovl44:021d, a second way to target
 the standard that writes (-2, -1) without the source count (its button was not traced).
 """
 from __future__ import annotations
@@ -19,10 +20,12 @@ from __future__ import annotations
 from ..model import commands as C
 from ..model import events as E
 from ..model.ids import MAP_W, ROAD_STANDARD
+from ..model.state import ReportEntry
 from .bonuses import s8
 from .city import can_place, room
 from .movement import armies_at, remove_army
 from .constants import city as K
+from .constants import history as KH
 from .engine import IllegalCommand
 
 
@@ -88,6 +91,53 @@ def set_vector(state, cmd: C.SetVector) -> list:
     return []
 
 
+def sources_of(state, ci: int) -> list:
+    """ovl44:0410 for a city: the cities (any owner) with +0x31 set whose target is its x, y, in
+    table order.
+    Evidence: asm ovl44:0492..0509."""
+    c = state.cities[ci]
+    return [i for i, o in enumerate(state.cities) if o.vectoring and tuple(o.vector_to) == (c.x, c.y)]
+
+
+def redirect_vectors(state, cmd: C.RedirectVectors) -> list:
+    """RedirectVectors(city, dest): the Vectoring page's "change destination" mode (DS:0e94 == 2)
+    and a click: every city vectoring to `city` gets the new target.  dest as for `SetVector`
+    (ovl62:0651: an own city, or p + 100 while the standard is on the map).  Legal (else the
+    EXE writes nothing and leaves the mode) when the n sources of `city` (ovl44:0410) are > 0,
+    n + m <= 4 with m = the cities already vectoring to dest (ovl44:0410(dest), `vector_count`),
+    and dest is not one of the sources.  Each source gets only its target words +0x33 / +0x35 =
+    dest's x, y, or (-2, -2) for >= 100: no +0x2d test (a source whose production stalled keeps
+    vectoring) and +0x31 untouched.  The EXE compares dest with all four list words, also those
+    past the count, which hold stack garbage (bp-0x14..bp-0xe uninitialised): a garbage word
+    equal to dest refuses there - not modelled.
+    Evidence: asm ovl44:072e..086b (0762 ovl62:0651, 077c / 0791 ovl44:0410 for dest and for
+    DS:0e98, 0797 DS:0e94 == 2, 07a1 n > 0, 07aa..07b3 n + m <= 4, 07b8..07d3 the four words,
+    07d8..086b the writes), 0410..050d."""
+    if not 0 <= cmd.city < len(state.cities):
+        raise IllegalCommand("no city %r" % (cmd.city,))
+    p = state.current
+    if s8(state.cities[cmd.city].owner) != p:
+        raise IllegalCommand("city %d is not the current player's" % cmd.city)
+    dest = cmd.dest
+    if dest == p + K.STANDARD_DEST.value:
+        if standard_square(state, p) is None:
+            raise IllegalCommand("the standard is not on the map")
+    elif not (0 <= dest < len(state.cities) and s8(state.cities[dest].owner) == p):
+        raise IllegalCommand("destination %r is not an own city" % (dest,))
+    src = sources_of(state, cmd.city)
+    if not src:
+        raise IllegalCommand("no city vectors to city %d" % cmd.city)
+    if len(src) + vector_count(state, dest) > K.REDIRECT_MAX.value:
+        raise IllegalCommand("more than four cities would vector there")
+    if dest in src:
+        raise IllegalCommand("the destination is one of the sources")
+    to = K.STANDARD_TARGET.value if dest >= K.STANDARD_DEST.value else \
+        (state.cities[dest].x, state.cities[dest].y)
+    for i in src:
+        state.cities[i].vector_to = tuple(to)
+    return []
+
+
 def cancel_lost_standard(state) -> list:
     """Switch off vectoring to the standard when the current side's standard is not on the map.
     Evidence: decomp ovl47:0bd9 (first call of ovl43:0000): own cities with +0x31 set and target
@@ -116,7 +166,8 @@ def cancel_vectors_to(state, x: int, y: int) -> None:
 def _place(a, x: int, y: int) -> None:
     a.x, a.y = x, y
     a.vector_dest = 0                       # +0xf &= 1 (bit 0 not modelled)
-    a.transit = K.TRANSIT_NONE.value        # +0xe &= 0xf0 (not modelled), +0x10 = 0xff
+    a.order &= 0xF0                         # asm ovl43:048f..0495: +0xe &= 0xf0, |= 0
+    a.transit = K.TRANSIT_NONE.value        # +0x10 = 0xff (04a2)
 
 
 def _home(state, a, events, x_reset: bool) -> None:
@@ -127,6 +178,14 @@ def _home(state, a, events, x_reset: bool) -> None:
     events.append(E.VectorRerouted({"army": a.id, "home": a.home_city, "deleted": False}))
 
 
+def _report_arrival(state, a) -> None:
+    """Production report entry of kind 0 for an arriving army, appended before the placement
+    clears +0xf (asm ovl43:01ee..0291 in a city, 03aa..044d at the standard; +0xf &= 1 at 047f,
+    count + 1 at 04ac): type +4, city = home +9, dest = (+0xf >> 1) & 0x7f."""
+    state.production_report.append(ReportEntry(
+        KH.ENTRY_ARRIVED.value, s8(a.type_id), s8(a.home_city), a.vector_dest & 0x7F, a.id))
+
+
 def advance_transit(state) -> list:
     """Move the current side's vectored units one step: 0x65 -> 0x66, 0x66 -> arrival.
     Evidence: asm ovl43:0029..04b8, armies from the top index down, owner == SCN 0x110:
@@ -135,7 +194,8 @@ def advance_transit(state) -> list:
     destination is its home city (+9), else rerouted home (+0xf = home << 1, 0x65).  (-2, -1) with
     0x66: placed on the standard square (ovl47:0b47) when it exists, holds < 8 armies (0b62:007d)
     and passes ovl43:0d4f; otherwise x = -1 and rerouted home.  So a unit arrives two turns after
-    it was made.  Placement does not set the map army bit (ovl62:0000 rebuilds it)."""
+    it was made.  Placement does not set the map army bit (ovl62:0000 rebuilds it).  Each
+    arrival appends a kind-0 production report entry (`GameState.production_report`)."""
     p = state.current
     new, on_way = K.TRANSIT_NEW.value, K.TRANSIT_ON_WAY.value
     xc, xs, ty = K.TRANSIT_X_CITY.value, K.TRANSIT_X_STANDARD.value, K.TRANSIT_Y.value
@@ -149,6 +209,7 @@ def advance_transit(state) -> list:
             d = a.vector_dest & 0x7F
             loc = room(state, d)
             if loc is not None and can_place(state, a.type_id, *loc):
+                _report_arrival(state, a)
                 _place(a, *loc)
                 events.append(E.VectorArrived({"army": a.id, "city": d, "x": a.x, "y": a.y}))
             elif s8(a.home_city) == d:
@@ -160,6 +221,7 @@ def advance_transit(state) -> list:
             loc = standard_square(state, p)
             if (loc is not None and len(armies_at(state, *loc)) < K.SQUARE_FULL.value
                     and can_place(state, a.type_id, *loc)):
+                _report_arrival(state, a)
                 _place(a, *loc)
                 events.append(E.VectorArrived({"army": a.id, "city": None, "x": a.x, "y": a.y}))
             else:

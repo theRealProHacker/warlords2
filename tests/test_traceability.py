@@ -5,11 +5,12 @@
 * every `Unverified(name, row)` in warlords2/ names a row of the risk register (section 5);
 * no string literal in warlords2/, tests/, tools/ equals a game text longer than 12
   characters, and none contains one of 20 characters or more.  Game texts are STRING.DAT,
-  HLP, army and hero names, QUOTES, card descriptions, voice captions and GFX page text,
-  read from the user's copy at test time.  Literals are str and bytes (cp437) constants,
-  `+` chains of them and the constant parts of f-strings; .md and .txt files under tests/
-  and tools/ count line by line.  Dict keys and subscripts that are identifiers, and file
-  names, are allowed.
+  ERROR.DAT, HLP, army and hero names, QUOTES, card descriptions, voice captions, GFX page
+  text and the text WARLORD2.EXE holds itself (the menu titles and items of `ui.menubar`,
+  every other NUL-ended string of DGROUP), read from the user's copy at test time.  Literals are str and bytes (cp437) constants,
+  `+` chains of them and the constant parts of f-strings, dict keys and subscripts included
+  (two identifier-shaped game texts are longer than MIN_TEXT); .md and .txt files under
+  tests/ and tools/ count line by line.  File names are allowed.
 
 Each check is a function over a list of files, so the tests below can also show that it
 fires on a planted file.
@@ -21,7 +22,8 @@ from pathlib import Path
 
 import pytest
 
-from warlords2.formats.gamedir import GameDir
+from warlords2.assets.exe import ds_base
+from warlords2.formats.gamedir import EXE_NAME, GameDir
 from warlords2.formats.gfxscript import parse_gfx
 from warlords2.formats.tables import (ENC, StringTable, parse_armytypes, parse_card, parse_help,
                                       parse_heronames, parse_quotes, parse_voice_text)
@@ -102,10 +104,6 @@ def bad_unverified(paths, rows):
     return out
 
 
-def _identifier(node):
-    return isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value.isidentifier()
-
-
 def _folded(node):
     """The string a `+` chain of str constants spells, else None."""
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
@@ -119,15 +117,7 @@ def _folded(node):
 
 def _py_literals(p):
     tree = ast.parse(p.read_text(encoding="utf-8"))
-    allowed = set()
     for node in ast.walk(tree):
-        if isinstance(node, ast.Dict):
-            allowed |= {id(k) for k in node.keys if k is not None and _identifier(k)}
-        elif isinstance(node, ast.Subscript) and _identifier(node.slice):
-            allowed.add(id(node.slice))
-    for node in ast.walk(tree):
-        if id(node) in allowed:
-            continue
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
             yield node.lineno, node.value
         elif isinstance(node, ast.Constant) and isinstance(node.value, bytes):
@@ -148,10 +138,9 @@ def _json_literals(p):
         elif isinstance(v, list):
             for x in v:
                 yield from walk(x)
-        elif isinstance(v, dict):                 # identifier keys allowed
+        elif isinstance(v, dict):
             for k, x in v.items():
-                if not k.isidentifier():
-                    yield k
+                yield k
                 yield from walk(x)
     for v in walk(json.loads(p.read_text(encoding="utf-8"))):
         yield 0, v
@@ -191,10 +180,30 @@ def game_text_literals(paths, texts):
     return sorted(set(out))
 
 
+DGROUP_TEXT = re.compile(rb"[\t\n\r\x20-\x7e]{%d,}(?=\x00)" % (MIN_TEXT + 1))
+
+
+def exe_texts(exe):
+    """The text WARLORD2.EXE holds: the menu titles, items and key labels (`ui.menubar`) and
+    every NUL-ended printable string of DGROUP longer than MIN_TEXT."""
+    from warlords2.ui.menubar import read_menu_tables
+    menus, _ = read_menu_tables(exe)
+    texts = set()
+    for m in menus:
+        texts.add(m.title)
+        for it in m.items:
+            texts |= {it.label, it.key_label or ""}
+    base = ds_base(exe)
+    texts |= {m.group().decode(ENC) for m in DGROUP_TEXT.finditer(exe[base:base + 0x10000])}
+    return texts
+
+
 def load_game_texts(gd):
     """Every game text the check knows, from the user's copy."""
     root = gd.root
     texts = {s for g in StringTable(gd.read("DATA/STRING.DAT")).groups for s in g}
+    texts |= {s for g in StringTable(gd.read("DATA/ERROR.DAT")).groups for s in g}
+    texts |= exe_texts(gd.read(EXE_NAME))
     for h in parse_help(gd.read("HELP/WARLORD2.HLP")):
         texts |= {h["title"], h["text"]}
     for name in ("ARMYTYPE.DAT", "ARMYTYP2.DAT"):
@@ -287,7 +296,7 @@ def test_game_text_check_fires(tmp_path):
         f"B = {{{entry!r}: 1}}",                             # 2 non-identifier key
         f"C = x[{entry!r}]",                                 # 3 non-identifier subscript
         f"D = {short!r}",                                    # 4 too short
-        f"E = {{{ident!r}: 1, 'k': x[{ident!r}]}}",          # 5 identifier key/subscript: allowed
+        f"E = {{{ident!r}: 1, 'k': x[{ident!r}]}}",          # 5 identifier key/subscript
         f"F = {entry.encode('cp437')!r}",                    # 6 bytes
         f"G = {long_[:half]!r} + {long_[half:]!r}",          # 7 + chain
         f"H = f{long_[:half]!r}",                            # 8 f-string part, not a game text
@@ -295,10 +304,10 @@ def test_game_text_check_fires(tmp_path):
         f"J = 'see: {long_} here'",                          # 10 substring
         f"K = 'x {short} y'",                                # 11 short substring: allowed
     ]) + "\n", encoding="utf-8")
-    assert _lines(game_text_literals([p], texts)) == [1, 2, 3, 6, 7, 9, 10]
+    assert _lines(game_text_literals([p], texts)) == [1, 2, 3, 5, 6, 7, 9, 10]
     j = tmp_path / "planted.json"
     j.write_text(json.dumps({entry: [entry], ident: f"x {long_}"}), encoding="utf-8")
-    assert len(game_text_literals([j], texts)) == 2
+    assert len(game_text_literals([j], texts)) == 3              # entry, the ident key, long_
     for suffix in (".md", ".txt"):
         d = tmp_path / f"planted{suffix}"
         d.write_text(f"title\n  {entry}  \nsome {long_} inline\n{short}\n", encoding="utf-8")
@@ -310,3 +319,12 @@ def test_game_texts_cover_every_source(game_texts, game):
     gd = GameDir(game)
     strings = {s for g in StringTable(gd.read("DATA/STRING.DAT")).groups for s in g if s.strip()}
     assert strings <= game_texts and len(game_texts - strings) > 100
+    exe = gd.read(EXE_NAME)
+    from warlords2.assets.exe import ds_str
+    from warlords2.ui.menubar import read_menu_tables
+    menus = read_menu_tables(exe)[0]
+    labels = {it.label for m in menus for it in m.items} | {m.title for m in menus}
+    errors = {s for g in StringTable(gd.read("DATA/ERROR.DAT")).groups for s in g if s.strip()}
+    assert labels <= game_texts and errors <= game_texts
+    assert max(map(len, labels)) > MIN_TEXT                    # a menu label the check now sees
+    assert ds_str(exe, 0x25E0) in game_texts                   # a DGROUP text (ovl57:180b)

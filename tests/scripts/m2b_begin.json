@@ -9,7 +9,7 @@
   [54, {"assert_state": {"state": "setup", "dialog": null}}],
   [55, {"shot": "setup"}],
   [56, {"press_button": 141}],
-  [59, {"assert_state": {"state": "game", "dialog": null}}],
+  [59, {"assert_state": {"state": "game", "dialog": "TurnStart"}}],
   [59, {"move": [0, 0]}],
   [60, {"shot": "game"}]
  ]

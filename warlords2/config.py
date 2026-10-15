@@ -25,7 +25,7 @@ def _positive(s: str) -> int:
 
 # accepted so scripts and docs can use them, but no milestone has implemented them yet
 NOT_IMPLEMENTED = {"music": "--music", "music_variant": "--music-variant", "music_cache": "--music-cache",
-                   "allow_unverified": "--allow-unverified", "state_hash_at": "--state-hash-at"}
+                   "state_hash_at": "--state-hash-at"}
 
 
 def build_parser() -> argparse.ArgumentParser:

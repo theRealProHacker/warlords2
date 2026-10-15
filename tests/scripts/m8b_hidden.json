@@ -1,0 +1,144 @@
+{
+ "note": "ERYTHEA with Hidden Map (and Strong neutrals, Diplomacy), the Sirians the one human, the other seven sides computer: DS:3254 is set for every computer turn (ovl68:005b..0074), so the map is drawn from the human's stored view (road bit 7) and only where ovl64:006c lets it (00a2..0167: the stack's square and the view centre not fully hidden, DS:2d56[ovl64:1055] != 0x0e, with the DS:2eac / 2eae / 2eb0 exception), no overview at the turn start (ovl68:00e3 / 0102) and none at a reveal (ovl63:1fed 2034): End Turn from the Turn menu (ovl61:2074: the map drawn, the buttons disabled), then every computer side's name and bars over the map End Turn drew, their walks unseen (the 3-tick step wait still runs), the AI's battles unseen (ovl36:124a: show = show2 = 0 for a square without road bit 7, 12e5..130c); then the Sirians' Turn 2 pop-up.  The state_hash steps check the engine's hashes recorded by the first runs (want).",
+ "args": [
+  "--scenario",
+  "ERYTHEA",
+  "--seed",
+  "3",
+  "--controls",
+  "HCCCCCCC",
+  "--options",
+  "1,1,0,1,0,0,0,0,0,0",
+  "--no-voice"
+ ],
+ "steps": [
+  [
+   2,
+   {
+    "wait_dialog": "progress",
+    "frames": 5
+   }
+  ],
+  [
+   30,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 40
+   }
+  ],
+  [
+   74,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   76,
+   {
+    "wait_dialog": "hero_offer",
+    "frames": 10
+   }
+  ],
+  [
+   90,
+   {
+    "press_button": 287
+   }
+  ],
+  [
+   92,
+   {
+    "wait_dialog": "production",
+    "frames": 10
+   }
+  ],
+  [
+   106,
+   {
+    "press_button": 192
+   }
+  ],
+  [
+   110,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   111,
+   {
+    "move": [
+     500,
+     200
+    ]
+   }
+  ],
+  [
+   125,
+   {
+    "shot": "01_sirians_turn_1"
+   }
+  ],
+  [
+   130,
+   {
+    "drag": [
+     [
+      395,
+      8
+     ],
+     [
+      430,
+      26
+     ]
+    ],
+    "frames": 2
+   }
+  ],
+  [
+   133,
+   {
+    "shot": "02_end_turn_white_dwarves_unseen"
+   }
+  ],
+  [
+   134,
+   {
+    "state_hash": "end_turn",
+    "want": "4c41a174113a57bcc6a76642e662c8c417aecba5364f544b2fa190e5b5c59d9b"
+   }
+  ],
+  [
+   300,
+   {
+    "shot": "03_ussyrian_orcs_hidden_walk"
+   }
+  ],
+  [
+   500,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 600
+   }
+  ],
+  [
+   665,
+   {
+    "shot": "04_sirians_turn_2"
+   }
+  ],
+  [
+   666,
+   {
+    "state_hash": "sirians_turn_2",
+    "want": "fa47f91f5d2f90fa8c265c05a49198c41a6b1036a96dd60fe5274b68107733a6"
+   }
+  ]
+ ]
+}

@@ -55,6 +55,7 @@ NEWS_ELIMINATED = Const(4, "asm ovl61:19e3..19f1: ovl41:1244(p, 4, p, 0, DS:2b00
 ELIMINATED_MSG = Const((11, 5), "asm ovl61:1a06: push 0xffff000b -> ovl59:04f0(11, -1): ovl59:052f "
                                 "rolls rnd(1, n, -1) over the n = 5 entries of STRING.DAT group 11 "
                                 "(count checked against the data by tests/engine/test_victory.py)")
+ELIMINATED_WAIT = Const(0x64, "asm ovl61:1a39: ovl61:11d1(msg, 0x64) for a computer side with no human alive")
 
 # ---------------------------------------------------------------- end states (ovl61:1aed)
 MSG_NO_PLAYERS = Const(12, "asm ovl61:1c0a..1c4f: STRING 12 entries 0-3, then 0a4c:02b5 (exit)")
@@ -64,7 +65,3 @@ NEWS_VICTORY = Const(7, "asm ovl61:1cfc / 1d8e / 1ea6: ovl41:1244(p, 7, p, 0, \"
 SURRENDER_SHARE_DIV = Const(2, "asm ovl61:1e11..1e1e: cities[h] > records / 2 (signed)")
 SURRENDER_MARGIN_DIV = Const(8, "asm ovl61:1e25..1e3c: cities[h] > best computer + records / 8")
 WIN_SHARE_DIV = Const(2, "asm ovl61:1cd7..1ce3: cities[h] > intact cities / 2 (signed)")
-
-# ---------------------------------------------------------------- surrender and victory screens
-SCN_ENEMY = Const(0x10F3, "asm ovl61:1f54: declining the surrender writes 2c04:10f3 + 2c = the current "
-                          "side for every live c (when a live human exists)")

@@ -1,0 +1,259 @@
+{
+ "note": "View -> Stack by its key 's' (menu 529, ovl66:0c9c) on the Knights' capital stack of TUTORIA after the turn-1 hero offer (M7b's dialog, Accept 287) and the turn-1 city screen (M6b's dialog, Esc), each with its tutorial page (hero and one army, selected by a click).  Select Army on the second row (button 337, ovl66:157d), Ungroup All (335, ovl66:1704), Group All (334, ovl66:16c5), Select Group on row 1 (344, ovl66:166f), Cancel (333, ovl66:14fd: nothing applied); opened again, Group All and Return (332 OK, DS:155c; ovl66:14d3: the apply step, here the engine command GroupAll).",
+ "args": [
+  "--scenario",
+  "TUTORIA",
+  "--seed",
+  "3",
+  "--controls",
+  "HCCCCCCH",
+  "--no-voice"
+ ],
+ "steps": [
+  [
+   2,
+   {
+    "wait_dialog": "progress",
+    "frames": 5
+   }
+  ],
+  [
+   50,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 30
+   }
+  ],
+  [
+   84,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   86,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 5
+   }
+  ],
+  [
+   92,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   94,
+   {
+    "wait_dialog": "hero_offer",
+    "frames": 5
+   }
+  ],
+  [
+   97,
+   {
+    "press_button": 287
+   }
+  ],
+  [
+   99,
+   {
+    "wait_dialog": "tutorial_page",
+    "frames": 5
+   }
+  ],
+  [
+   103,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   105,
+   {
+    "wait_dialog": "production",
+    "frames": 5
+   }
+  ],
+  [
+   108,
+   {
+    "key": "escape"
+   }
+  ],
+  [
+   111,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   115,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   117,
+   {
+    "click": [
+     196,
+     210
+    ]
+   }
+  ],
+  [
+   128,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   129,
+   {
+    "key": "s"
+   }
+  ],
+  [
+   131,
+   {
+    "wait_dialog": "stack",
+    "frames": 2
+   }
+  ],
+  [
+   133,
+   {
+    "shot": "01_stack"
+   }
+  ],
+  [
+   134,
+   {
+    "press_button": 337
+   }
+  ],
+  [
+   136,
+   {
+    "shot": "02_select_army"
+   }
+  ],
+  [
+   137,
+   {
+    "press_button": 335
+   }
+  ],
+  [
+   139,
+   {
+    "shot": "03_ungroup_all"
+   }
+  ],
+  [
+   140,
+   {
+    "press_button": 334
+   }
+  ],
+  [
+   142,
+   {
+    "shot": "04_group_all"
+   }
+  ],
+  [
+   143,
+   {
+    "press_button": 344
+   }
+  ],
+  [
+   145,
+   {
+    "shot": "05_select_group"
+   }
+  ],
+  [
+   146,
+   {
+    "press_button": 333
+   }
+  ],
+  [
+   148,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   149,
+   {
+    "shot": "06_cancelled"
+   }
+  ],
+  [
+   150,
+   {
+    "key": "s"
+   }
+  ],
+  [
+   152,
+   {
+    "wait_dialog": "stack",
+    "frames": 2
+   }
+  ],
+  [
+   153,
+   {
+    "press_button": 334
+   }
+  ],
+  [
+   155,
+   {
+    "key": "return"
+   }
+  ],
+  [
+   157,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   159,
+   {
+    "shot": "07_grouped"
+   }
+  ]
+ ]
+}

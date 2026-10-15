@@ -54,6 +54,48 @@
   [
    53,
    {
+    "wait_dialog": "turn_start",
+    "frames": 4
+   }
+  ],
+  [
+   55,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   57,
+   {
+    "wait_dialog": "hero_offer",
+    "frames": 4
+   }
+  ],
+  [
+   59,
+   {
+    "press_button": 287
+   }
+  ],
+  [
+   61,
+   {
+    "wait_dialog": "production",
+    "frames": 4
+   }
+  ],
+  [
+   63,
+   {
+    "press_button": 192
+   }
+  ],
+  [
+   67,
+   {
     "assert_state": {
      "state": "game",
      "dialog": null
@@ -61,13 +103,13 @@
    }
   ],
   [
-   54,
+   68,
    {
     "shot": "map_start"
    }
   ],
   [
-   55,
+   69,
    {
     "click": [
      420,
@@ -76,13 +118,13 @@
    }
   ],
   [
-   57,
+   71,
    {
     "shot": "map_nw"
    }
   ],
   [
-   58,
+   72,
    {
     "click": [
      600,
@@ -91,13 +133,13 @@
    }
   ],
   [
-   60,
+   74,
    {
     "shot": "map_se"
    }
   ],
   [
-   61,
+   75,
    {
     "click": [
      510,
@@ -106,7 +148,7 @@
    }
   ],
   [
-   63,
+   77,
    {
     "shot": "map_centre"
    }

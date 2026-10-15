@@ -17,8 +17,10 @@ Sources (re-read by M6a from out/asm/ and out/rea/decomp/; EL = docs/research/ex
 
 Steps that belong to other milestones go through `HOOKS`, resolved by name as in combat.py.
 Not modelled (no engine state): messages and redraws (ovl61:10fb, ovl64:006c, ovl63:1fed,
-0c8c:10a1 = flat 5c8e:10a1), the city-screen UI words DS:0e86 /
-0e9e beyond what the commands carry, and the DGROUP recount caches (rules/economy.py).
+0c8c:10a1 = flat 5c8e:10a1), the city-screen UI words DS:0e86 / 0e9e (the dialog keeps them;
+`BuyProduction.slot` and `ChooseProduction.type` carry their values).  The income and upkeep
+caches (rules/economy.py) are refreshed after a take-over and an own raze, not after a purchase
+or a delivery.
 """
 from __future__ import annotations
 
@@ -29,12 +31,16 @@ from ..model import commands as C
 from ..model import events as E
 from ..model.city import Slot
 from ..model.ids import (EMPTY_SLOT, MAP_ARMY, MAP_OWNER_MASK, MAP_W, NO_OWNER, Control)
+from ..model.state import ReportEntry
 from .bonuses import s8
 from .constants import city as K
 from .constants import combat as KC
+from .constants import history as KH
 from .constants import movement as KM
 from .constants import unverified_allowed
-from .economy import add_gold, city_count, s16
+from . import heroes as H
+from .economy import add_gold, cached_cities, refresh_cities, s16
+from .economy import refresh as refresh_caches
 from .engine import IllegalCommand, NotImplementedCommand
 from .movement import alloc_army, armies_at, remove_army, type_flag
 from .pathfinding import rebuild_cost_map
@@ -140,7 +146,7 @@ def buy_slot(c) -> int:
     """The slot a purchase goes into (DS:0e86 as the buy screen opens).
     Evidence: decomp ovl44:0978: from slot 3 down, the first k with slot k empty and slot k-1
     filled; otherwise 0 (so a full city replaces slot 0 unless the player picks another slot with
-    ovl44:1112, which BuyProduction does not carry)."""
+    ovl44:1112: `BuyProduction.slot`)."""
     for k in range(K.SLOTS.value - 1, 0, -1):
         if s8(c.slots[k].type) < 0 and s8(c.slots[k - 1].type) >= 0:
             return k
@@ -149,11 +155,17 @@ def buy_slot(c) -> int:
 
 def buy_production(state, cmd: C.BuyProduction) -> list:
     """Buy a production slot for an own city.
-    Evidence: decomp ovl44:0ee3 with the button states of ovl44:0dae: a type is offered when w4 >= 0,
-    disabled when it is already in a slot or when gold < w4.  The slot (ovl44:0978) gets the type
-    and w1 time, w2 cost, w0 strength, w3 moves; defence recomputed (ovl44:0930); gold -= w4.  If
-    a production is running (+0x2d > 0) and its type is no longer in any slot, production and
-    vectoring stop (+0x2d = 0, +0x31 = 0, target -1/-1, +0x2c = 0xff)."""
+    Evidence: asm ovl44:0ee3..1111 with the button states of ovl44:0dae: a type is offered when
+    w4 (+0x1e) >= 0, its button disabled when the type is already in a slot (0e36..0e6e) or when
+    gold < w4 (0e8a..0e9e).  The slot is DS:0e86: `buy_slot` as the dialog opens (ovl44:0978),
+    advanced after a buy (10c8..10e7: below 3 and the next slot empty -> + 1), and set to any
+    slot 0..3 by the buttons 397-400 (ovl44:1112), which are enabled only while slot 3 is filled
+    (0dd5..0e11).  So `slot` (None = `buy_slot`) must be `buy_slot(c)`, or anything 0..3 while
+    slot 3 holds a type (the dialog's DS:0e86 after its own +1 steps equals `buy_slot` again).
+    The slot gets (0f4c..0fdc) type = record +0, time = +0x18 (w1), cost = +0x1a (w2),
+    strength = +0x16 (w0), moves = +0x1c (w3); defence = ovl44:0930 (0fe6); gold -= w4 (101c).
+    Then, if +0x2d > 0 and the old +0x2c is in no slot any more, production and vectoring stop
+    (1026..10c2: +0x2d = 0, +0x31 = 0, target -1/-1, +0x2c = 0xff)."""
     c = _own_city(state, cmd.city)
     if cmd.type not in buy_offer(state):
         raise IllegalCommand("type %r is not offered" % (cmd.type,))
@@ -163,13 +175,68 @@ def buy_production(state, cmd: C.BuyProduction) -> list:
     p = state.current
     if s16(state.players[p].gold) < s16(t.buy_price):
         raise IllegalCommand("not enough gold")
-    k = buy_slot(c)
+    k = buy_slot(c) if cmd.slot is None else cmd.slot
+    full = s8(c.slots[K.SLOTS.value - 1].type) >= 0
+    if not isinstance(k, int) or not 0 <= k < K.SLOTS.value or not (k == buy_slot(c) or full):
+        raise IllegalCommand("slot %r cannot be bought into (DS:0e86 is %d unless slot 3 is filled)"
+                             % (cmd.slot, buy_slot(c)))
     old = s8(c.current)
     c.slots[k] = Slot(t.type_id, t.turns, t.strength, t.moves, t.cost)
     c.defence = defence_of(c)
     add_gold(state, p, -s16(t.buy_price))
     if s8(c.turns_left) > 0 and not any(s8(s.type) == old for s in c.slots):
         _stop(c)
+    return []
+
+
+def sort_slots(state, cmd: C.SortSlots) -> list:
+    """SortSlots(city): closing the Build Production dialog (ovl44:0eca, also when nothing was
+    bought) sorts the slots with ovl44:1544: nothing when slot 0 is empty; else the leading run
+    of filled slots (up to the first type < 0) by |w4| of each type's record, insertion sort
+    with a strict < (stable), all five bytes (type, time, strength, moves, cost) moving
+    together.  +0x2c is a type, so nothing else changes.
+    Evidence: asm ovl44:0eca..0ee2 (0ed3 call 1544(DS:0e98)), ovl44:1544..17b0 (1559 slot 0,
+    1564..15c7 run and keys |rec +0x1e| via ovl44:14ac, 15ca..17a8 the sort, 179c jge = strict)."""
+    c = _own_city(state, cmd.city)
+    sort_city_slots(state, c)
+    return []
+
+
+def sort_city_slots(state, c) -> None:
+    """ovl44:1544 on city record `c` (see `sort_slots`).
+    Evidence: asm ovl44:1544..17b0."""
+    if s8(c.slots[0].type) < 0:
+        return
+    n = 0
+    while n < K.SLOTS.value and s8(c.slots[n].type) >= 0:
+        n += 1
+    keys = [abs(s16(state.army_type(s8(c.slots[i].type)).buy_price)) for i in range(n)]
+    for i in range(1, n):
+        j = i
+        while j > 0 and keys[j] < keys[j - 1]:
+            keys[j], keys[j - 1] = keys[j - 1], keys[j]
+            c.slots[j], c.slots[j - 1] = c.slots[j - 1], c.slots[j]
+            j -= 1
+
+
+def choose_production(state, cmd: C.ChooseProduction) -> list:
+    """ChooseProduction(city, type): ovl44:00ff with DS:0e9e = `type`, the type the city screen
+    remembers: +0x2c (if +0x2d > 0) or -1 as the screen opens (ovl45:01d6..01f5), the type of
+    a filled slot clicked (ovl44:00c8), -1 after Stop (ovl44:0185).  A click on an empty slot
+    runs 00ff with the remembered value.  00ff: k = ovl44:0000(city, DS:0e9e) - the first slot
+    whose type byte (signed) equals it, slot 0 when none does; +0x2c = DS:0e9e (low byte),
+    +0x2d = the time byte of slot k.  For -1 that is the first empty slot (type 0xff), whose
+    time byte is the scenario file's (EL §9.4); vectoring is not touched.  `type` must be -1 or
+    a type held in a slot: a remembered type that is no longer in a slot needs an empty slot
+    to click and a buy that replaced it, which only happens in a full city (ovl44:1112).
+    Evidence: asm ovl44:00ff..0184 (0106..0112 ovl44:0000, 0128 +0x2c, 0146..014d +0x2d),
+    ovl44:0000..0032, ovl44:00c8..00fe."""
+    c = _own_city(state, cmd.city)
+    t = cmd.type
+    if not isinstance(t, int) or not (t == K.CHOOSE_NONE.value or any(s8(s.type) == t for s in c.slots)):
+        raise IllegalCommand("type %r is neither -1 nor in a slot" % (t,))
+    c.current = t & 0xFF
+    c.turns_left = c.slots[slot_of(c, t)].time
     return []
 
 
@@ -234,7 +301,9 @@ def create_unit(state, ci: int, x: int, y: int, dest: int):
     owner = city owner; allowance and moves = slot moves; strength = slot strength, or
     min(+2, 9) when the current player (SCN 0x110) is Enhanced; home = city; +0xa = 0;
     upkeep = slot cost / 2; city +0x2d = 0.  dest -1: transit 0xff and the square's army bit
-    (0b62:02e2); else x = -2 for dest >= 100, -1 otherwise, y = -1, +0xf = dest << 1, transit 0x65."""
+    (0b62:02e2); else x = -2 for dest >= 100, -1 otherwise, y = -1, +0xf = dest << 1, transit 0x65.
+    No type record is read, so +0x2c = 0xff (ChooseProduction -1) makes a unit too: type -1
+    with the statistics of the first empty slot (else slot 0); readers get NO_TYPE (X36)."""
     c = state.cities[ci]
     t = s8(c.current)
     s = c.slots[slot_of(c, t)]
@@ -254,6 +323,7 @@ def create_unit(state, ci: int, x: int, y: int, dest: int):
     c.turns_left = 0
     if dest == K.DIRECT.value:
         a.vector_dest = 0
+        a.order &= 0xF0                          # asm ovl43:0f72..0f77: +0xe &= 0xf0, |= 0
         a.transit = K.TRANSIT_NONE.value
         state.world.flags[y * MAP_W + x] |= MAP_ARMY
     else:
@@ -272,10 +342,17 @@ def deliver(state) -> list:
     set), ovl43:0dd7 makes a unit: placed in the room square, or in transit to the city at the
     target (ovl62:044a) or to the standard (p + 100) when no city is there.  A city whose timer ran
     out without a unit stays at 0 and produces nothing until a production is chosen again.
-    `Produced` events with info["restart"] are the report entries ovl43:06bd restarts."""
+    `Produced` events with info["restart"] are the report entries ovl43:06bd restarts.
+    The production report list (`GameState.production_report`) is emptied (count = 0 at
+    ovl43:0016) and refilled: arrivals (rules/vectoring.py), then one entry per unit made, kind
+    1 with the city vectoring (05dd), else kind 2 with dest -1 (0609); type = the new record's
+    +4 (0653), city = the producing city (066e), dest (067f); count + 1 at 068b.  With the army
+    table full the EXE reads the type through a null pointer (0dd7 returned NULL) [U]: the
+    city's production byte stands in."""
     from . import vectoring
     p = state.current
     events = vectoring.cancel_lost_standard(state)
+    state.production_report.clear()              # asm ovl43:0016: count byte +0x320 = 0
     events += vectoring.advance_transit(state)
     for ci, c in enumerate(state.cities):
         if s8(c.owner) != p or s8(c.turns_left) <= 0:
@@ -299,40 +376,58 @@ def deliver(state) -> list:
             dest = K.DIRECT.value
         x, y = loc if loc is not None else (K.TRANSIT_X_CITY.value, K.TRANSIT_Y.value)
         a = create_unit(state, ci, x, y, dest)
+        kind = KH.ENTRY_VECTORED.value if c.vectoring else KH.ENTRY_PLACED.value
+        state.production_report.append(ReportEntry(
+            kind, s8(c.current) if a is None else s8(a.type_id), ci, dest, None if a is None else a.id))
         events.append(E.Produced({"city": ci, "army": None if a is None else a.id,
                                   "type": s8(c.current), "x": None if a is None else a.x,
                                   "y": None if a is None else a.y, "dest": dest, "restart": True}))
     return events
 
 
-def restart_production(state, events) -> None:
-    """Restart the timer of every city that delivered (the report screen after delivery).
-    Evidence: decomp ovl43:06bd: for report entries of kind 1 or 2 (made in a city, vectored or
-    not; kind 0 = an arrival), +0x2d = the time of slot ovl44:0000(city, +0x2c).  The human turn
-    calls it after ovl43:0000 returns > 0 (asm ovl68:0597..05a0); the computer turn
-    (ovl68:01b3) does not, so a computer city produces again only after a new choice."""
-    for ev in events:
-        if isinstance(ev, E.Produced) and ev.info.get("restart"):
-            c = state.cities[ev.info["city"]]
-            c.turns_left = c.slots[slot_of(c, s8(c.current))].time
+def restart_production(state, events=None) -> None:
+    """Restart the timer of every city the production report names (the report screen after
+    delivery), then rebuild the map words.  `events` (the delivery's) is not read: 06bd reads
+    the report block (`GameState.production_report`), which past 100 entries no longer matches
+    the units made (model.state.ProductionReport).
+    Evidence: asm ovl68:0597..05a0: ovl43:0000 returned the signed count (06a8) != 0 -> ovl43:06bd;
+    06c9..0756: for si = 0 while count > si: kind byte +si != 0 (06d3) -> city c = signed byte
+    +0xc8 + si (06df), +0x2d of city c = the time byte of slot ovl44:0000(c, +0x2c) (0703..0744);
+    then ovl62:0000 (0760, `refresh_map`: an arrival placed by the transit loop has no army bit
+    until then), also for a negative count.  The computer turn (ovl68:01b3) does not call it,
+    so a computer city produces again only after a new choice.  A city byte outside the city
+    table (reachable only past 100 entries) addresses other SCN bytes: not modelled (X40)."""
+    from .mapwords import refresh_map
+    rep = state.production_report
+    if rep.count == 0:
+        return
+    for e in rep:
+        if e.kind == 0:
+            continue
+        if not 0 <= e.city < len(state.cities):
+            KH.REPORT_CITY_OUTSIDE.value                 # raises unless allowed (X40)
+            continue
+        c = state.cities[e.city]
+        c.turns_left = c.slots[slot_of(c, s8(c.current))].time
+    refresh_map(state)
 
 
 # ------------------------------------------------------------------------------- capture
 
 
 def _ai_order(army) -> int:
-    """Army byte +0xe low nibble.  Not in model.Army: the allocator 0b62:0309 and ovl43 clear it;
-    it is set to 1 by AI code (asm ovl19:0ed4, ovl22:075d) and by 0a8b:0254 (asm 0a8b:0363, in
-    the resident movement segment: nibble 1 and +0xf = a destination for the eight stack pointers
-    at DS:5e5e; caller not traced).  No rule implemented so far writes it, so it is 0 for every
-    army here (reported to the coordinator as a needed model field)."""
-    return 0
+    """Army byte +0xe low nibble (`Army.order` bits 0-3, the AI order kind): set to 1 by AI code
+    (asm ovl19:0ed4, ovl22:075d) and by 0a8b:0254 (asm 0a8b:0363), cleared by the allocator
+    0b62:0309 and by ovl43 (0f72 unit made in place, 048f arrival).
+    Evidence: asm ovl36:0fca..0fd5 (+0xe & 0xf == 1)."""
+    return army.order & 0x0F
 
 
 def take_city(state, city: int, attacker: int, owner: int, flying: bool = False) -> list:
     """Take-over after a won battle on a city (the combat `take_city` hook).
     Evidence: asm ovl36:0d8d..10cb.  Loot from the defending owner nibble d: none for 0x0f; else
-    gold[d] when d owns <= 1 city, else gold[d] / cities[d] (idiv); loot = max(trunc(loot/2), 0);
+    gold[d] when DS:5dea[d] <= 1 (0da0, the count of ovl62:03f9 at 0cb5), else gold[d] /
+    DS:5dea[d] (idiv 0dc5); loot = max(trunc(loot/2), 0);
     a human attacker sees STRING (0x93, 0) when loot > 0; when d < 8: gold[attacker] += loot,
     gold[d] -= 2 * loot.  City: if its owner is not 0x0f, +0x2f = 0x0f when it equals SCN 0x110,
     else the old owner; +0x30 = 0; owner = attacker; +0x2d = 0.  Squares 3..0: army bit cleared,
@@ -340,7 +435,8 @@ def take_city(state, city: int, attacker: int, owner: int, flying: bool = False)
     x, y); `flying` is the attacking stack's move mode DS:5dfc == 2, set at selection
     0c8c:0529).  Cost map rebuilt for SCN 0x110 (asm ovl36:0f69, 0555:0d9e).  +0x31 = 0.  Old
     owner's armies with x == -1, +0xe low nibble 1 and vector destination == this city are freed
-    (0b62:03be at ovl36:1002); every city vectoring to this city loses vectoring and production."""
+    (0b62:03be at ovl36:1002); every city vectoring to this city loses vectoring and production.
+    Then the recounts ovl62:03f9 / 02bf / 0372 (10c1..10cb): the income and upkeep caches."""
     from . import vectoring
     c = state.cities[city]
     pl = state.players
@@ -349,7 +445,7 @@ def take_city(state, city: int, attacker: int, owner: int, flying: bool = False)
         loot = 0
     else:
         g = s16(pl[owner].gold)
-        n = city_count(state, owner)
+        n = cached_cities(state, owner)                          # DS:5dea (0da0 / 0dc5)
         loot = g if n <= K.LOOT_SINGLE_CITY.value else _idiv(g, n)
     loot = max(_idiv(loot, K.LOOT_DIVISOR.value), 0)
     if pl[attacker].control == Control.HUMAN and loot > 0:
@@ -382,6 +478,8 @@ def take_city(state, city: int, attacker: int, owner: int, flying: bool = False)
                 and a.vector_dest == here):
             remove_army(state, a)
     vectoring.cancel_vectors_to(state, c.x, c.y)
+    refresh_cities(state)                                        # asm ovl36:10c1
+    refresh_caches(state)                                        # asm ovl36:10c6..10cb
     return events
 
 
@@ -438,7 +536,10 @@ def raze(state, ci: int) -> list:
     Evidence: decomp ovl32:016b: tile bytes (x,y) = 0xa0 + 2o, (x,y+1) = 0xb0 + 2o, (x+1,y) =
     0xa1 + 2o, (x+1,y+1) = 0xb1 + 2o with o the owner before razing (byte arithmetic); its own
     +0x31 = 0; every city with +0x31 set and target == (x, y): +0x2d = 0, target 0/0, +0x31 = 0,
-    +0x2c = 0xff.  Armies, slots and the owner nibble are not touched (ovl62:0000 rebuilds it)."""
+    +0x2c = 0xff.  Armies, slots, the owner nibbles and the cost map are not touched: they keep the
+    city's values until the next ovl62:0000 / 0555:0d9e (the next side's main-loop pass, or a
+    battle's map refresh), so in the rest of the turn the four squares still cost 1 (0x99 for an
+    own coastal city)."""
     from . import vectoring
     c = state.cities[ci]
     o2 = (c.owner * 2) & 0xFF
@@ -462,7 +563,10 @@ def capture(state, cmd: C.CaptureChoice) -> list:
     rnd(1,15,0)+10, ovl01:1ded(2,0,0,0,0).  Occupy ovl31:03fe: ovl01:1ded(4,0,0,0x4d,0x3005).
     Computer side, ovl19:1864 branches: pillage ovl19:1a2a (nothing when 0, else gold, slot,
     rnd(1,5,0)); sack ovl19:199c (pillage when 0, else slots, rnd(1,10,0)+5, gold); raze
-    ovl32:016b, rnd(1,15,0)+10, ovl29:1851; occupy changes nothing; no quest call."""
+    ovl32:016b, rnd(1,15,0)+10, ovl29:1851; occupy changes nothing; no quest call.
+    A capture made by a treachery attack carries info["news_after"]: the kind-8 entry of
+    ovl36:2257, which the original writes after the nested ovl36:0000 (and with it this modal
+    question) has returned (rules.diplomacy.treachery)."""
     ev = state.pending
     if not isinstance(ev, E.CityCaptured):
         raise IllegalCommand("no capture question pending")
@@ -514,6 +618,8 @@ def capture(state, cmd: C.CaptureChoice) -> list:
             _call("ai_raze", None, state, ci)
     elif human:
         events += _quest(state, K.QUEST_OCCUPY.value)
+    if "news_after" in ev.info:
+        H.news(state, *ev.info["news_after"])   # the treachery entry (rules.diplomacy.treachery)
     return events
 
 
@@ -530,6 +636,8 @@ def raze_own(state, cmd: C.RazeOwnCity) -> list:
     inf = _infamy(state, *K.RAZE_OWN_INFAMY.value)
     events = raze(state, cmd.city)
     events[-1].info["infamy"] = inf
+    refresh_cities(state)                                        # asm ovl32:009c
+    refresh_caches(state)                                        # asm ovl32:00a1 / 00a6
     return events
 
 

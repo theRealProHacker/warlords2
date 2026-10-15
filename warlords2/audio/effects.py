@@ -19,10 +19,15 @@ animation as the EXE does.  START.EXE plays START/DING0.SND (its only sample nam
 11000 (START.EXE file offsets 0xD23F / 0xD318, then 0000:02bb AX=068Ah / 0000:02ce
 AX=068Bh), so it plays at 11000 Hz as well (`ding0`).
 
-Event triggers (call sites; "human" = SCN 0x0D0[side] == 0, as the EXE tests):
-* Duel: ovl37:0094 (battle display) per DS:41b5 kill: an attacking unit died -> 0181(0)
-  (ovl37:00dd), a defending one -> 0181(1) (ovl37:010c); not after Space skipped the rest
-  (the animator's skip, which then also leaves out these calls);
+Event triggers (call sites; "human" = SCN 0x0D0[side] == 0, as the EXE tests).  A computer
+side's turn is not played from events: `states.phases.computer` plays the kills' army samples
+(ovl37:0094) and the splash of a dying hero's items (ovl36:173b, present point "sound") at the
+engine's present points.
+* Duel: ovl37:0094 (the battle window's kill loop, for any attacker) per DS:41b5 kill: an
+  attacking unit died -> 0181(0) (ovl37:00dd), a defending one -> 0181(1) (ovl37:010c); not
+  after Space skipped the rest.  The battle timeline of `ui.anim.battle` calls it for a human
+  attack ovl36:0000; a computer battle ovl36:124a behind its gates 150a..1530 is the computer
+  phase's (`army` directly);
 * SiteSearched of a ruin search (info "hero", kind neither temple nor sage) by a human:
   01a9(0) at ovl34:01fe, before the result;
 * SageOffered: 01a9(0) at ovl34:0af7 (sage visit, human only);
@@ -33,7 +38,10 @@ Event triggers (call sites; "human" = SCN 0x0D0[side] == 0, as the EXE tests):
 * ItemDropped with "lost": 023d at ovl36:173b (a dying hero's items on Water, any side) and
   ovl47:09a1 (a drop on Water, human only, ovl25:09ab);
 * Moved with "no_path" for a human side: 0b5f at 0a8b:0cac;
-* TurnStarted of a human side: 0b93 at ovl68:0415, while the "Turn %d" pop-up shows.
+* TurnStarted of a human side: 0b93 at ovl68:0415, while the "Turn %d" pop-up shows; after
+  the pop-up the turn start waits for the sample's end (155e:0736 at ovl68:043f: with a digital
+  driver and a sample playing, 0000:02b5 polled until it is over), `length` for
+  `ui.dialogs.turn_start`.
 """
 from __future__ import annotations
 
@@ -57,6 +65,16 @@ def play(app, name: str) -> int:
     pcm = a.pcm(a.path(*SAMPLES[name]))
     a.mixer.play(pcm)
     return a.frames(pcm) if name in WAITS else 0
+
+
+def length(app, name: str) -> int:
+    """The logical frames effect `name` plays when `play` starts it now (0 when nothing would
+    play: effects off or no digital driver)."""
+    from . import audio
+    a = audio(app)
+    if not (a.settings.effects and a.mixer.available):
+        return 0
+    return a.frames(a.pcm(a.path(*SAMPLES[name])))
 
 
 def army(app, n: int) -> int:
@@ -114,6 +132,7 @@ def _human(state, p: int | None = None) -> bool:
 
 @registry.event_sound(E.Duel)
 def _duel(host, ev) -> None:
+    """The kill loop ovl37:0094, called by the battle timelines for a kill they show."""
     army(host.app, 0 if ev.info.get("loser") == "attacker" else 1)
 
 
@@ -165,5 +184,7 @@ def _no_path(host, ev) -> None:
 
 @registry.event_sound(E.TurnStarted)
 def _turn(host, ev) -> None:
-    if _human(host.state):
+    """ovl58:0b93 has one caller, ovl68:0415 in the human turn start: the event's side, not
+    the side the state shows now."""
+    if ev.info.get("human"):
         turn(host.app)

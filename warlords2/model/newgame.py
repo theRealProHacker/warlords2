@@ -20,6 +20,13 @@ class NewGameConfig:
     (dice, sides, add) of every ovl59:02bf roll the setup screen made after the loader's
     (quotation ovl57:0fe8, Random Characters ovl57:20af), in order; `new_game` repeats them
     after the loader's rolls so the game's dice continue the one stream of ovl59:02bf.
+    rng_state: `rules.rng.Rng.state()` of that one stream as the setup screen's loader found
+    it (before ovl63:2479's 256 rolls): ovl59:02bf seeds itself once per run (DS:2678,
+    ovl59:0356), so the Game Start faces' rolls and an earlier setup visit's rolls come
+    before the loader's (`states.menu.session_dice`).  `new_game` continues it (its source
+    decides the die; `seed` and `rng` only name where it began); None starts the stream at
+    `seed` with `rng`, as `--scenario` does (no Game Start, so nothing rolls before the
+    loader).
     """
     scenario: str
     controls: tuple[int, ...]
@@ -33,3 +40,4 @@ class NewGameConfig:
     rng: str = "python"
     greatest: int | None = None
     setup_rolls: tuple[tuple[int, int, int], ...] = ()
+    rng_state: dict | None = None
