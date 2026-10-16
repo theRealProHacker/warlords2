@@ -295,18 +295,13 @@ def test_planted_standard_slots_and_moving_army(kit):
     gd, store, sp = kit
     for i in (0, 8, 9, 10, 14):
         assert sp.standard(i).get_size() == (32, 29) and not sp.is_mask_standard(i)
-    from warlords2.rules.constants import UnverifiedError, allowing_unverified
-    for i in (11, 12, 27, 28):                             # cache group 8: register X44
-        with pytest.raises(UnverifiedError, match="X44"):
-            sp.standard(i)
-        with pytest.raises(UnverifiedError, match="X44"):
-            sp.draw_standard(pygame.Surface((40, 40), depth=8), i, (0, 0))
-        with allowing_unverified():                        # provisional: nothing drawn
-            dst = pygame.Surface((40, 40), depth=8)
-            dst.fill(6)
-            assert sp.standard(i) is None
-            sp.draw_standard(dst, i, (0, 0))
-            assert (pygame.surfarray.array2d(dst) == 6).all()
+    assert sp.group8.now is None and sp.group8.shown == {None}   # a store without an App
+    for i in (11, 12, 27, 28):                             # cache group 8 empty: nothing (X44)
+        dst = pygame.Surface((40, 40), depth=8)
+        dst.fill(6)
+        assert sp.standard(i) is None
+        sp.draw_standard(dst, i, (0, 0))
+        assert (pygame.surfarray.array2d(dst) == 6).all()
     for i, name in ((13, "ashadow.pck"), (15, "road.pck")):  # mask records: plane 0 only
         assert sp.is_mask_standard(i) and sp.is_mask_standard(i + 16)
         x, y, w, h = S.STANDARD

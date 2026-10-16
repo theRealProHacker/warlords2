@@ -35,6 +35,7 @@ STATES = {
     "game": "warlords2.states.game:Game",          # M3
 }
 MOUSE_FILE = "STAND.PCK"
+MENUBUTT = 43                             # MENUBUTT.PCK, cache group 8
 SETTLE_TIMEOUT = 10.0                     # seconds a pgsm hook thread may take
 BANNER_FMT, BANNER_VERSION = 0x27C9, 0x27F8   # res_0a4c:02f3 / 02f7: printf(DS:27c9, DS:27f8)
 
@@ -72,13 +73,30 @@ class App:
         for p in problems:                                    # hash mismatch: reported, not fatal
             print(p, file=sys.stderr)
         self.user = UserDir(cfg.user_dir, cfg.data)
+        from .audio import music_triggers
+        from .audio.music import MusicLog
+        from .audio.settings import SoundInitError, sound_init
+        try:
+            sound_init(self)                                  # res_0a4c:01bc 155e:0005 (--music on)
+        except SoundInitError as e:
+            for line in e.lines:                              # 0000:43ac, then 0a4c:02b5
+                sys.stdout.write(line)
+            self.exit_program()
+            raise SystemExit(0) from None
+        self.frame = 0
+        self.music_words = music_triggers.make_words(self)   # DS:2632 / 379e / 37a9 / 0bee / 37a3 (M10c)
+        self.music_log = MusicLog()
+        music_triggers.register(self)
         from .persist.saves import RunCarry, Saves
-        self.saves = Saves(self.user, self.gd)        # res_0a4c:0250 -> ovl49:0e5f (the slot table)
+        self.saves = Saves(self.user, self.gd, music=self.music_words)   # res_0a4c:0250 -> ovl49:0e5f
         self.run_carry = RunCarry()                   # the run's memory across games (EL §10.4)
 
         # everything is read here, synchronously, before pgsm exists
         pygame.display.init()
         self.assets = AssetStore(self.gd, app=self)
+        from .assets.store import CacheGroup8
+        self.group8 = CacheGroup8(self.assets.pictures)   # the loaded group-8 picture (register X44)
+        self.group8.load(MENUBUTT)                # 08a9:0219 -> ovl14:02fb -> 030a: 034a / 00a2 (43)
         if not self.gd.path(MOUSE_FILE).is_file():           # ovl64:003b -> ovl52:0054 -> ovl52:0000
             from .audio import effects
             effects.chord(self)                               # ovl52:002e, before the message
@@ -90,6 +108,7 @@ class App:
         self.screen = Screen(cfg.scale, self.assets.palette("STANDARD.PAL"))
         pygame.key.start_text_input()                         # once, never stopped
         self.input = Input(cfg.scale)
+        music_triggers.player(self)                           # the mixer, the cache check (one stderr line)
 
         self._hook_errors: list[BaseException] = []
         self._closed = False
@@ -203,8 +222,15 @@ class App:
         """0a4c:02b5, the end of the program: back to text mode, music off, vectors and mouse
         released (here: the main loop stops and `close` releases the display), then
         printf(DS:27c9, DS:27f8), the one-line banner with the version, to the console (the
-        text from the user's EXE), and exit(0).  Nothing is written.
+        text from the user's EXE), and exit(0).  Nothing is written.  The music stops at once
+        (155e:02a0 -> 0466: `rules.music.stop` on the run's words, the player cut).
         Evidence: asm res_0a4c:02b5..030b (02f2..02fa printf, 0302 exit(0))."""
+        from .rules import music as MU
+        if getattr(self, "music_words", None) is not None:
+            MU.stop(self.music_words)
+        p = getattr(self, "music_player", None)
+        if p is not None:
+            p.close()
         from .assets.exe import ds_str
         from .assets.text import printf
         exe = self.gd.read(EXE_NAME)
@@ -217,6 +243,11 @@ class App:
         if self._closed:
             return
         self._closed = True
+        p = getattr(self, "music_player", None)
+        if p is not None:
+            p.close()
+        from .audio import music_triggers
+        music_triggers.unregister(self)
         for st in getattr(self.manager, "states", {}).values():   # a turn-loop run parked at a present point
             ab = getattr(st, "abandon_run", None)
             if ab is not None:

@@ -24,8 +24,7 @@ def _positive(s: str) -> int:
 
 
 # accepted so scripts and docs can use them, but no milestone has implemented them yet
-NOT_IMPLEMENTED = {"music": "--music", "music_variant": "--music-variant", "music_cache": "--music-cache",
-                   "state_hash_at": "--state-hash-at"}
+NOT_IMPLEMENTED = {"state_hash_at": "--state-hash-at"}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -55,9 +54,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--no-intro", action="store_true", help="skip the intro (the 'n' switch)")
     p.add_argument("--alt-names", action="store_true", help="ARMYTYP2.DAT names (the 's' switch)")
     p.add_argument("--no-voice", action="store_true", help="no talking advisor (the 'v' switch)")
-    p.add_argument("--music", choices=["on", "off"], default="on")
-    p.add_argument("--music-variant", choices=["opl", "gm"], default="opl")
-    p.add_argument("--music-cache", type=Path, default=Path("out/music"))
+    p.add_argument("--music", choices=["on", "off"], default="on",
+                   help="off: no music driver (DS:37a3 = 0: the Settings music box disabled, no music "
+                        "dice); on (default): SOUND.DAT decides, OPTIONS.SND switches it")
+    p.add_argument("--music-variant", choices=["opl", "gm"], default="opl",
+                   help="rendered arrangement: opl = the S files (FM, default), gm = the R files")
+    p.add_argument("--music-cache", type=Path, default=REPO_ROOT / "out" / "music",
+                   help="rendered music (python -m warlords2.audio.music_render; default out/music/ "
+                        "below the repository)")
     p.add_argument("--allow-unverified", action="store_true",
                    help="permit Unverified constants, with a logged warning each")
     p.add_argument("--state-hash-at", type=_frames, default=[], metavar="F[,F...]",

@@ -264,6 +264,7 @@ class MenuBar:
 
 class MenuDialog(Dialog):
     """An open drop-down; modal like the EXE's menu loop."""
+    event_loop = False                 # the menu loop of 1372 tracks the mouse itself [unverified]
 
     def __init__(self, bar: MenuBar, host, menu: int, keyboard: bool, item: int | None = None):
         super().__init__(on_close=lambda r: r and bar.choose(host, *r))

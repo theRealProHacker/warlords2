@@ -21,6 +21,19 @@ if TYPE_CHECKING:
     from ..app import App
 
 
+def event_loop_idle(dialogs) -> bool:
+    """No dialog, or the top one waits in the event loop 08a9:000e (`Dialog.event_loop`), whose
+    idle pass 0081 polls the music (155e:02ab) before the DS:166a test at 0086."""
+    top = dialogs.top
+    return top is None or bool(getattr(top, "event_loop", False))
+
+
+def music_poll(app, where: str) -> None:
+    p = getattr(app, "music_player", None)
+    if p is not None:
+        p.poll(where)
+
+
 class NoLoading:
     """pgsm loading state that does nothing: the default `LoadingState()` needs a display
     and `SysFont` (S9a), and pgsm calls it as `update(dt, state)` (S9b)."""
@@ -60,6 +73,8 @@ class BaseState(State):
         self._request = (name, kw)
 
     def update(self, events: list[pygame.event.Event], dt: float) -> None:
+        if self.music_idle():
+            music_poll(self.app, "idle")
         if self.dialogs:
             self.dialogs.update(events, dt)
         else:
@@ -75,6 +90,11 @@ class BaseState(State):
     def draw(self, s: pygame.Surface) -> None:
         self.paint(s)
         self.dialogs.draw(s)
+
+    def music_idle(self) -> bool:
+        """This frame is an idle pass of the event loop 08a9:0081, where the music poller
+        155e:02ab runs (M10c, `audio.music`): never by default."""
+        return False
 
     def step(self, events: list[pygame.event.Event], dt: float) -> None:
         """Per-frame logic while no dialog is open."""

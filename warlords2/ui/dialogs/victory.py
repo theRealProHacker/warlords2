@@ -20,12 +20,14 @@ from __future__ import annotations
 from .. import registry
 from ..dialog import Dialog
 from ..keys import popup_input
-from ..widgets import ButtonRow, kit
+from ..widgets import POPUP_PICTURE, ButtonRow, kit
+from ...assets.store import cache_load
 
 POPUP, SCREEN, DONE = 0x16, 32, 483
 
 
 class VictoryScreen(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, host, popup=POPUP, screen=SCREEN, ids=(DONE,), on_close=None):
         super().__init__(on_close)
         self.host = host
@@ -33,6 +35,7 @@ class VictoryScreen(Dialog):
         self.popup = popup
         lay = k.layouts.screen(screen)
         self.row = ButtonRow([lay.button(i) for i in ids], k.picture)
+        cache_load(k, POPUP_PICTURE.get(popup, 25), *(b.picture for b in self.row.buttons))   # ovl17:0000, buttons (X44)
 
     def update(self, events, dt) -> None:
         popup_input(self, events, self.row, self.k.exe, self.press)

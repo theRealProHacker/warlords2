@@ -35,6 +35,7 @@ from ..dialog import Dialog
 from ..keys import popup_input
 from ..layout import NORMAL, PRESSED
 from ..widgets import ButtonRow, kit, text_centred
+from ...assets.store import cache_load
 
 POPUP, SCREEN = 4, 4
 OPTION_IDS, PRESET_IDS, OK = range(159, 169), range(169, 172), 172
@@ -71,11 +72,13 @@ def option_pos(i: int) -> tuple[int, int]:
 
 
 class Options(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, k, words: list[int], host, on_close=None):
         super().__init__(on_close)
         self.kit, self.words, self.host = k, words, host
         self.presets = presets(k.exe)
         self.buttons = ButtonRow(list(k.layouts.screen(SCREEN).buttons), k.picture)
+        cache_load(k, *(b.picture for b in self.buttons.buttons))   # SETUPBU buttons, 0771:0090 (X44)
         self._states()
 
     def _states(self) -> None:

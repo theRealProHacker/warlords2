@@ -28,6 +28,7 @@ from __future__ import annotations
 import pygame
 
 from ...assets.fonts import CHANCE17
+from ...assets.store import cache_load
 from ...audio import voice
 from .. import registry
 from ..dialog import Dialog
@@ -40,13 +41,17 @@ CAPTION_INK, CAPTION_SHADOW = 15, 0         # SetFont(2, 15, 0, 3), drawn transp
 
 
 class VoiceFace(Dialog):
+    event_loop = False                 # ovl58:026f: the face's own ovl59:0000 loop
     def __init__(self, k, speech: voice.Speech, on_close=None):
         super().__init__(on_close)
         self.kit, self.speech = k, speech
+        cache_load(k, VOICE)                     # ovl58:081e 027e (X44)
 
     def update(self, events, dt) -> None:
         if not self.speech.step(any(e.type in (pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN) for e in events)):
             self.close(None)
+        if self.speech.eye is not None:
+            cache_load(self.kit, VOICEBIT)       # ovl58:09b0 / 09f1 / 0a32 / 0a70 0129 (X44)
 
     def draw(self, fb: pygame.Surface) -> None:
         fb.blit(self.kit.picture(VOICE), FACE_AT, FACE_SRC)

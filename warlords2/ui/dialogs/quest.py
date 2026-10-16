@@ -69,6 +69,7 @@ from ..keys import popup_input
 from ..widgets import MAP_POPUP, MARBLE, ButtonRow, blit_opaque, kit, text_centred
 from .hero_offer import (HIDDEN_LINE as EDGE_04D3, MAP_SHIFT, MAP_TOP, bitmap, box_mark, line_mark, map_popup, raw,
                          seen, sprintf, square_mark, wait)
+from ...assets.store import cache_load
 
 log = logging.getLogger(__name__)
 
@@ -241,6 +242,7 @@ def has_quest(state) -> bool:
 
 class Page(Dialog):
     """The scroll page of ovl01:0167 / 1520."""
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
 
     def __init__(self, host, screen, button, title, title_at, on_close=None):
         super().__init__(on_close)
@@ -296,6 +298,7 @@ def quest_page(host, on_close=None, empty_index=None):
         d.hero = hero
         d.head = sprintf(ds_str(k.exe, HERO_FMT), st.heroes[s8(hero.hero_slot)].name)
         d.lines, d.marks = quest_lines(k, st)
+        cache_load(k, SCROLL)                           # ovl01:0226 027e (X44)
     else:
         if empty_index is None:
             log.warning("quest page without a quest and without the engine's roll (ovl01:0244); member 0 shown")
@@ -325,6 +328,7 @@ def quest_reward(host, event, on_close=None):
     st = host.state
     info = event.info
     d = Page(host, REWARD_SCREEN, REWARD_CLOSE, ds_str(k.exe, REWARD_TITLE), REWARD_TITLE_AT, on_close)
+    cache_load(k, SCROLL)                               # ovl01:1544 027e (X44)
     hero = st.armies[info["hero"]]
     d.hero = hero
     d.head = sprintf(ds_str(k.exe, REWARD_HERO_FMT), st.heroes[s8(hero.hero_slot)].name)

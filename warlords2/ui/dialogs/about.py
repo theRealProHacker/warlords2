@@ -39,6 +39,7 @@ from ..dialog import Dialog
 from ..widgets import is_dismiss, kit, text_centred
 from .hero_offer import raw, sprintf
 from .progress import INK, LINE_DY, LINE_X, LINE_Y0, POPUP, SHADOW
+from ...assets.store import cache_load
 
 GROUP = 139
 VERSION = 0x1292                       # DS:1292, line 2 (ovl49:0160)
@@ -118,10 +119,12 @@ def lines(k, heap=FIXED) -> list[str]:
 
 
 class About(Dialog):
+    event_loop = False                 # ovl49:0084 waits in ovl61:10fb
     def __init__(self, host, on_close=None):
         super().__init__(on_close)
         self.host = host
         self.k = kit(host.app)
+        cache_load(self.k, 70)                         # popup 0x17 BSCROLL: ovl17:0000 at 05b8 (X44)
         self.lines = lines(self.k, figures(host.app))
 
     def update(self, events, dt) -> None:

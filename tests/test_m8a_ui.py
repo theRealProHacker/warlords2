@@ -169,7 +169,7 @@ def test_settings_dialog_toggles(hotseat):
     assert d.dialog_id == "settings"
     ids = {b.id for b in d.row.buttons}
     assert {252, 260, 268, 259, 267, 275} <= ids and not ids & {253, 261, 269}     # dead side 1
-    assert d.row.state[276] == 2                                                   # no music driver
+    assert d.row.state[276] == 1                       # a music driver (SOUND.DAT; --music off: 2, test_m10c)
     d.press(259)
     assert st.players[7].control == Control.COMPUTER
     d.press(259)
@@ -294,7 +294,8 @@ def test_answer_runs_no_main_loop_pass(hotseat, monkeypatch):
 
 @gamedata
 def test_settings_speech_is_a_command_and_music_box_unticked(hotseat, monkeypatch):
-    """SetSpeech (ovl33:0576(2)); no music driver -> DS:0bee = 0 (ovl58:0c32..0c45): unticked."""
+    """SetSpeech (ovl33:0576(2)); the music box shows DS:0bee (the run's music words, off in a
+    headless run with a fresh user dir), not the settings' digit."""
     from warlords2.model import commands as C
     g, _ = _until(hotseat, _human, dismiss=True)
     seen = []

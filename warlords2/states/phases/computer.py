@@ -92,6 +92,7 @@ import numpy as np
 import pygame
 
 from ...assets.exe import ds_bytes, ds_str, ds_words
+from ...assets.store import map_drawn
 from ...model import events as E
 from ...model.ids import MAP_H, MAP_W, Control, Terrain
 from ...rules.constants import movement as KM
@@ -161,6 +162,12 @@ def _word(name):
     return property(lambda self: getattr(self.words, name), lambda self, v: setattr(self.words, name, v))
 
 
+def _music(app, what: str, at: str) -> None:
+    p = getattr(app, "music_player", None)
+    if p is not None:
+        getattr(p, what)(at)
+
+
 class ComputerTurn(Phase):
     name = "computer"
     told, eac, eae, eb0 = _word("told"), _word("eac"), _word("eae"), _word("eb0")
@@ -210,18 +217,29 @@ class ComputerTurn(Phase):
     def start_run(self, runner, blank: str | None = None) -> None:
         """A new run; `blank` the picture the run starts from (Begin: "backdrop"), None to keep
         it (the next run of the same computer phase, End Turn draws its own)."""
-        g = self.game
         self.runner = runner
         self.presenting = True
-        if blank == BACKDROP:                          # ovl61:0000(0, 1) (si = 1)
-            self.palette.refresh(g.state, False)       # 0174 (0080)
-            self.disable_buttons()                     # 0418 (009f, si != 0)
+        if blank == BACKDROP:
+            self.begin_screen()
+
+    def begin_screen(self) -> None:
+        """What ovl61:0000(0, 1) (si = 1) draws before its no-humans message (0110) and the loop
+        (0118): the buttons, their disabling, no map, the overview without Hidden Map."""
+        g = self.game
+        hidden = g.state.options.hidden_map
+        self.palette.refresh(g.state, False)           # 0174 (0080)
+        self.disable_buttons()                         # 0418 (009f, si != 0)
+        if g.under is None:                            # --scenario: no ovl57:0cfe before it
             self.map = BACKDROP                        # no ovl64:006c (005a)
-            if not g.state.options.hidden_map:         # 00a7..00b8
-                self.overview_draw()
-            else:
-                self.overview = BACKDROP
-            self.box = view_origin(g.state.flags.get(SCN_CX, 0), g.state.flags.get(SCN_CY, 0))
+        elif hidden:
+            self.map = BLACK                           # ovl57:0ec5 ovl61:0a6e
+        else:
+            self.map = g.under.subsurface(AREA).copy()     # the Setup screen's, no 006c
+        if not hidden:                                 # 00a7..00b8
+            self.overview_draw()
+        else:
+            self.overview = BACKDROP if g.under is None else BLACK
+        self.box = view_origin(g.state.flags.get(SCN_CX, 0), g.state.flags.get(SCN_CY, 0))
 
     def abandon(self) -> None:
         if self.runner is not None:
@@ -396,6 +414,7 @@ class ComputerTurn(Phase):
 
     def p_side(self, player):
         self.hidden = True                              # 12bf:07a5 at ovl61:21e8
+        _music(self.game.app, "side", "ovl61:21d4")     # the track ovl58:0000(2) started, if any
 
     def p_side_done(self, player):
         self.hidden = False                             # 12bf:0757 at ovl61:21fd
@@ -404,6 +423,7 @@ class ComputerTurn(Phase):
         self.presenting = False
 
     def p_loop_check(self):
+        _music(self.game.app, "poll", "ovl61:2206")     # 155e:02ab before the 220b test
         self.reply = self.stopped = self.settings is not None     # DS:166a (ovl61:220b)
 
     def p_strip(self, at):
@@ -666,6 +686,7 @@ class ComputerTurn(Phase):
         lead = self.selected(st)
         seen = PORT_VIEW if st.ai.proc.single_view else SEEN
         self.cells = compose(st, left, top, self.view.sp, lead.id if lead is not None else None, seen)
+        map_drawn(self.game.app)                        # ovl64:1a79 in the EXE's order (X44)
         render(self.view.buf, self.cells, self.view.sp, None)
         self.map = self.view.buf.copy()
         self.map_origin = (left, top)

@@ -57,6 +57,7 @@ def in_map(pos: tuple[int, int]) -> bool:
 class Panel(Dialog):
     """A right-click panel: its picture at the rectangle, then `content(fb, left, top)`; it
     closes in the first frame with no mouse button held."""
+    event_loop = False                 # ovl46: held while the right button is down (0726:003b loop)
     hides_pointer = True
 
     def __init__(self, k, input, rect, picture: int, content: Callable, on_close=None):

@@ -59,6 +59,7 @@ DISPATCH = {
     C.SetEnhance: ("M8a", R + "turn:set_enhance"),
     C.SetObserve: ("M8a", R + "turn:set_observe"),
     C.SetSpeech: ("M8a", R + "turn:set_speech"),
+    C.SetMusic: ("M10c", R + "music:set_music"),
     C.SetView: ("M8a", R + "turn:set_view"),
     C.AcceptSurrender: ("M9a", R + "victory:accept_surrender"),
     C.CloseVictory: ("M9b", R + "victory:close_victory"),
@@ -90,6 +91,8 @@ ANSWERS = {
 assert set(ANSWERS) == set(E.PENDING)
 
 # Commands legal with or without a pending question (the view words, the speech switch).
+# Not SetMusic: it rolls a die, and Settings does not open under the modal questions
+# (07be:0064 skips the menu keys while DS:166a is set, 00a9; rules.music.set_music).
 ANYTIME = (C.SetView, C.SetSpeech)
 
 
@@ -129,7 +132,9 @@ def apply(state, cmd) -> list:
     """Apply one command; returns the events it produced.  Atomic: when the handler raises
     (IllegalCommand, an Unverified value, any error), the state is put back as it was before
     the call (same hash), in place, so references into the state stay valid; the production
-    report block (`GameState.production_report`, not in the snapshot) is put back too.
+    report block (`GameState.production_report`, not in the snapshot) is put back too, and the
+    music words (`GameState.music`, through `serialize.snapshot` / `restore`): a refused command
+    stands for one the EXE never carried out, so its music call is undone with its dice.
     Evidence: plan §1.3 (single entry point, pending questions); no game rule."""
     from ..model.serialize import restore, snapshot
     snap = snapshot(state)

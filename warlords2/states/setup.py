@@ -88,6 +88,7 @@ import pygame
 from ..assets.fonts import CHANCE17
 from ..audio import effects
 from ..assets.sprites import MapColors
+from ..assets.store import cache_load, cache_unload
 from ..formats.scenario import load_scenario
 from ..model.ids import LEVEL_OFF, Control
 from ..model.newgame import NewGameConfig
@@ -247,11 +248,14 @@ class Setup(ScreenHost):
             self.starting = False
             return
         self.scenario, self.sides, self.ready, self.anim = scenario, None, False, None
+        cache_unload(self.app)                               # ovl57:0014 0997:0066 (X44)
         self.rng_state, self.rolls, self.overview = None, [], None
 
     # ------------------------------------------------------------------ load
 
     def enter_screen(self, k) -> None:
+        from ..audio import music_triggers
+        music_triggers.pre_game(self.app, 0, "ovl57:003a")  # every ovl57:0000 entry, no die
         if self.ready:                                       # back (ovl57:0000(0, 0, 0, 1)): ovl57:0416 only
             return self.refresh()
         self.bar.repaint()                                   # 1372:132f(0)
@@ -288,7 +292,9 @@ class Setup(ScreenHost):
 
     def redraw_screen(self) -> None:
         """ovl57:0000(0, 0, 0, 1) (the Cancel paths of the Load list and of ovl34:1434 on this
-        screen): the buttons and the bar again."""
+        screen): the buttons and the bar again; its 003a music call (mode 0, no die)."""
+        from ..audio import music_triggers
+        music_triggers.pre_game(self.app, 0, "ovl57:003a")
         self.refresh()
 
     def options_path(self, k):
@@ -313,6 +319,7 @@ class Setup(ScreenHost):
     def refresh(self) -> None:
         """ovl57:0416."""
         k, s = kit(self.app), self.sides
+        cache_load(k, SETUPBU)                               # the side boxes ovl57:0634, the buttons (X44)
         for p in range(N_SIDES):
             for ids in (CONTROL, CHAR_BOX, PORTRAIT):
                 self.set_button(ids[p], NORMAL)
@@ -397,11 +404,15 @@ class Setup(ScreenHost):
             effects.chord(self.app)                      # ovl57:0d36
             return self.refresh()
         k = kit(self.app)
+        from ..audio import music_triggers
+        music_triggers.pre_game(self.app, 0xB, "ovl57:0e24")   # INT22 (19, 0), no die
         self.face(BEGIN_SPEECH, lambda: self._start(k))  # ovl57:0e2c: ovl58:026f(1)
 
     def _start(self, k) -> None:
         self.options_path(k).write_bytes(struct.pack("<10h", *self.words))     # ovl57:2289
-        self.request("game", new_game=self.new_game_config(), overview=self.overview)
+        under = self.app.screen.fb.copy()            # the screen ovl57:0cfe leaves up (`Game.under`)
+        self.paint(under)
+        self.request("game", new_game=self.new_game_config(), overview=self.overview, under=under)
 
     def on_button(self, id: int) -> None:
         if self.anim is not None or not self.ready:

@@ -1112,7 +1112,24 @@ next 0356. [V]
   and End Turn blanks map and overview first (ovl61:20fd -> 0a6e: colour 0 over DS:2ab0 =
   (16, 30, 360, 360) and DS:2aa8 = (400, 30, 224, 312)).
 * ovl61:0000(0, 1) (Begin): ovl61:1732, 17f6, ovl68:0952, ovl53:0000, ...; no live human ->
-  ovl61:1160(STRING (14, 0), STRING (14, 1)); then ovl61:2123.
+  ovl61:1160(STRING (14, 0), STRING (14, 1)); then ovl61:2123.  Under the message (0110) is what
+  0000 drew before it: the strip 0aeb (0076), the palette ground 0a9d (007b), the buttons 0174
+  (0080) disabled by 0418 (009f), no map (si = 1 skips ovl64:006c and the first ovl63:0000,
+  005a), the overview without Hidden Map (00a7..00b8); ovl66:0356 is skipped (008b).  The
+  computer phase of the Begin run draws this before the message (`ComputerTurn.begin_screen`,
+  `Game.begin_phase`) and the run goes on from it.  With a live human 0000 opens nothing
+  itself (00ed..00ef jump to the loop at 0116); the first pop-ups are the loop's.  Before
+  0000 ovl57:0cfe (Begin res_07be:0662, and the tutorial branch ovl57:00eb) draws only the
+  strip 0aeb (0eb3) and, with Hidden Map (SCN 0x124), 0a6e (0ec5: colour 0 over DS:2ab0 and
+  DS:2aa8); through 0e24..0eae (music, the face ovl58:026f, saved and restored, OPTIONS.DAT,
+  ovl25:0519) the Setup screen stays up.  So without Hidden Map the map area keeps the Setup
+  screen's pixels (ovl61:0a10's marble, the side boxes 0634) until the first ovl64:006c that
+  draws (none for a computer side with SCN 0x159 = 0), and with Hidden Map map and overview
+  stay black until the first turn start or computer turn draws them (ovl68:0259 di = 0 draws
+  nothing before its pop-up).  `Setup._start` hands its frame to the game (`Game.under`):
+  painted until 0000, its map area the Begin run's map picture, black with Hidden Map
+  (`ComputerTurn.begin_screen`, `run_loop`).  --scenario has no Setup screen: the backdrop
+  SCREEN0-3 stands in (the tutorial's picture 3 is the same image).
 * Settings (ovl33): open ovl33:0000(n) (menu 07be:02d9 with 1, ovl25:0479 with 0), popup type 4,
   screen 9, DS:166a = 1; buttons (jump table 07be:0b0c) 251 close (ovl33:0034: from the menu
   ovl61:011f(0, 0), else DS:166a = 0, screen 0, ovl61:2123), 252+p -> ovl33:04cc (0x0d0[p] =
@@ -2127,6 +2144,91 @@ plane buffers into heap memory (scroll2 is missing from the game copy used here)
 picture is the occupant at a map draw is the order of the EXE's 137 cache call sites
 (0129 x71, 034a x46, 027e x18, 00a2 x2) against its map draws.
 
+*(Addition, the group-8 occupant, register X44 [V asm].)* The read: plane byte (sy + r) * S
++ (sx >> 3) + (c >> 3) (0c56..0c6a, DS:699e = 3), S = record +8 * 2 = 2 * ceil(w / 16)
+(1012:0232 rounds with DS:69a6 = 15, shifts by DS:69a0 = 4; 1012:0187(0) for mode 4, the
+mode table DS:3465 + 0x1a * 4 +0x12 = 0), so the cell is the contiguous rectangle
+((52 % S) * 8, 29 + 52 / S, 32, 29) of the picture: scroll (160, 30), stack (16, 30), voice
+(64, 30), helpgfx (416, 29), bscroll (80, 30); movebar (S = 40) and rmapbar (S = 24) end at
+byte 2336 / 1424 of a 720 / 504-byte plane.  Slot 12 (51e4, 4 planes) puts that cell through
+the a8 mask as slots 9 / 10 / 14 do; slot 11 (51a9, the mask record of one plane) only colour
+bit 0, 1 on the picture's key colour, as slots 13 / 15.  The cache calls: each of 00a2 /
+0129 / 027e / 034a returns to the draw at once when the picture's +0 bit 2 is set (already
+loaded; 0139..0141), else unloads the first loaded picture of the same +5 group (0147..0171)
+and loads (03a9 sets bit 2 at 04c2); 0066 unloads every loaded picture with +0 bits 0-1 != 0
+(in group 8: movebar0..7, tower and cityback (TERRAIN), scenario (<scenario>\PICS)).  No other
+code sets bit 2 or writes 51a9 / 51e4 (0997:000e / 003a have no caller; 03a9 / 059c are called
+only inside 0997; 060a / 06bb, 15 calls each, only lock and unlock the planes).  Picture
+arguments of the 137 sites: 91 constants of other groups (abits, atrans2, strat, war, bshield,
+shields, popup*, curs, hidden, button, specbits, marble 25, scenery, ashadow, road) and 4
+variables of groups 10..26 (ovl64:0385 / 0876 / 0b8f / 1aba: a0..a8, scenery0 / 1, ashadow):
+no group-8 effect.  34 constants of group 8 and 8 variable sites that can name one:
+
+| Sites | Picture | Counterpart here (`cache_load` / `cache_unload`) |
+|-------|---------|-----------------------------------------------|
+| 08a9:0219 -> ovl14:02fb -> 030a (0313 034a, 03b1 / 03d4 00a2) | 43 menubutt | `App.__init__` (start-up) |
+| ovl14:014a (01dc / 02c1); ovl14:0032 -> 030a | 43 | `dialogs.shortcuts.Shortcuts` (open; Done reloads 43, no change) |
+| ovl00:0039 (0201), ovl00:0382 (05f0 .. 09be, x5) | 47 diplom | `dialogs.diplomacy_report` / `diplomacy_action` (open; their buttons are 47 too) |
+| ovl01:0167 (0226), ovl01:1520 (1544) | 45 scroll | `dialogs.quest` `quest_page` (with a quest) / `quest_reward` |
+| ovl02:01ff (026b) | 54 rmapbar | `dialogs.progress.Progress.update`, a new percentage, then 070b's 70 |
+| ovl16:0000 (0048) | 30 bigarmy | none (per-frame `production.details`); the screen's CITYBU buttons are hooked |
+| ovl17:0000 (020c, 05b8 / 05d5), 070b (07d8), 07e4 (08b3): type 6 -> 28, 7 -> 32, 9 -> 44, 0x0d -> 69, 0x10..0x13 -> 56..59, 0x14 / 0x15 / 0x16 -> 12 / 14 / 13, 0x17 -> 70, 0x18..0x1b -> 64..67 (070b / 07e4: 6, 7, 0x0d, 0x17 only), others marble 25 | as `widgets.POPUP_PICTURE` | the dialog's open: turn_start (6), capture (7), temple (9), level_up, scenario_select (0x13), victory / surrender (0x14..0x16), progress / about (0x17), medal, gfxpage tutorial pages (0x0e + #D); ovl61:137e (13b9 / 13c5, new game via ovl53:013a -> ovl30:0000 -> ovl29:010b) -> `Game.start_engine` |
+| ovl34:175b (179f) | 35 search | `dialogs.search_result.Searching` |
+| ovl36:1f19 (1fb5) | 48 advisor | `dialogs.advisor.Advisor` |
+| ovl45:06de (0af6) | 55 cityback | none (per-frame `city_info.draw_picture`); the screen's buttons are hooked |
+| ovl47:0d5c (1074), 12f9 (133c) | 33 / 34 mhero / fhero | `dialogs.hero_offer.HeroOffer` (open; 290 / 291) |
+| ovl57:0634 (0979 / 09b7 / 09ee), 0a4e (0b79), 10c7 (10de) | 31 setupbu, 52 ssg | `states.setup.Setup.refresh` (ovl57:0416: the SETUPBU buttons last) |
+| ovl57:0000 (0014 0066), ovl49:0414 (0449 0066) | unload | `Setup.on_enter` (not `back`), `save_load.open_load` |
+| ovl58:026f (081e; 09b0 / 09f1 / 0a32 / 0a70) | 50 voice; 51 voicebit | `dialogs.voice_face.VoiceFace` (open; each blink frame) |
+| ovl59:06de (0895, `#G`) | the script's picture | `gfxpage.GfxPages` per page (popup, then each `#G`) |
+| ovl60:0332 (035a 2 scenario, 0428 1 startbu) | 2, 1 | `states.menu.Menu.refresh` (ovl60:011e: the STARTBU buttons last) |
+| ovl61:131b (1374) | 71 + SCN 0x110 | `turn_bar.TurnBar.progress` |
+| ovl66:0e85 (0eba), ovl66:1fd2 (20a0) | 46 stack | `dialogs.stack.Stack`, `dialogs.army_bonus.ArmyBonus` |
+| 0771:0001 (0090, BUTTON.DAT +0x1f) | 1, 31, 46, 47, 49, 60, 61, 63, 68 (screens 1, 3 / 4, 18 / 35, 21 / 22, 26, 29, 10 / 11 / 15 / 30, 6, 33) | the dialog's buttons at open or rebuild: options, sage, items (and after its help page, ovl35:0f0c), fight_order, resign, production, the rest as above |
+
+Type 0x0d (scroll2) is never opened: the constant types pushed to ovl17:0000 are 0..0x17
+without 0x0d, the variable ones 0x10 + level, 0x18 + medal and 0x0e + `#D`.  Map draws:
+the computer turn's ovl64:006c / 0053 (`states.phases.computer` `render_map`) run in the EXE's
+order with the hooks above, so its map has the occupant of that moment (`CacheGroup8.map_drawn`).
+Elsewhere this program repaints the map every frame and has no counterpart of the EXE's
+006c calls, so the flag is drawn only when every occupant since the last placed map draw
+gives the same result (`CacheGroup8.shown`).  Not hooked (drawn every frame here):
+ovl16:0048 and ovl45:0af6, which run only inside the city screen after its CITYBU buttons,
+which are hooked: all three have records of their own, so `now` and `shown` give the same
+flag (nothing; after 0066 too); button redraws on a press (08a9:02f1 -> 0771:0001) reload
+the sheet loaded at the open.
+
+*(Addition, Music, M10c [V raw bytes / asm].)* ovl58:0000(mode) is game logic: read from a
+raw-byte disassembly of WARLORD2.EXE at file offset 0x73b40 (the listing's head is broken by
+case labels; its far calls are unrelocated, 0130:04a8 = 155e:04a8). 0007 DS:0bee == 0 ->
+return (DS:2632 not written); 0011 mode == DS:2632 and 155e:04a8() (MIDPAK INT 66h 0x70c, 0
+without a music driver DS:37a3) -> return; 0028 DS:2632 = mode; 002c..003a a playing
+sequence is stopped (155e:0466: DS:379e = -1, DS:37a9 = 0); 003f..017b (group, index) per mode,
+0046 ovl59:0505(group, index) (052f draws rnd(1, n, -1) for index -1, also for n = 1) and (7,
+0), 155e:032f load, 155e:0412(0, flag) with flag 1, mode 2 0 (011b). Mode 2 (0096..00f6): no
+live human side (0x137[p] != 0 and 0x0d0[p] == 0, p < 8) -> rnd(1, 100, 0) first (< 6 ->
+(12, -1), >= 53 -> (10, -1), else (11, -1)); a live human -> (11, -1). The table and the
+callers are register X32 (closed, model O1) and formats/sound.md §2; the dice are drawn by
+`rules.music.play` at the call sites (21d4 before ovl68:0000; 0529 between ovl47:0000 and
+0d5c; 0546 before the turn-1 city screen and ovl43:0000, both only with SCN 0x15b clear;
+ovl47:0726 in the human promotion; ovl36:24c9 before the medal text rolls 2524 / 2581 and 2668
+after the pop-up; ovl01:0006 first in the temple menu; ovl34:0aad after the sage's list
+1610; ovl01:272c after the quest reward 1909 / 1c02, human; ovl61:1fc0 / 1f76 / 1edb first in
+the victory / surrender offer / declined screens; ovl49:040a at the end of a load, after the
+overview's 256 dice; ovl33:05a0 when the Settings switch goes on). Playback: 155e:0412(seq,
+flags) stops a playing sequence, DS:379e = seq, registers and plays it (INT 66h 0x704 / 0x702),
+DS:37a9 = flags; the poller 155e:02ab (DS:379e != -1 and 04a8() == 0: bit 0 of DS:37a9 ->
+0412(DS:379e, DS:37a9) again, the same loaded track without a new die; else 0466) runs only in
+the event loop 08a9:0081 (idle event) and in the main loop at ovl61:2206 (after each computer
+side's ovl68:0000 and ovl61:17f6, before the 220b Settings test), so every mode but 2 loops and
+mode 2 plays once; no poll inside the modal waits (ovl59:0142, ovl61:10fb, 155e:0736) or a
+computer side's turn. No fade (155e:04c3), segue (0000:0c5d) or pause (049a / 048c) has a
+caller. The Settings switch ovl33:0576(0): 155e:0782 (stop if playing, DS:37a3 = 0) and 0775
+(DS:37a3 = 1), both skipped with DS:37a6 (no driver at all), then DS:0bee toggled and, on,
+ovl58:0000(1), which always plays and rolls (the stop made 04a8 false). Quit 0a4c:02b5 ->
+155e:02a0 unloads the drivers (a cut). [unverified: the meaning of MIDPAK 0x70c (stopped /
+playing / done) is MIDPAK's documented API; MIDPAK.COM not disassembled.]
+
 ## 10. Save / Load / New Game / Quit (ovl49) *(Addition, M10b)*
 
 Read from `out/asm/ovl49.asm` (019d..0e5f), `ovl29.asm` 0da9 / 0dff, `ovl25.asm` 04c5..05b9,
@@ -2276,7 +2378,27 @@ every pixel where the Setup screen differs from the frame SCREEN0-3 lies in the 
 the map DS:2ab0 (ovl64:006c), the overview (ovl63:0000), the info cell DS:2a9c (0aeb) or the
 palette rectangle DS:2a94 = (400, 355, 224, 114), which ovl61:0a9d (007b) covers with marble
 (picture 25, source (0, 0)); so the Setup pixels do not survive and the frame under them is
-SCREEN0-3, as `states.game.Game` paints it.  [Open, not M10b] ovl61:0a9d's marble over DS:2a94
-at every ovl61:0000 (Begin and the loads) is not drawn by `Game.paint`, which shows SCREEN0-3's
-own pixels there (2408 pixels differ between the palette buttons on an ERYTHEA turn-1 frame).
+SCREEN0-3, as `states.game.Game` paints it.
+
+The action palette's ground (closed after M10b): ovl61:0a9d (stub entry 0x66, no far caller; its
+one caller is the near call at ovl61:007b, for both values of si) copies MARBLE (0, 0, w, h)
+opaque (0997:0129) over DS:2a94 = (400, 355, 224, 114), the inside of SCREEN0-3's outline there
+(x 399 / 624, y 354 / 469).  Every ovl61:0000 runs it: Begin (ovl57:0ed0, (0, 1)), the loads
+(ovl49:039f), the Cancel paths and the dialog closes of its 22 far calls.  Before it ovl61:0000
+rebuilds the screen-0 button records (ovl53:056a(0) at 004f, which ends in 08a9:0345: state byte
++4 and shown byte +5 = 0 for every button), so ovl61:0174 (0080) draws every button it does not
+hide over the marble: 08a9:066e draws (0a0a:0005) when the state changes or +5 = 0, 08a9:05f0
+always, 08a9:03b3 (hide) only clears +5.  The BUTTON.PCK cells of the 24 buttons in the rectangle
+have the size of their rectangles and the picture has no colour key, so a button replaces its
+rectangle and the rest shows the marble.  Nothing else draws there: ovl61:011f does not call
+0a9d, the popups restore what they covered (ovl17:069c; every in-game JOIN screen's button inside
+the rectangle lies inside a popup rectangle DS:06a8), ovl66:0356 / 070d and 0aeb stay left of
+x 376, the turn bar (ovl61:11d1 / 1291 / 131b) is in DS:2a9c, the map and the overview end at
+y 390 / 342, and ovl61:106f (five lines centred in DS:2a94, stub entry 0xa7) has no caller.  So
+from the game's first ovl61:0000 on the marble is under the palette for good: `Game.screen_up`
+(set at Begin, `_show_loaded`, `redraw_game_screen`; cleared when a game is entered fresh, kept
+by the in-game load) and `ui.palettes.Painter.ground` under every phase's buttons, computer
+turns included; before it (the building phase, the load scroll over the Game Start / Setup
+screen) SCREEN0-3's own pixels.  Every frame from Begin on changes by up to 2408 pixels (the
+gaps between the buttons), the state hashes do not.
 

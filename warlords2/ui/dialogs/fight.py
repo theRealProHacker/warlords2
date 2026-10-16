@@ -134,6 +134,7 @@ class Fight(Dialog):
     after-battle steps), "wait" (ovl61:10fb), "after" (window closed, the map mark stays until
     the battle's end redraws the map).  `ui.anim.battle` drives it; while it is the top dialog
     `update` steps the host's animator, whose current view is the battle's timeline."""
+    event_loop = False                 # the battle window: ovl59:0000 tick waits and ovl61:10fb
 
     def __init__(self, host, battle, scene, anim, on_close=None):
         super().__init__(on_close)

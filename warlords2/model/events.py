@@ -63,6 +63,7 @@ class Resigned(Event): pass
 class DisbandPrompt(Event): pass              # pending (Disband yes/no, 0b62:06bf)
 class Advised(Event): pass                    # the Military Advisor's answer (rules/advisor.py)
 class TurnCue(Event): pass                    # a presentation step of the turn sequence (rules/turn.py)
+class MusicStarted(Event): pass               # ovl58:0000 started a sequence (rules/music.py)
 
 
 @dataclass(frozen=True)
@@ -81,7 +82,7 @@ EVENTS = (
     ItemDropped, ItemTaken, Blessed, SageOffered, QuestAssigned, QuestCompleted, QuestFailed,
     RelationChanged, TreacheryPrompt, Treachery, PlayerEliminated, NoHumansLeft, NoPlayersLeft,
     Victory, SurrenderOffered, Resigned, DisbandPrompt, TurnCue, Msg,
-    Advised,
+    Advised, MusicStarted,
 )
 PENDING = (HeroOffered, CityCaptured, SageOffered, TreacheryPrompt, SurrenderOffered,
            DisbandPrompt, Victory)

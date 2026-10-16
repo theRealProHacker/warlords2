@@ -17,6 +17,7 @@ from .army import NO_TYPE, NO_TYPE_ID, Army, ArmyType
 from .city import City
 from .hero import HeroSlot
 from .item import Item
+from .music import MusicWords
 from .player import Player
 from .site import Site
 from .world import World
@@ -340,6 +341,13 @@ class GameState:
         # snapshot its own copy (a preview never writes the run's buffer), restore and the
         # engine's rollback leave it (the EXE writes it also on the paths ours refuse).
         self.list_names: list[str] = []
+        # The music words of the program run (model.music.MusicWords: DS:2632, 379e, 37a9,
+        # 0bee, 37a3), read and written by ovl58:0000 (rules.music).  Run memory like the
+        # report block: not saved, not hashed; serialize.snapshot / restore copy and put back
+        # its values in place (a refused command's music call is undone with its dice, in
+        # the engine's rollback and the host's run restore); the host shares its one object
+        # with every game it enters (`rules.saveload.RunPart.music`); copy() gives a copy.
+        self.music = MusicWords()
 
     def army_type(self, type_id: int) -> ArmyType:
         """The record with this id; the game scans for type_id (tables.md §1, ovl44:14ac).
@@ -395,4 +403,5 @@ class GameState:
         new.ai.proc = self.ai.proc.snapshot(new.ai.blocks)
         new.production_report = self.production_report.copy()
         new.list_names = list(self.list_names)
+        new.music = self.music.copy()
         return new

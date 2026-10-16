@@ -30,7 +30,9 @@ bar of the computer turn (ovl61:11d1 / 1291 / 131b), the "Turn %d" screen (ovl68
 fog and view drawing (ovl63:2200, ovl63:0000, ovl64:006c, ovl61:0aeb, ovl61:0a6e), button
 states (ovl61:0174, ovl61:0418, ovl66:0356 but for its selection words, which
 `rules.selection.redraw_palette` writes, ovl62:0af3), DS:325e / DS:2ade (written, never
-read), the music ovl58:0000 (see `run`).  The engine marks where the EXE draws them with
+read).  The music ovl58:0000 is engine work (`rules.music`, register X32: a random track
+rolls the game's dice): mode 2 per computer side (`run`), 4 / 1 at the human turn start
+(`resume`).  The engine marks where the EXE draws the rest with
 `rules.present.present` points (computer turn, End Turn, the loop), which the computer phase
 draws from the state.  DS:3254 is `AiProcess.single_view` (written by `computer_turn`, cleared
 by `human_turn`; rules/quests.py derives the same value where it reads it); the DGROUP recount
@@ -59,12 +61,14 @@ from . import city as CT
 from . import economy as EC
 from . import heroes as H
 from . import movement as M
+from . import music as MU
 from . import pathfinding as P
 from . import quests as Q
 from . import ruins as RU
 from . import selection as S
 from . import visibility as V
 from .bonuses import s8
+from .constants import music as KM
 from .constants import turn as K
 from .constants import unverified_allowed
 from .engine import IllegalCommand, NotImplementedCommand
@@ -555,8 +559,10 @@ def resume(state, stage: int) -> list:
     (the production screen) and return; stage <= 2: ovl43:0000 production, ovl43:06bd restart
     when it reported something; then the info bar and the buttons (ovl66:0356 / ovl61:0174 at
     05a8 / 05ad: `rules.selection.redraw_palette` and TurnCue "info_bar"); then the turn-2 tutorial page when SCN 0x12e is set and byte
-    0x134 bit 0x40 clear (bit set, FILE.DAT (25, 7) through ovl61:168d).  (Music ovl58:0000(4)
-    before the dialog / (1) without one: see `run`.)"""
+    0x134 bit 0x40 clear (bit set, FILE.DAT (25, 7) through ovl61:168d).  Music (stage <= 0,
+    only while SCN 0x15b is clear): ovl58:0000(4) between the offer check and its dialog
+    (ovl68:0529, no die), else ovl58:0000(1) (0546: a die unless mode 1 still plays) before the
+    turn-1 city screen and the production; after the victory button (0x15b set) neither."""
     t = H.turn(state)
     if _flag(state, SCN_VICTORY) and not _flag(state, K.SCN_ACK_VICTORY.value):
         return _call("victory_screen", [], state)
@@ -565,10 +571,16 @@ def resume(state, stage: int) -> list:
     events = []
     if stage <= 0:
         events += H.promote_all(state)
-        offer = H.human_offer(state)
-        if offer:
+        offer = H.human_offer_check(state)
+        victory = _flag(state, SCN_VICTORY)            # asm ovl68:0521 / 053e: 0x15b gates the music
+        if offer is not None:
+            if not victory:
+                events += MU.play(state, KM.OFFER_MODE.value, "ovl68:0529")
+            events += H.offer_dialog(state, offer)
             state.pending.info["resume"] = 1
-            return events + offer
+            return events
+        if not victory:
+            events += MU.play(state, KM.TURN_START_MODE.value, "ovl68:0546")
     if stage <= 1 and t == K.FIRST_TURN.value:
         p = state.players[state.current]
         return events + [E.TurnCue({"kind": "city_screen", "city": state.city_at(*p.capital)})]
@@ -606,13 +618,14 @@ def run(state, max_sides: int | None = None) -> list:
     is the same pass sequence as one uninterrupted run (the UI runs a game without live humans
     one computer side per call, `states.game.Game`).
     Called once after `rules.setup.new_game` (the original enters the loop from ovl61:0000) and
-    by End Turn.  Not modelled: the music of ovl58:0000 (mode 2 per computer turn at 21d4, 1 or
-    4 at the human turn start), which also rolls the game's dice for a random track, but only
-    when the requested mode differs from the playing one or the track has ended
-    (ovl58:0011..0020) -- a wall-clock condition; music never rolls here (plan §5 R15).
+    by End Turn.  Music: ovl58:0000(2) at 21d4 for every computer side, after the pass top and
+    before the side's turn (`rules.music.play`): with the music on it rolls the game's dice when
+    the mode was another one or the track was stopped - rnd(1, 100, 0) without a live human,
+    then the track pick rnd(1, n, -1) - before the first roll of `computer_turn`; with it off
+    nothing (register X32 closed as model O1, plan §5 R15).
     Present points (rules.present): "loop_pass" at the pass top (ovl59:01f1 input flush,
-    2165), "side" before a computer side's turn (music ovl58:0000(2) at 21d4, pointer off
-    12bf:07a5 at 21e8), "side_done" after it (pointer on 12bf:0757 at 21fd), "human_turn"
+    2165), "side" before a computer side's turn (after the music call at 21d4: pointer off
+    12bf:07a5 at 21e8; the player sees a new track in `GameState.music`), "side_done" after it (pointer on 12bf:0757 at 21fd), "human_turn"
     before ovl68:0259, "loop_check" after ovl61:17f6 and 155e:02ab: a true answer (DS:166a set,
     the Settings dialog ovl25:045e opened) ends the loop there (220b..2212).  Without a
     presenter the answer is None and the loop goes on.
@@ -633,6 +646,7 @@ def run(state, max_sides: int | None = None) -> list:
             present("human_turn", player=state.current)
             events += human_turn(state)
             break
+        events += MU.play(state, KM.MODE2.value, "ovl61:21d4")   # before 12bf:07a5 (21e8)
         present("side", player=state.current)
         events += computer_turn(state)
         present("side_done", player=state.current)

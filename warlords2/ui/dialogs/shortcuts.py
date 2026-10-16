@@ -52,6 +52,7 @@ from ..keys import popup_input
 from ..palettes import shortcut_ids
 from ..widgets import ButtonRow, blit_opaque, kit, text_centred
 from .hero_offer import outline
+from ...assets.store import cache_load
 
 POPUP, SCREEN, MENUBUTT = 0, 14, 0x2B
 DONE = 294
@@ -90,6 +91,7 @@ def current_slot(k) -> int:
 
 
 class Shortcuts(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, host, on_close=None):
         super().__init__(on_close)
         self.host = host
@@ -102,6 +104,7 @@ class Shortcuts(Dialog):
         self.slot_frame = [ds_words(exe, SLOT_FRAME + 8 * i, 4) for i in range(N_SLOTS)]
         self.empty = ds_words(exe, EMPTY, 4)
         self.row = ButtonRow(list(k.layouts.screen(SCREEN).buttons), k.picture)
+        cache_load(k, MENUBUTT)                         # ovl14:01dc / 02c1 0129 (X44)
 
     @property
     def cur(self) -> int:

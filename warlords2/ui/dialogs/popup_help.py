@@ -36,6 +36,7 @@ def popup_rect(pos: tuple[int, int]) -> tuple[int, int, int, int]:
 
 
 class PopupHelp(Dialog):
+    event_loop = False                 # ovl15:0000: shown while the right button is held, its own loop
     hides_pointer = True
 
     def __init__(self, k, title: str, text: str, pos: tuple[int, int], input, on_close=None):

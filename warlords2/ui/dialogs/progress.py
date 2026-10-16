@@ -39,13 +39,14 @@ import pygame
 
 from ...assets.exe import ds_str
 from ...assets.fonts import CHANCE17
+from ...assets.store import cache_load
 from ...assets.text import printf
 from .. import registry
 from ..dialog import Dialog
 from ..widgets import kit, text_centred
 
 POPUP = 0x17
-RMAPBAR = 54
+RMAPBAR, BSCROLL = 54, 70
 LINE_X, LINE_Y0, LINE_DY = 328, 161, 20
 BAR_FRAME = (232, 255, 192, 25)
 BAR_AT, BAR_H = (232, 257), 21
@@ -60,6 +61,7 @@ def bar_width(pct: int) -> int:
 
 
 class Progress(Dialog):
+    event_loop = False                 # a load scroll: ovl59:0000 waits, no event loop
     def __init__(self, k, lines: list[str], work: Generator, on_close=None):
         super().__init__(on_close)
         self.kit, self.lines, self.work = k, list(lines), work
@@ -67,6 +69,7 @@ class Progress(Dialog):
         self.pct: int | None = None              # its bar is drawn
         self.shown: int | None = None            # its text is drawn
         self.result: tuple | None = None         # (return value,) once the work has ended
+        cache_load(k, BSCROLL)                   # popup 0x17: ovl17:0000 at 05b8 (X44)
 
     def update(self, events, dt) -> None:
         drawn = self.shown == self.pct           # the last frame drew the text of pct
@@ -82,6 +85,7 @@ class Progress(Dialog):
             return
         if v is not None:
             self.pct = v
+            cache_load(self.kit, RMAPBAR, BSCROLL)   # ovl02:026b, then ovl17:070b at 07d8 (X44)
 
     def draw(self, fb: pygame.Surface) -> None:
         k, f = self.kit, self.kit.fonts[CHANCE17]

@@ -141,6 +141,7 @@ def item_list(state, hero) -> list[int]:
 
 
 class HeroInspect(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, host, on_close=None):
         super().__init__(on_close)
         self.host = host

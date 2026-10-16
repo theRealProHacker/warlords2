@@ -47,6 +47,18 @@ DS:6852[i] equals [i - 1], else 0; when the selected slots are exactly the palet
 first selected slot f, [f] = 1.  ovl66:0567: a selected stack and (one palette army or all
 selected).
 
+Action palette ground ovl61:0a9d (`Painter.ground`; its one caller is ovl61:0000 at 007b, for
+Begin, the loads and every other ovl61:0000): MARBLE (0, 0, 224, 114) opaque over DS:2a94 =
+(400, 355, 224, 114), the inside of the frame's outline there.  ovl61:0000 first rebuilds the
+screen-0 button records (ovl53:056a(0) at 004f -> 08a9:0345: state 0, shown byte +5 = 0), so
+0174 (0080) draws every button it does not hide over the marble (08a9:066e draws when the state
+changes or +5 = 0; 08a9:05f0 always); hiding (08a9:03b3) only clears +5.  Nothing else draws
+into the rectangle: ovl61:011f does not call 0a9d, the popups restore what they covered
+(ovl17:069c), ovl66:0356, the info-area strip and the turn bar stay left of x 376, and
+ovl61:106f (five lines centred in DS:2a94) has no caller.  So from the game's first ovl61:0000
+on the marble is under the palette for good (`states.game.Game.screen_up`); before it the game
+frame SCREEN0-3 shows there.
+
 Button states ovl61:0174 (after every order; it ends with the menu refresh ovl61:0519,
 `ui.game_menus`, before the shortcut buttons ovl14:00aa): 173 Move when DS:5e62 and DS:2ea6 > DS:2ea8 (path
 marks left); 174 Next when ovl67:09e7 (an own army on the map awake and not done); 175 with that
@@ -84,6 +96,7 @@ INK, SHADOW = 15, 0
 SCREEN = 0                                    # JOIN screen of the game frame
 
 STRIP_SRC, STRIP_AT = (0, 60, 360, 66), (16, 403)          # ovl61:0aeb
+GROUND_RECT = 0x2A94                          # ovl61:0a9d: (400, 355, 224, 114)
 ICON_W, ICON_H, ICON_PITCH = 32, 29, 30
 RING_W, RING_H = 32, 30
 DIGIT_DX, MOVES_AT = 8, (8, 31)
@@ -199,6 +212,7 @@ class Painter:
         self.clear = [_rect(exe, CLEAR_RECT + 8 * i) for i in range(8)]
         self.mark_src = (_rect(exe, MARK_SRC), _rect(exe, MARK_SRC + 8))
         self.grp_at = ds_words(exe, GRP_AT, 2)
+        self.ground_rect = _rect(exe, GROUND_RECT)
         self.kind_at = ds_words(exe, KIND_AT, 2)
         self.moves_fmt = ds_str(exe, MOVES_FMT)
         self.group_fmt = ds_str(exe, GROUP_MOVES_FMT)
@@ -229,6 +243,11 @@ class Painter:
 
     def strip(self, fb) -> None:
         blit_opaque(fb, self.marble, STRIP_AT, STRIP_SRC)
+
+    def ground(self, fb) -> None:
+        """ovl61:0a9d: the marble (0, 0, w, h) over the action palette's rectangle DS:2a94."""
+        x, y, w, h = self.ground_rect
+        blit_opaque(fb, self.marble, (x, y), (0, 0, w, h))
 
     def info_area(self, fb, state) -> None:
         """ovl66:05a3 as the last ovl66:0356 drew it (the numbers of `palette_drawn`; before the

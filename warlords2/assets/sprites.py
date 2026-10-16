@@ -13,6 +13,9 @@ inferred from the look of a sheet.  Sources (overlay offsets, docs/research/exe_
   hidden bitmap and keeps its mask), 161b a black 40-px bitmap (ovl52:016b..0185).
 * Opaque 40x40 copy 052a:0009; masked blit [DS:69c8] (src, sx, sy, w, h, dst, x, y, mask,
   msx, msy); mask blit with a black source 052a:017f (48x40).
+* Planted-standard slots 11 / 12 (DS:51a9 / 51e4) are the records 15 of cache group 8's
+  pictures share; what they hold follows the group's occupant (`assets.store.CacheGroup8`,
+  register X44; `Sprites.group8_occupant`, `group8_read`).
 
 Tables of numbers the EXE keeps in DGROUP are read from the user's EXE (`assets.exe`).
 """
@@ -26,7 +29,7 @@ import pygame
 from ..formats.tables import parse_mapcolor
 from ..rules.constants import Unverified
 from .exe import ds_bytes, ds_far, ds_words
-from .store import PIC_ENTRY, PIC_TABLE
+from .store import PIC_ENTRY, PIC_TABLE, CacheGroup8, group8_of
 from ..ui.screen import IDENTITY
 
 Rect = tuple[int, int, int, int]
@@ -57,22 +60,15 @@ ITEM = (0x40, 0, 32, 0x1D)                           # ovl64:20b0: atrans2 (64, 
 GROUP8_SLOTS = (11, 12)                              # DS:51a9 / 51e4: cache group 8 (picture table +5)
 GROUP8_STANDARD = Unverified(
     "planted-standard flag of item 11 or 12 (cache group 8's mask / bitmap)", "X44", None,
-    "reachable: ovl47:09f7 sets road bit 0x40 (0b28) with standard p < 8; a computer hero's step "
-    "(0a8b:04c8 -> ovl28:0427) takes every item on the square and never writes 19d9, so the bit "
-    "stays; a later drop (ovl47:0943) or a dead hero's items (ovl36:16cd) leave item 11 / 12 the "
-    "lowest on-map index there, and ovl64:2d7c (items 21..0, 2e66..2eb4) gives it n & 15.  Slots "
-    "DS:4f20 + 0x3b * 11 / 12 = 51a9 / 51e4 are the mask and bitmap records of 15 of the 49 "
-    "pictures with cache group 8 (table byte +5): 45, 46, 50, 54, 62, 69..78.  Loading any group-8 "
-    "picture (0997:00a2 / 0129 / 027e / 034a) first unloads the loaded one (059c; 1012:0975 sets "
-    "+0x34 = 0 at 09bf), the records are zero in the image, and 0f00:0c4d bounds its loops by "
-    "+0x34, so nothing is drawn unless one of the 15 is the occupant.  With one, 0c4d reads rows "
-    "29..57 at x 416 (0c56..0c6a) with no clip to the source (0e68:00f3 loops the passed width / "
-    "height): inside the buffer for scroll / stack / voice / helpgfx / bscroll (deterministic), past "
-    "it into heap memory for movebar0..7 (320x18) and rmapbar (192x21).  Which picture is the "
-    "occupant at an ovl64:1a79 map draw is the EXE's order of ~137 cache calls (0129 x71, 034a x46, "
-    "027e x18, 00a2 x2) against its map draws; this program decodes each picture once and repaints "
-    "every frame in its own order, so it has no load event that matches them.  Provisional: the "
-    "flag is not drawn (the EXE's own result when the occupant is none of the 15)")
+    "the occupant of cache group 8 at the map draw (`assets.store.CacheGroup8`) is MOVEBAR0..7 or "
+    "RMAPBAR, whose 0f00:0c4d read at rows 29..57, x 416 (plane byte y * stride + 52, no clip to "
+    "the source) runs past the plane buffer into heap memory, or the map on the screen may have "
+    "been drawn with any of several occupants that give different flags: this program repaints "
+    "the map every frame and has no counterpart of the EXE's ovl64:006c calls outside the "
+    "computer turn, so it knows only every occupant since the last map draw it can place.  "
+    "Provisional: the flag is not drawn (the EXE's result when the occupant is none of the 15 "
+    "pictures that share the records)")
+HEAP = "heap"                                        # `group8_source`: the read leaves the planes
 FOG_W, FOG_H, FOG_COLS, FOG_PITCH = 48, 40, 7, 0x29  # ovl64:24e2..251e: hidden mask (v%7*48, v/7*41)
 FOG_FULL = 0x0E                                      # ovl64:1b6e: the black tile, nothing else drawn
 FOG_TABLE_DS = 0x2D56                                # 256 bytes, neighbour mask -> pattern (0xff none)
@@ -155,6 +151,23 @@ def picture_slots(exe: bytes, n: int) -> dict[int, list[tuple[int, str]]]:
     return out
 
 
+def group8_read(px: np.ndarray, w: int, h: int) -> np.ndarray | None:
+    """The pixels ([x, y], 32x29) of a w x h picture `px` ([x, y]) that 0f00:0c4d takes for the
+    flag cell STANDARD from that picture's record: plane byte (sy + r) * S + (sx >> 3) + (c >> 3)
+    for row r, column c (0c56..0c6a, DS:699e = 3), S the record's +8 words * 2 = 2 * ceil(w / 16)
+    (1012:0232 / 0b8a with DS:69a6 = 15, DS:69a0 = 4: 1012:0187 with the mode table's +0x12 = 0
+    for mode 4), no clip to the source.  A stride under 56 bytes runs on into later rows.  None
+    when a byte lies past the plane buffer (S * h bytes: heap memory) or in a row's padding."""
+    sx, sy, cw, ch = STANDARD
+    stride = 2 * ((w + 15) // 16)
+    c = np.arange(cw)[:, None]
+    o = (sy + np.arange(ch)[None, :]) * stride + (sx >> 3) + (c >> 3)
+    x, y = (o % stride) * 8 + (c & 7), o // stride
+    if o.max() >= stride * h or x.max() >= w:
+        return None
+    return px[x, y]
+
+
 def _keyed(base: pygame.Surface, transparent: np.ndarray) -> pygame.Surface:
     """Copy of an 8-bit sheet whose `transparent` pixels (array [x, y]) become KEY."""
     s = base.copy()
@@ -187,6 +200,8 @@ class Sprites:
         self.standard_mask = mask[x:x + w, y:y + h]
         self._standards: dict[int, pygame.Surface] = {}
         self.slot_pictures = picture_slots(exe, len(store.pictures))
+        self.group8 = group8_of(store) or CacheGroup8(store.pictures)   # the App's word (X44)
+        self._group8_px: dict[int, np.ndarray | None] = {}
         hidden = pygame.surfarray.array2d(pic("hidden.pck"))
         fog = pygame.Surface(hidden.shape, depth=8)
         fog.set_palette(IDENTITY)
@@ -210,14 +225,22 @@ class Sprites:
         (1012:0232 passes 1, 151d:00ed) of the picture's size and stride, so only plane 0 of
         the OS bitmap changes: colour bit 0 becomes 1 where that picture has its key colour at
         (416..447, 29..57), 0 elsewhere, under the army mask (`standard_bit0`).  Slots 11 (51a9)
-        and 12 (51e4) are the mask and bitmap of 15 of cache group 8's 49 pictures (scroll,
-        stack, voice, rmapbar, helpgfx, scroll2, bscroll, movebar0..7): an item 11 or 12 can lie
-        alone on a flagged square in play; the EXE draws nothing unless the group's occupant at
-        that map draw is one of the 15, and its pixels (heap memory for movebar / rmapbar) when
-        it is (`GROUP8_STANDARD`, register X44): `UnverifiedError`, or None (nothing drawn)
-        with unverified values allowed."""
+        and 12 (51e4) are the mask and bitmap records of 15 of cache group 8's 49 pictures
+        (scroll, stack, voice, rmapbar, helpgfx, scroll2, bscroll, movebar0..7), zero in the
+        image and after any other group-8 load; an item 11 or 12 can lie alone on a flagged
+        square in play.  `group8_occupant` (register X44): None draws nothing (no picture of
+        the 15 loaded, +0x34 = 0 planes); one of them gives the cell `group8_read` takes from
+        its planes, slot 12 keyed as here, slot 11 bit 0 only (`standard_bit0`)."""
         if (i & 0x0F) in GROUP8_SLOTS:
-            return GROUP8_STANDARD.value
+            k = self.group8_occupant()
+            if k is None:
+                return None
+            if (i & 0x0F) != GROUP8_SLOTS[1]:
+                raise ValueError(f"planted item {i}: DS:51a9 is a mask record (`standard_bit0`)")
+            cell = pygame.Surface(STANDARD[2:], depth=8)
+            cell.set_palette(IDENTITY)
+            pygame.surfarray.blit_array(cell, self._group8_cell(k))
+            return _keyed(cell, self.standard_mask)
         i &= 0x0F
         if i < len(self.armies):
             return self.armies[i].subsurface(STANDARD)
@@ -240,13 +263,43 @@ class Sprites:
         return owners[0][0]
 
     def is_mask_standard(self, i: int) -> bool:
-        """Slot i & 15 is a picture's mask record (one plane, `standard`)."""
+        """Slot i & 15 is a mask record (one plane, `standard`): of one picture, or slot 11's
+        DS:51a9 of the 15 group-8 pictures."""
         owners = self.slot_pictures.get(SLOTS + SLOT_STEP * (i & 0x0F), ())
-        return len(owners) == 1 and owners[0][1] == "mask"
+        return bool(owners) and all(kind == "mask" for _, kind in owners)
 
-    def standard_bit0(self, i: int) -> np.ndarray:
-        """Plane 0 of mask slot i & 15 over the flag cell ([x, y], True = key colour, 151d:00cf)."""
+    # ---------------------------------------------------------------- cache group 8 (X44)
+
+    def group8_source(self, k: int | None):
+        """What slots 11 / 12 hold with picture k the group's occupant: None for no picture or
+        one with records of its own (nothing drawn), k when 0c4d's read stays in its planes,
+        HEAP when it runs past them."""
+        if k is None or (k, "bitmap") not in self.slot_pictures.get(SLOTS + SLOT_STEP * GROUP8_SLOTS[1], ()):
+            return None
+        return k if self._group8_cell(k) is not None else HEAP
+
+    def group8_occupant(self) -> int | None:
+        """The group-8 picture whose records slots 11 / 12 show, None for nothing drawn; every
+        occupant since the last placed map draw (`CacheGroup8.shown`) must give the same, else
+        (or for HEAP) `GROUP8_STANDARD`: `UnverifiedError`, None with unverified values allowed."""
+        outs = {self.group8_source(k) for k in self.group8.shown}
+        if len(outs) == 1 and HEAP not in outs:
+            return outs.pop()
+        return GROUP8_STANDARD.value
+
+    def _group8_cell(self, k: int) -> np.ndarray | None:
+        if k not in self._group8_px:
+            pic = self.store.picture(k)
+            self._group8_px[k] = group8_read(pygame.surfarray.array2d(pic), *pic.get_size())
+        return self._group8_px[k]
+
+    def standard_bit0(self, i: int) -> np.ndarray | None:
+        """Plane 0 of mask slot i & 15 over the flag cell ([x, y], True = key colour, 151d:00cf);
+        for slot 11 the occupant's mask record read as `group8_read`, None when nothing is drawn."""
         i &= 0x0F
+        if i == GROUP8_SLOTS[0]:
+            k = self.group8_occupant()
+            return None if k is None else self._group8_cell(k) == self.store.pictures[k].key
         k = self._slot_owner(i, "mask")
         x, y, w, h = STANDARD
         px = pygame.surfarray.array2d(self.store.picture(k))[x:x + w, y:y + h]
@@ -256,10 +309,13 @@ class Sprites:
         """ovl64:213c into the 8-bit `dst` at `pos`, clipped (`standard`)."""
         if not self.is_mask_standard(i):
             cell = self.standard(i)
-            if cell is not None:                       # None: X44 provisional, nothing drawn
+            if cell is not None:                       # None: nothing drawn (X44)
                 dst.blit(cell, pos)
             return
-        bit = self.standard_bit0(i).astype(np.uint8)
+        bit = self.standard_bit0(i)
+        if bit is None:                                # slot 11, nothing drawn (X44)
+            return
+        bit = bit.astype(np.uint8)
         put = ~self.standard_mask                      # M = 0: the army sheet's opaque pixels
         x0, y0 = pos
         w, h = bit.shape

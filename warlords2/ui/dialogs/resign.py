@@ -33,6 +33,7 @@ from ..dialog import Dialog
 from ..keys import popup_input
 from ..widgets import ButtonRow, kit, text_centred
 from .hero_offer import answer, human_phase, raw
+from ...assets.store import cache_load
 
 POPUP, SCREEN, GROUP = 1, 33, 165
 GRACEFUL, UNGRACEFUL, KEEP = 487, 488, 489
@@ -43,12 +44,14 @@ AFTER = ((4, 5),)                              # 488: ovl49:1806..1826
 
 
 class Resign(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, host, on_close=None):
         super().__init__(on_close)
         self.host = host
         k = self.k = kit(host.app)
         lay = k.layouts.screen(SCREEN)
         self.row = ButtonRow([lay.button(i) for i in (GRACEFUL, UNGRACEFUL, KEEP)], k.picture)
+        cache_load(k, *(b.picture for b in self.row.buttons))   # RESIGNBU buttons, 0771:0090 (X44)
 
     def update(self, events, dt) -> None:
         popup_input(self, events, self.row, self.k.exe, self.press)

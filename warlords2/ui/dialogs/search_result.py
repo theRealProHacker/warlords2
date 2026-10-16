@@ -52,6 +52,7 @@ from ..mapview import AREA
 from ..typename import type_name
 from ..widgets import ButtonRow, blit_opaque, is_dismiss, kit, text_centred
 from .hero_offer import answer, human_phase, outline, raw, sprintf, wait
+from ...assets.store import cache_load
 
 POPUP, SCREEN = 4, 13
 OK, TAKE = 292, 293
@@ -87,11 +88,13 @@ def search(host):
 
 class Searching(Dialog):
     """ovl34:175b's pop-up with the lines of ovl34:17c9."""
+    event_loop = False                 # ovl34:175b's lines wait in ovl61:10fb; SearchResult polls once its 1812 buttons are up
 
     def __init__(self, host, marker=None, on_close=None):
         super().__init__(on_close)
         self.host = host
         k = self.k = kit(host.app)
+        cache_load(k, SEARCH_PICTURE)                      # ovl34:179f 0129 (X44)
         exe = k.exe
         self.title_at = ds_words(exe, SLOTS, 2)
         self.slots = [ds_words(exe, SLOTS + 4 * i, 2) for i in range(1, 4)]
@@ -130,6 +133,11 @@ class Searching(Dialog):
 
 class SearchResult(Searching):
     """The ruin search: lines and waits in the EXE's order, then ovl34:1812."""
+    @property
+    def event_loop(self) -> bool:
+        """The lines wait in ovl61:10fb; the 1812 buttons (292 / 293) are 08a9 event-loop ones."""
+        return self.row is not None
+
 
     def __init__(self, host, steps, hero: int, square, on_close=None):
         super().__init__(host, marker=square, on_close=on_close)

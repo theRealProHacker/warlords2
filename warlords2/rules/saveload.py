@@ -35,6 +35,7 @@ from . import pathfinding as P
 from .constants import saveload as K
 from .constants.setup import LOADER_TILE_ROLLS
 from .mapwords import refresh_map
+from . import music as MU
 from .movement import FREE, remove_army
 from .present import present
 from .ruins import site_tiles
@@ -106,7 +107,9 @@ class RunPart:
     keeps but for owner / x / y (ovl53:00c1..00fe; `begin_carry`); a load reads it from the
     file instead.  None = a fresh run (BSS).  `list_names`: the ovl51 name buffer DS:483c
     (`GameState.list_names`, the same list object: the run has one), None = a fresh run (BSS:
-    empty).  The ovl49 words DS:128c / 128e / 1290 are the dialog's (persist / ui), and
+    empty).  `music`: the run's music words (`model.music.MusicWords`, DS:2632 / 379e / 37a9 /
+    0bee / 37a3, the same object: the run has one), None = a fresh one (the EXE image values).
+    The ovl49 words DS:128c / 128e / 1290 are the dialog's (persist / ui), and
     DS:0a54 / DS:5c38 live on the App."""
     fields: dict
     rng: Any
@@ -114,6 +117,7 @@ class RunPart:
     production_report: ProductionReport | None = None
     armies: list | None = None
     list_names: list | None = None
+    music: Any = None
 
 
 def run_part(state: GameState) -> RunPart:
@@ -125,11 +129,12 @@ def run_part(state: GameState) -> RunPart:
     (EL "Save / Load / Quit", What a load keeps)."""
     d = serialize.dump(state, rng=False)
     return RunPart({k: d[k] for k in RUN_FIELDS}, state.rng, state.ai.proc, state.production_report,
-                   d["armies"], state.list_names)
+                   d["armies"], state.list_names, state.music)
 
 
 def fresh_run_part(rng, army_types, advisor_talking: int = 0, advisor_digital: int = 0,
-                   advisor_groups: dict | None = None, process=None, list_names: list | None = None) -> RunPart:
+                   advisor_groups: dict | None = None, process=None, list_names: list | None = None,
+                   music=None) -> RunPart:
     """The run part of a load in a fresh run of the program: the BSS / EXE-image values (zero
     selection words and battle arrays, no search field, no cost map, a cleared path cache, zero
     caches and city counts, no overview bitmap, DS:16a6 = 0), the army types as the run loads
@@ -137,7 +142,9 @@ def fresh_run_part(rng, army_types, advisor_talking: int = 0, advisor_digital: i
     them), the session's advisor settings, the run's AI process (`process`: pass the App's
     `AiProcess`; its `allocated` 0 makes the AI read draw the 0519 dice; None, for tests, gets
     a new one at the AI read), an empty report block and the run's list name buffer DS:483c
-    (`list_names`: what the pre-game lists left, the host's `RunCarry.names`; None = empty).
+    (`list_names`: what the pre-game lists left, the host's `RunCarry.names`; None = empty) and
+    the run's music words (`music`: the host's object, which the pre-game screens' modes 0 / 11
+    wrote; None = the EXE image values).
     `rng`: the run's dice stream; the EXE seeds it from the clock at the first roll (EL §2), the
     stand-in is `rules.rng.Rng(cfg.seed, cfg.rng)` (plan register X49).
     Evidence: EXE image zeros (file 0x33250 + DS) of DS:5dfe..5e62, 41fa..436a, 4160, 16a6,
@@ -149,7 +156,7 @@ def fresh_run_part(rng, army_types, advisor_talking: int = 0, advisor_digital: i
                    advisor_talking=advisor_talking, advisor_digital=advisor_digital,
                    advisor_groups=dict(advisor_groups or {}))
     fields = {k: serialize.plain(getattr(st, k)) for k in RUN_FIELDS}
-    return RunPart(fields, rng, process, ProductionReport(), list_names=list_names)
+    return RunPart(fields, rng, process, ProductionReport(), list_names=list_names, music=music)
 
 
 def _null_selection(state) -> None:
@@ -199,6 +206,8 @@ def merge(saved: dict, run: RunPart) -> GameState:
     st.production_report = run.production_report if run.production_report is not None else ProductionReport()
     if run.list_names is not None:
         st.list_names = run.list_names
+    if run.music is not None:
+        st.music = run.music
     _null_selection(st)
     off, v = K.SCN_LOADED.value
     st.flags[off] = v
@@ -278,7 +287,7 @@ def load(saved: dict | None, run: RunPart | None = None, *, where: str = "game",
     return Loaded(st, rebuilt, record)
 
 
-def after_load(state: GameState, rebuilt: bool, where: str = "game") -> None:
+def after_load(state: GameState, rebuilt: bool, where: str = "game") -> list:
     """ovl49:02d3 after a load (0414 returned `rebuilt`), from `where` ("game", "game_start",
     "setup"): the recounts 03f9 -> 02bf -> 0372 (0372 reads 03f9's counts), the site tiles
     ovl35:09f2(SCN 0x110), the map words ovl62:0000, the cost map 0555:0d9e(SCN 0x110, 1); then
@@ -288,7 +297,10 @@ def after_load(state: GameState, rebuilt: bool, where: str = "game") -> None:
     overview, info cell, palettes and menu refresh; its ovl66:0356 is `redraw_palette`), two
     "strip" points (ovl68:0952(1, 0), (0, 0)), the "message" STRING (47, 1) with the side's
     name (ovl61:10fb, waits for a key), "map" (ovl64:006c), "frame_off" (ovl62:0af3) and
-    "music" mode 1 (ovl58:0000(1); M10c, register X32).  The host sets DS:2a86 = 1 (inside
+    "music" mode 1 (ovl58:0000(1), `rules.music.play`: a die unless mode 1 still plays, e.g.
+    a load from the Game Start screen (mode 0 before) rolls, a load in a game with the turn
+    music looping does not; info `events` = what it returned).  Returns those events
+    ([MusicStarted] or []).  The host sets DS:2a86 = 1 (inside
     ovl61:0000) and DS:28c6 = 0 (03a7).  No turn start, no main-loop pass: the human phase of
     SCN 0x110 goes on as saved.
     Evidence: asm ovl49:0332 ovl48:0000; 0337..0349 (2a86 and rebuilt -> 0a6e, 0698); 034e..035c
@@ -316,7 +328,9 @@ def after_load(state: GameState, rebuilt: bool, where: str = "game") -> None:
     present("message", group=g, index=i, args=(state.players[state.current].name,), wait=None)
     present("map", at="ovl49:0400")
     present("frame_off", at="ovl49:0405")
-    present("music", at="ovl49:040c", mode=K.LOAD_MUSIC_MODE.value)
+    events = MU.play(state, K.LOAD_MUSIC_MODE.value, "ovl49:040a")
+    present("music", at="ovl49:040c", mode=K.LOAD_MUSIC_MODE.value, events=events)
+    return events
 
 
 def new_game(state: GameState, ai_setup: Callable[[GameState], None] | None = None) -> None:
@@ -360,7 +374,9 @@ def begin_carry(state: GameState, run: RunPart) -> None:
     words (DS:5dfe / 5e00 / 2bda / 5dfc / 5dfa / 3250 / 6862 / 6842 / 6852; ovl53 nulls only the
     pointers), the caches DS:5dca / 5dda / 5dea (no new-game path calls 0372 / 02bf / 03f9),
     DS:16a6 (ovl53 writes it only to set it), the army type table (loaded once per run), the
-    session's advisor words, the report block DS:4464, the list name buffer DS:483c and the army table (its records keep
+    session's advisor words, the report block DS:4464, the list name buffer DS:483c, the music
+    words (`RunPart.music`: DS:2632 etc., written in ovl57 / ovl53 only through ovl58:0000)
+    and the army table (its records keep
     every byte; ovl53 then sets owner 0xff, x = y = -1, `rules.setup.new_game`).  Called by
     `rules.setup.new_game(run=)` right after the state is built, so the set-up steps overwrite
     what the EXE's overwrite (the cost map, the search field by the territories' distance maps,
@@ -380,4 +396,6 @@ def begin_carry(state: GameState, run: RunPart) -> None:
         state.production_report = run.production_report
     if run.list_names is not None:
         state.list_names = run.list_names
+    if run.music is not None:
+        state.music = run.music
 

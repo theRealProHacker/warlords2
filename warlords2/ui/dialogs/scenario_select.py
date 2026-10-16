@@ -37,7 +37,8 @@ from .. import registry
 from ..dialog import Dialog
 from ..keys import popup_input
 from ..layout import DISABLED, NORMAL
-from ..widgets import ButtonRow, kit, text_centred
+from ..widgets import POPUP_PICTURE, ButtonRow, kit, text_centred
+from ...assets.store import cache_load
 
 POPUP, SCREEN, ROWS = 0x13, 29, 7
 ROW_IDS = range(476, 483)
@@ -50,6 +51,7 @@ TITLE_AT, TEXT_AT, CITIES_AT, SITES_AT, SIDES_AT = (416, 101), (416, 174), (368,
 
 
 class ScenarioSelect(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, k, records: list[dict], current: int, host, on_close=None):
         super().__init__(on_close)
         self.kit, self.records, self.host = k, records, host
@@ -70,6 +72,7 @@ class ScenarioSelect(Dialog):
         app.scenario_list_top = self.rows[0]
         lay = k.layouts.screen(SCREEN)
         self.buttons = ButtonRow(list(lay.buttons), k.picture)
+        cache_load(k, POPUP_PICTURE[POPUP], *(b.picture for b in self.buttons.buttons))   # ovl17:0000, buttons (X44)
         self.fmts = [ds_str(k.exe, o) for o in (FMT_CITIES, FMT_SITES, FMT_SIDES)]
         self._states()
 

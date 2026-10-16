@@ -25,8 +25,9 @@ from ...model.ids import Control
 from ...rules.bonuses import s8
 from .. import registry
 from ..dialog import Dialog
-from ..widgets import is_dismiss, kit, text_centred
+from ..widgets import POPUP_PICTURE, is_dismiss, kit, text_centred
 from .hero_offer import raw, sprintf, wait
+from ...assets.store import cache_load
 
 FIRST_GROUP, FIRST_POPUP = 101, 0x10
 FEMALE_OFFSET = 6
@@ -36,6 +37,7 @@ LINE_Y = (160, 180, 200, 232, 252)
 
 
 class LevelUp(Dialog):
+    event_loop = False                 # ovl47:0672 waits in ovl59:0142
     def __init__(self, k, state, ev, on_close=None):
         super().__init__(on_close)
         self.k = k
@@ -43,6 +45,7 @@ class LevelUp(Dialog):
         a = state.armies[info["army"]]
         h = state.heroes[info["slot"]]
         self.popup = FIRST_POPUP + info["group"] - FIRST_GROUP
+        cache_load(k, POPUP_PICTURE[self.popup])       # ovl17:0000 (X44)
         f = FEMALE_OFFSET if info["female"] else 0
         g = info["group"]
         self.title = sprintf(raw(k, g, f))

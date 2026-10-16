@@ -33,15 +33,22 @@ phase, without a turn start, when it was the run from Begin).  The game or the a
 during a run abandons the parked engine thread (`abandon_run`).  With no live human at the start
 ovl61:0000 shows the two-line message STRING (14, 0) / (14, 1) (ovl61:00f1..0110 -> ovl61:1160,
 which waits for its dismissal with DS:166a set) before the loop ovl61:2123 (0118): the loop runs
-when the message is closed.
+when the message is closed.  Under it is what ovl61:0000(0, 1) drew before 0110: the info strip
+(0076), the palette ground (007b), the buttons (0174 at 0080) disabled by 0418 (009f), no map
+(si = 1 skips ovl64:006c at 005a: the backdrop) and without Hidden Map the overview (00b8) --
+the Begin run's computer phase draws them first (`begin_phase`, `ComputerTurn.begin_screen`) and
+the run starts from that picture.  With a live human ovl61:0000 shows nothing before the loop;
+its first pop-ups are the turn start's (ovl68), over the same picture (`hand_over`).
 
 Map, overview and info bar with Hidden Map and more than one live human (ovl68:0259 di = 0):
 * End Turn (ovl61:2074): the info bar gets the plain marble cell ovl61:0aeb (20cb; picture 25,
   source (0, 0x3c), over DS:2a9c = (16, 403, 360, 66)) and the map and the overview are filled
   black (ovl61:0a6e at 2110: DS:2ab0, DS:2aa8 with colour 0) -- `blank_map` "black";
 * Begin (ovl61:0000(0, 1), si = 1): no map draw (ovl64:006c only for si = 0, 005a), the overview
-  only without Hidden Map (00a7..00b8), no 0a6e: the game frame's backdrop shows there --
-  `blank_map` "backdrop"; the info bar is the marble cell (0076, no ovl66:0356 for si != 0);
+  only without Hidden Map (00a7..00b8); before it ovl57:0cfe fills map and overview black with
+  Hidden Map (0ec5 ovl61:0a6e) -- `blank_map` "black"; from --scenario (no Setup screen) the
+  game frame's backdrop shows there -- `blank_map` "backdrop"; the info bar is the marble cell
+  (0076, no ovl66:0356 for si != 0);
 * the human turn start: the marble cell again (ovl68:034c); with di = 0 the overview, the map and
   the info bar are not drawn before the pop-up (0337 / 037a skip ovl63:0000, ovl64:0629,
   ovl66:0356); after the pop-up and the wait for the turn sample (155e:0736) the overview and the
@@ -51,6 +58,20 @@ Map, overview and info bar with Hidden Map and more than one live human (ovl68:0
   12bc: 011f(0, 0, 0)), or a command that redraws the palette (selection steps 0b62 / ovl66 /
   ovl67, Deselect 0b62:08fa, Move 0c8c:04fb, Attack ovl36) -- `bar_blank`.
 With di = 1 the turn start draws all three before the pop-up (0344, 039c, 03a4).
+
+The action palette's ground: every ovl61:0000 (Begin, the loads, the Cancel paths, the dialog
+closes that call it) covers DS:2a94 = (400, 355, 224, 114) with marble (ovl61:0a9d at 007b) before
+it draws the buttons (0174 at 0080); nothing else draws there and the popups restore it, so from
+the game's first ovl61:0000 on (`screen_up`) the frame paints the marble under every phase's
+buttons, computer turns included; before it (the building phase) SCREEN0-3's own pixels show
+(`ui.palettes`).
+
+Begin from the Setup screen (`under`, the frame `states.setup.Setup._start` hands over): the
+Setup screen stays up through ovl57:0e24..0eae (painted until ovl61:0000), and without Hidden
+Map its map area stays until the first map draw (the Begin run's map picture,
+`ComputerTurn.begin_screen`).  The frame between Begin's loop handing a human turn start over
+and the turn-start phase shows what that turn start drew before its pop-up over the run's
+buttons (`phases.building.Building.paint`).
 
 No main-loop pass between two commands: the EXE's event loop 08a9:000e dispatches each event
 (0726:0009 / 07be:0064 / 07be:0e26 / 07be:04d8) and returns to its poll, and none of that path
@@ -105,6 +126,7 @@ import pygame
 
 from ..assets import cursors as CU
 from ..assets.sprites import MapColors, Sprites
+from ..assets.store import cache_load
 from ..model import commands as C
 from ..model.ids import Control
 from ..model.state import SCN_TERRAIN_SET
@@ -217,6 +239,8 @@ class Game(BaseState):
         self.phase = None
         self._next: str | None = None
         self.map_ready = False
+        self.screen_up = False
+        self.under = None
         self.sprites = self.view = self.minimap = self.bar = None
         self.no_setup = False
         self.turn_events = None
@@ -226,12 +250,13 @@ class Game(BaseState):
         self.run_palette = None
         self.held_screen = None
         self.run_start = self.run_prev = self.run_phase = None
+        self.begin_phase = None
         self.shield_strip = None
         self.strip_saved = None
         self.load_where = self.load_backdrop = self.load_prev = None
         self.load_started = self.pointer_hidden = False
 
-    def on_enter(self, frm: str, new_game=None, load_slot=None, overview=None) -> None:
+    def on_enter(self, frm: str, new_game=None, load_slot=None, overview=None, under=None) -> None:
         self.config, self.load_slot, self.overview = new_game, load_slot, overview
         self.dialogs = GameDialogs(self)
         self.load_where = self.load_backdrop = self.load_prev = None
@@ -246,7 +271,9 @@ class Game(BaseState):
             if frm != "game":                     # (502 is live in a game only in human / over)
                 self.load_backdrop = frm          # the Game Start / Setup screen stays up under it
         self.state, self.phase_name, self.phase = None, None, None
+        self.under = under                        # the Setup screen at Begin (ovl57:0cfe), else None
         self.map_ready = False
+        self.screen_up = False                    # no ovl61:0000 yet: the frame's own pixels
         self.battle_names = [None, None]          # DS:4148 / 4134 (ui.dialogs.fight)
         self._next = "building" if load_slot is None else None
         self.no_setup = frm != "setup" and load_slot is None
@@ -257,6 +284,7 @@ class Game(BaseState):
         self.run_palette = None
         self.held_screen = None
         self.run_start = self.run_prev = self.run_phase = None
+        self.begin_phase = None
         self.shield_strip = None                  # nothing before Begin (ovl61:0034)
         self.strip_saved = None
 
@@ -316,7 +344,9 @@ class Game(BaseState):
         st = self.state = new_game(sc, cfg, list(types), unused_name=unused_side_name(a.read("WARLORD2.EXE")),
                                    hero_names=load_hero_names(self.app.gd, terrain_set(sc)),
                                    cards=card_reader(self.app.gd), process=self.app.ai_process, run=run)
+        st.music = self.app.music_words           # the run's music words (DGROUP, model.music; M10c)
         carry.enter(st, scenario_record(self.app, cfg.scenario, carry.record))
+        cache_load(self.app, 70)                  # ovl53:013a -> ovl29:010b -> ovl61:137e: BSCROLL (popup 0x17 / 070b) (X44)
         self.app.session_dice = st.rng            # the run's one stream goes on in the game
         snd = audio(self.app)                     # DS:26c8 / 37a4 and the FILE.DAT group sizes
         st.advisor_talking = int(snd.settings.speech)
@@ -381,15 +411,21 @@ class Game(BaseState):
             save_load.saves(self.app).finish_load(loaded, self.load_where)
         finally:
             PR.detach(me)
+        music = next((info.get("events") for point, info in points if point == "music"), None)
         self.app.session_dice = st.rng            # the run's one stream (X06 / X49)
         for point, info in points:
             if point == "game_screen":
                 self._show_loaded(st, result.overview)
             elif point == "strip":
                 self.strip_call(info["at"])
-            elif point == "message":
-                save_load.load_message(self, st)
-                break                              # "map", "frame_off", "music": nothing to draw here
+            elif point == "message":               # ovl61:10fb waits; ovl58:0000(1) at 040a after it
+                save_load.load_message(self, st, on_close=lambda _: self._load_music(music))
+                break                              # "map", "frame_off": nothing to draw here
+
+    def _load_music(self, events) -> None:
+        """ovl49:040a, after the message: the track of after_load's mode-1 call, if it started."""
+        from ..audio import music_triggers
+        music_triggers.sounded(self.app, events)
 
     def _show_loaded(self, st, overview) -> None:
         """ovl61:0000(DS:28c6, 0) on the loaded game: DS:2a86 = 1, DS:28c6 = 0."""
@@ -410,6 +446,7 @@ class Game(BaseState):
         self.phase = phase_class(self.phase_name)(self)
         self._next = None
         self.phase.enter()                         # ovl61:0174 -> 0519 and 1372:132f
+        self.screen_up = True                      # ovl61:0a9d (007b)
         self.map_ready = True
         self.palette_drawn()                       # ovl61:008f ovl66:0356
 
@@ -417,6 +454,7 @@ class Game(BaseState):
         """ovl61:0000(0, 0) (the Cancel paths of ovl49:0995 / 02d3, ovl34:1434, after a save):
         map, overview, the palette and menu refresh ovl61:0174 -> 0519, the bar repaint and the
         info area ovl66:0356."""
+        self.screen_up = True                      # ovl61:0a9d (007b)
         self._refresh_palette()
         if self.bar is not None:
             self.bar.repaint()
@@ -454,9 +492,21 @@ class Game(BaseState):
         from ..rules.engine import apply
         st = self.state
         sites, draws = site_bytes(st), st.palette_draws
-        events = apply(st, cmd)
+        events = self._engine(apply, st, cmd)
         self._after(cmd, sites, draws)
         return events
+
+    def _engine(self, apply, st, cmd):
+        """`rules.engine.apply` with the music log kept in step: a refused command's music calls
+        go with its dice and words (`audio.music.MusicLog.roll_back`)."""
+        log = getattr(self.app, "music_log", None)
+        mark = log.mark() if log is not None else None
+        try:
+            return apply(st, cmd)
+        except BaseException:
+            if log is not None:
+                log.roll_back(mark)
+            raise
 
     def _after(self, cmd, sites, draws) -> None:
         st = self.state
@@ -473,7 +523,7 @@ class Game(BaseState):
         st = self.state
         sites, draws = site_bytes(st), st.palette_draws
         try:
-            events = apply(st, cmd)
+            events = self._engine(apply, st, cmd)
         except IllegalCommand as e:
             log.error("%s refused: %s", type(cmd).__name__, e)
             return None
@@ -511,12 +561,16 @@ class Game(BaseState):
         self.loop_blank = blank
         if self.phase_name != "computer":               # the first run of End Turn / Begin
             self.run_start = snap
+            ml = getattr(self.app, "music_log", None)
+            self.run_log = ml.mark() if ml is not None else None
             ss = self.shield_strip
             self.strip_saved = (ss.copy(), ss.drawn) if ss is not None else None
             self.run_prev = (self.phase_name, self.phase) if self.phase_name == "human" else None
-        ph = self.phase if self.phase_name == "computer" else ComputerTurn(self)
+        drawn = self.begin_phase if begin else None     # Begin's screen, drawn by `start_turns`
+        self.begin_phase = None
+        ph = self.phase if self.phase_name == "computer" else drawn or ComputerTurn(self)
         self.run_phase = ph
-        ph.start_run(Runner(run), BACKDROP if begin else None)
+        ph.start_run(Runner(run), BACKDROP if begin and drawn is None else None)
         try:
             ph.pump()
         except Exception as e:                          # noqa: BLE001 (logged, the state restored)
@@ -547,6 +601,11 @@ class Game(BaseState):
                 d.close(None)
         if self.run_start is not None:
             run_restore(self.state, self.run_start)
+            if getattr(self, "run_log", None) is not None:
+                self.app.music_log.roll_back(self.run_log)     # the run's music calls with its dice
+            p = getattr(self.app, "music_player", None)
+            if p is not None:
+                p.rolled_back()                        # the music words came back too
             if self.strip_saved is not None:
                 self.shield_strip.restore(*self.strip_saved)
         self.view.follow(self.state)
@@ -601,7 +660,11 @@ class Game(BaseState):
         """ovl61:0000(0, 1) after the new game: the full shield strip ovl68:0952(1, 1) (0034,
         after 1732 / 17f6, before the message); no live human -> the two-line message, and the
         main loop ovl61:2123 once it is closed; else the loop now."""
+        from .phases.computer import ComputerTurn
+        self.screen_up = True                      # 0a9d (007b), before the message (0110)
         self.strip_call("ovl61:0034")
+        self.begin_phase = ComputerTurn(self)      # the run's phase, current at its first point
+        self.begin_phase.begin_screen()            # 0174, 0418, the overview (0080..00b8)
         if live_humans(self.state) == 0:
             k = registry_kit(self.app)
             registry.open_dialog("message", self, lines=[k.text.S(*m) for m in NO_HUMANS_MSG],
@@ -615,8 +678,10 @@ class Game(BaseState):
         the human phase without a turn start.  `begin`: the run from Begin, ovl61:0000(0, 1),
         which drew no map (the backdrop) and the overview only without Hidden Map."""
         from ..rules import turn
-        if not self._loop(lambda: turn.run(self.state, max_sides=1), BACKDROP_SHOWS if begin else BLACK,
-                          begin=begin):
+        blank = BLACK
+        if begin and not (self.under is not None and self.state.options.hidden_map):   # ovl57:0ec5
+            blank = BACKDROP_SHOWS
+        if not self._loop(lambda: turn.run(self.state, max_sides=1), blank, begin=begin):
             self._next = "human"
 
     def strip_call(self, at: str) -> None:
@@ -662,7 +727,7 @@ class Game(BaseState):
         from ..rules.engine import IllegalCommand, apply
         before = self.state.copy()
         try:
-            events = apply(self.state, cmd)
+            events = self._engine(apply, self.state, cmd)
         except IllegalCommand as e:
             log.error("%s refused: %s", type(cmd).__name__, e)
             return None
@@ -701,6 +766,26 @@ class Game(BaseState):
         refresh = getattr(self.phase, "refresh", None)
         if refresh is not None:
             refresh()
+
+    def music_idle(self) -> bool:
+        """An idle pass of the event loop 08a9:000e, whose 0081 polls the music (155e:02ab)
+        before and whatever the DS:166a test at 0086: the human / over phase with nothing
+        animating and no dialog, or any phase's top dialog that waits in that loop
+        (`Dialog.event_loop`: the hero offer, the victory and surrender screens, the turn-1
+        production screen, the temple, the sage, ... while an animator waits on them too; not
+        the message and tick waits, nor the name editor ovl56:03a6).  The computer phase polls
+        at "loop_check" (ovl61:2206); its Settings dialog only once the loop stopped at 220b
+        (while the engine runs on under it there is no event loop)."""
+        from .base import event_loop_idle
+        ph = self.phase
+        if ph is None:
+            return False
+        if self.dialogs:
+            if self.phase_name == "computer" and (getattr(ph, "under_dialogs", False)
+                                                  or getattr(ph, "runner", None) is not None):
+                return False
+            return event_loop_idle(self.dialogs)
+        return self.phase_name in ("human", "over") and not ph.busy()
 
     def scroll_to(self, x: int, y: int) -> None:
         self.view.centre(x, y)
@@ -776,7 +861,14 @@ class Game(BaseState):
             if shape is not None:
                 kit(self.app).cursors.current = shape
             return
-        fb.blit(self.app.assets.picture(BACKDROP), (0, 0))
+        if self.under is not None and not self.map_ready:   # ovl57:0e24..0eae: the Setup screen
+            fb.blit(self.under, (0, 0))
+        else:
+            fb.blit(self.app.assets.picture(BACKDROP), (0, 0))
+        if self.screen_up and self.sprites is not None:   # ovl61:0a9d under the action palette
+            from ..ui.palettes import painter_for
+            painter_for(self).ground(fb)
+        shown = self.begin_phase or self.phase     # Begin's screen under its no-humans message
         if self.map_ready:
             if self.blank_map == BLACK:
                 fb.fill(0, AREA)
@@ -787,18 +879,20 @@ class Game(BaseState):
                 self.held_screen.paint_map(fb)
                 self.held_screen.paint_overview(fb)
             else:
-                paint_map = getattr(self.phase, "paint_map", None)       # the human phase (M4c)
+                paint_map = getattr(shown, "paint_map", None)       # the human phase (M4c)
                 if paint_map is not None:
                     paint_map(fb)
                 else:
                     self.view.draw(fb, self.scene())
-                paint_ov = getattr(self.phase, "paint_overview", None)       # the computer phase
+                paint_ov = getattr(shown, "paint_overview", None)       # the computer phase
                 if paint_ov is not None:
                     paint_ov(fb)
                 else:
                     ov = self.overview_scene()
                     self.minimap.draw(fb, ov, *self.overview_box(ov))
-        if self.phase is not None:
+        if self.begin_phase is not None:
+            self.begin_phase.paint(fb)
+        elif self.phase is not None:
             self.phase.paint(fb)
             if self.bar_blank and self.map_ready and self.phase_name != "computer":   # ovl61:0aeb, no ovl66:0356 since
                 painter = getattr(self.phase, "painter", None)

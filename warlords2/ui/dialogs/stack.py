@@ -79,6 +79,7 @@ from ..menubar import with_codes
 from ..palettes import ABITS, leader, marks, painter_for
 from ..typename import type_name
 from ..widgets import ButtonRow, blit_opaque, kit
+from ...assets.store import cache_load
 
 log = logging.getLogger(__name__)
 
@@ -237,12 +238,14 @@ def _arrays(sel):
 
 
 class Stack(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, host, on_close=None):
         super().__init__(on_close)
         from ...rules.selection import sort_palette
         self._sort = sort_palette
         self.host = host
         k = self.k = kit(host.app)
+        cache_load(k, STACK_PCK)                           # ovl66:0eba 027e, buttons of screen 18 (0771:0090) (X44)
         exe = k.exe
         self.work = host.state.copy()                      # DS:6862.. edited, the real ones kept
         self.start = _arrays(host.state.selection)

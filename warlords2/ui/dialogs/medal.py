@@ -28,8 +28,9 @@ from .. import registry
 from ..dialog import Dialog
 from ..palettes import painter_for
 from ..typename import type_name
-from ..widgets import is_dismiss, kit
+from ..widgets import POPUP_PICTURE, is_dismiss, kit
 from .hero_offer import raw, sprintf, wait
+from ...assets.store import cache_load
 
 FIRST_POPUP = 0x18
 ICON_AT = (176, 155)
@@ -40,6 +41,7 @@ INK, SHADOW = 15, 0
 
 
 class Medal(Dialog):
+    event_loop = False                 # ovl36:2274's pop-up waits in ovl61:10fb (ovl59:0142)
     def __init__(self, host, ev, on_close=None):
         super().__init__(on_close)
         k = self.k = kit(host.app)
@@ -50,6 +52,7 @@ class Medal(Dialog):
         self.type, self.owner = a.type_id, a.owner
         m = info["medals"] - 1
         self.popup = FIRST_POPUP + m
+        cache_load(k, POPUP_PICTURE[self.popup])       # ovl17:0000 (X44)
         strength = info["gain"] == "strength"
         v = s8(a.strength) if strength else a.allowance
         picks = info["text_rolls"]                     # ovl36:2524 / 2581

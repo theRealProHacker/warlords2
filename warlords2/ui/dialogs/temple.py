@@ -28,6 +28,7 @@ from ..layout import DISABLED, NORMAL
 from ..widgets import ButtonRow, kit, text_centred
 from .hero_offer import answer, raw, sprintf, wait
 from .search_result import SHOWN, blessing_lines
+from ...assets.store import cache_load
 
 POPUP, SCREEN = 9, 15
 BLESS, QUEST = 328, 329
@@ -37,10 +38,12 @@ INK, SHADOW = 7, 6
 
 
 class Temple(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, host, site: int, on_close=None):
         super().__init__(on_close)
         self.host = host
         k = self.k = kit(host.app)
+        cache_load(k, 44, 61)                           # popup 9 TEMPLE (ovl17:0000), DBUTTON buttons (X44)
         st = host.state
         name = st.sites[site].name
         self.lines = [sprintf(raw(k, GROUP, 0), name), raw(k, GROUP, 1), raw(k, GROUP, 2)]

@@ -1,0 +1,489 @@
+{
+ "note": "M10c music on ERYTHEA, the Sirians (side 4) human, the other sides computer, Quests on, --no-voice. A scripted run's fresh user dir has the game's OPTIONS.SND (music off), so Begin's computer sides and the turn-1 offer (ovl68:0529, mode 4) call ovl58:0000 with the music off. Alt+X Settings, box 276 on -> SetMusic(True): ovl33:05a0 mode 1 with its die; close 251. Save (Alt+S) and load mid-turn (Alt+L): ovl49:040a mode 1 while mode 1 plays: no die. The hero walks to site 20 (a temple) and searches (z): ovl01:0006 mode 5 with its die (INT1 / INT8); Bless 328, the message. Settings again: 276 off (the track stops at once), 276 on (mode 1, a die). Alt+E End Turn: ovl61:21d4 mode 2 before every computer side (a die at the first, the same mode after), the Sirians' turn 2 with mode 1 (a die) after the Turn pop-up. Asserted by its music log, tests/test_m10c_music.py.",
+ "args": [
+  "--scenario",
+  "ERYTHEA",
+  "--seed",
+  "3",
+  "--controls",
+  "CCCCHCCC",
+  "--options",
+  "0,0,1,0,0,0,0,0,0,0",
+  "--no-voice"
+ ],
+ "steps": [
+  [
+   2,
+   {
+    "wait_dialog": "progress",
+    "frames": 5
+   }
+  ],
+  [
+   400,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 80
+   }
+  ],
+  [
+   490,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   492,
+   {
+    "wait_dialog": "hero_offer",
+    "frames": 10
+   }
+  ],
+  [
+   504,
+   {
+    "press_button": 287
+   }
+  ],
+  [
+   506,
+   {
+    "wait_dialog": "production",
+    "frames": 10
+   }
+  ],
+  [
+   518,
+   {
+    "press_button": 192
+   }
+  ],
+  [
+   522,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   523,
+   {
+    "move": [
+     196,
+     210
+    ]
+   }
+  ],
+  [
+   524,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   525,
+   {
+    "key": "x"
+   }
+  ],
+  [
+   526,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   527,
+   {
+    "wait_dialog": "settings",
+    "frames": 4
+   }
+  ],
+  [
+   532,
+   {
+    "shot": "01_settings_music_off"
+   }
+  ],
+  [
+   534,
+   {
+    "press_button": 276
+   }
+  ],
+  [
+   536,
+   {
+    "shot": "02_settings_music_on"
+   }
+  ],
+  [
+   538,
+   {
+    "press_button": 251
+   }
+  ],
+  [
+   542,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   543,
+   {
+    "state_hash": "music_on",
+    "want": "78b0cbfd55eb2f74b4d32f2e35cdc7c2348ac6f6c204654beae2d23dd6f80d0b"
+   }
+  ],
+  [
+   544,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   545,
+   {
+    "key": "s"
+   }
+  ],
+  [
+   546,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   548,
+   {
+    "wait_dialog": "sage_list",
+    "frames": 6
+   }
+  ],
+  [
+   556,
+   {
+    "press_button": 114
+   }
+  ],
+  [
+   558,
+   {
+    "press_button": 123
+   }
+  ],
+  [
+   560,
+   {
+    "wait_dialog": "input_box",
+    "frames": 4
+   }
+  ],
+  [
+   564,
+   {
+    "press_button": 191
+   }
+  ],
+  [
+   566,
+   {
+    "key": "m",
+    "text": "M"
+   }
+  ],
+  [
+   568,
+   {
+    "key": "return"
+   }
+  ],
+  [
+   570,
+   {
+    "press_button": 189
+   }
+  ],
+  [
+   574,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   576,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   577,
+   {
+    "key": "l"
+   }
+  ],
+  [
+   578,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   580,
+   {
+    "wait_dialog": "sage_list",
+    "frames": 6
+   }
+  ],
+  [
+   588,
+   {
+    "press_button": 114
+   }
+  ],
+  [
+   590,
+   {
+    "press_button": 123
+   }
+  ],
+  [
+   592,
+   {
+    "wait_dialog": "message",
+    "frames": 40
+   }
+  ],
+  [
+   638,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   642,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   643,
+   {
+    "state_hash": "loaded",
+    "want": "14d62dfc4ce3aa9ffa7c804addf69f1be40ddff14977743e449b52790d8ecb60"
+   }
+  ],
+  [
+   646,
+   {
+    "click": [
+     196,
+     210
+    ]
+   }
+  ],
+  [
+   652,
+   {
+    "click": [
+     36,
+     170
+    ]
+   }
+  ],
+  [
+   693,
+   {
+    "key": "z"
+   }
+  ],
+  [
+   697,
+   {
+    "wait_dialog": "temple",
+    "frames": 4
+   }
+  ],
+  [
+   702,
+   {
+    "shot": "03_temple"
+   }
+  ],
+  [
+   704,
+   {
+    "press_button": 328
+   }
+  ],
+  [
+   708,
+   {
+    "wait_dialog": "message",
+    "frames": 4
+   }
+  ],
+  [
+   712,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   716,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   717,
+   {
+    "move": [
+     196,
+     210
+    ]
+   }
+  ],
+  [
+   718,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   719,
+   {
+    "key": "x"
+   }
+  ],
+  [
+   720,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   721,
+   {
+    "wait_dialog": "settings",
+    "frames": 4
+   }
+  ],
+  [
+   726,
+   {
+    "press_button": 276
+   }
+  ],
+  [
+   728,
+   {
+    "shot": "04_settings_off_again"
+   }
+  ],
+  [
+   730,
+   {
+    "press_button": 276
+   }
+  ],
+  [
+   732,
+   {
+    "press_button": 251
+   }
+  ],
+  [
+   736,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   737,
+   {
+    "state_hash": "toggled",
+    "want": "4481e92f37708cda0b17e47aa8e4db05bc799011effa4141195b4eef9899f9d6"
+   }
+  ],
+  [
+   738,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   739,
+   {
+    "key": "e"
+   }
+  ],
+  [
+   740,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   742,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 600
+   }
+  ],
+  [
+   1362,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   1392,
+   {
+    "shot": "05_turn_2"
+   }
+  ],
+  [
+   1393,
+   {
+    "state_hash": "turn_2",
+    "want": "afcb56cec7ba25a83908df8415eb870b8a95fbcd3d593fbcc3ca64e6bda46de2"
+   }
+  ]
+ ]
+}

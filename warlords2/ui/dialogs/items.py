@@ -24,6 +24,7 @@ from ..gfxpage import GfxPages
 from ..keys import popup_input
 from ..widgets import ButtonRow, kit, text_centred
 from .hero_offer import raw, sprintf
+from ...assets.store import cache_load
 
 POPUP, SCREEN = 4, 35
 CLOSE, HELP = 495, 496
@@ -50,12 +51,14 @@ def listed(state) -> list[int]:
 
 
 class Items(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, host, on_close=None):
         super().__init__(on_close)
         self.host = host
         k = self.k = kit(host.app)
         lay = k.layouts.screen(SCREEN)
         self.row = ButtonRow([lay.button(HELP), lay.button(CLOSE)], k.picture)
+        cache_load(k, *(b.picture for b in self.row.buttons))   # STACK.PCK buttons, ovl35:0f0c -> 0771:0090 (X44)
 
     def update(self, events, dt) -> None:
         popup_input(self, events, self.row, self.k.exe, self.press)
@@ -66,7 +69,8 @@ class Items(Dialog):
             return True
         if id == HELP:                                    # ovl35:0f4e -> ovl61:168d
             k = self.k
-            self.host.dialogs.push(GfxPages(k, [k.store.read(k.files.get(*HELP_FILE))]))
+            self.host.dialogs.push(GfxPages(k, [k.store.read(k.files.get(*HELP_FILE))],     # then ovl35:0f0c (X44)
+                                            on_close=lambda _: cache_load(k, *(b.picture for b in self.row.buttons))))
             return True
         return False
 

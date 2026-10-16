@@ -165,6 +165,7 @@ from ..screen import IDENTITY
 from ..typename import type_name
 from ..widgets import ButtonRow, blit_opaque, kit, text_centred
 from . import city_info
+from ...assets.store import cache_load
 
 
 # ------------------------------------------------------------------ ids and modes
@@ -520,6 +521,7 @@ class MapPainter:
 
 
 class CityScreen(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, host, on_close=None):
         super().__init__(on_close)
         self.host = host
@@ -656,6 +658,7 @@ class CityScreen(Dialog):
         live.update(states)
         held = self.row.held.id if self.row.held is not None else None
         self.row = ButtonRow([b for b in self.layout.buttons if b.id in live], self.kit.picture)
+        cache_load(self.kit, *(b.picture for b in self.row.buttons))   # CITYBU buttons, 0771:0090 (X44)
         self.row.state.update(live)
         if held in live and live[held] == NORMAL:
             self.row.held = next(b for b in self.row.buttons if b.id == held)
@@ -1115,6 +1118,7 @@ registry.action(registry.MENU_ID["vectoring"])(_menu(VECTOR))
 
 
 class BuildProduction(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, screen: CityScreen, on_close=None):
         super().__init__(on_close)
         self.screen = scr = screen
@@ -1147,6 +1151,7 @@ class BuildProduction(Dialog):
             price = s16(st.army_type(t).buy_price)
             live[OFFER[k]] = DISABLED if have or gold < price else NORMAL
         self.row = ButtonRow([b for b in self.layout.buttons if b.id in live], self.kit.picture)
+        cache_load(self.kit, *(b.picture for b in self.row.buttons))   # buttons, 0771:0090 (X44)
         self.row.state.update(live)
 
     def update(self, events, dt) -> None:

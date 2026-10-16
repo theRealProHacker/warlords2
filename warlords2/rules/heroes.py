@@ -29,7 +29,9 @@ from ..model import events as E
 from ..model.ids import (HERO_TYPE, MAP_ARMY, MAP_H, MAP_OWNER_MASK, MAP_W, ROAD_STANDARD, Control,
                          ItemState, Terrain)
 from .bonuses import s8
+from . import music as MU
 from .constants import heroes as K
+from .constants import music as KMU
 from .constants import movement as KM
 from .constants import unverified_allowed
 from .economy import add_gold, cached_cities, refresh_cities, refresh_income
@@ -293,12 +295,30 @@ def human_offer(state) -> list:
     opening; buttons accept 0x11f, decline 0x120 (disabled on turn 1), rename 0x121, sex
     0x122 / 0x123 (ovl47:120c); then, still inside 0d5c with the dialog drawn, the tutorial page:
     SCN 0x12e set and SCN byte 0x134 bit 0 clear -> bit 0 set, FILE.DAT (25, 0) through
-    ovl61:168d (asm ovl47:11d5..1207; TurnCue "tutorial" after the HeroOffered)."""
-    from .constants import turn as KT
-    _names(state)
-    offer = offer_check(state)
+    ovl61:168d (asm ovl47:11d5..1207; TurnCue "tutorial" after the HeroOffered).  The two halves
+    are `human_offer_check` (ovl47:0000) and `offer_dialog` (ovl47:0d5c): rules.turn.resume
+    calls them apart, the music ovl58:0000(4) of ovl68:0529 lies between them."""
+    offer = human_offer_check(state)
     if offer is None:
         return []
+    return offer_dialog(state, offer)
+
+
+def human_offer_check(state):
+    """The offer check of the human turn start: ovl47:0000 on the current side, its dice
+    included (`offer_check`); {"city", "price"} or None.
+    Evidence: asm ovl68:0513 -> ovl47:0000 (see `offer_check`); the hero name file is read
+    first (ovl47:0c67's table, `_names`)."""
+    _names(state)
+    return offer_check(state)
+
+
+def offer_dialog(state, offer) -> list:
+    """The human offer dialog ovl47:0d5c for `offer` (from `human_offer_check`): the drawn name,
+    HeroOffered pending, the tutorial page (see `human_offer`).
+    Evidence: asm ovl68:0531 -> ovl47:0d5c (ovl47:0c67 name at its opening, 11d5..1207 the
+    tutorial page)."""
+    from .constants import turn as KT
     if offer["city"] < 0:
         raise RuntimeError("no city at the capital for the turn-1 hero")
     female, name = pick_name(state)
@@ -532,13 +552,16 @@ def add_exp(state, army_id, n) -> list:
 def promote(state, army, group: int) -> list:
     """One level up: level + 1, strength + 1 (cap 9), allowance + 2.
     Evidence: asm ovl47:0672..0720: level bits = (level + 1) & 3; 0b62:0005(army, 1); +6 += 2
-    (byte); the rest is the human's dialog (STRING `group`, index +6 for a heroine)."""
+    (byte); the rest is the human's dialog (STRING `group`, index +6 for a heroine), whose
+    music ovl58:0000(7) comes first (071a ovl25:09ab == 0 -> 0726; MusicStarted before the
+    HeroPromoted)."""
     h = slot_of(state, army)
     before = s8(army.strength)
     h.level = (h.level + 1) & 3
     add_strength(army, K.PROMOTE_STRENGTH.value)
     army.allowance = (army.allowance + K.PROMOTE_MOVES.value) & 0xFF
-    return [E.HeroPromoted({"army": army.id, "slot": s8(army.hero_slot), "level": h.level,
+    music = [] if is_computer(state) else MU.play(state, KMU.PROMOTION_MODE.value, "ovl47:0726")
+    return music + [E.HeroPromoted({"army": army.id, "slot": s8(army.hero_slot), "level": h.level,
                             "strength": s8(army.strength) - before, "moves": K.PROMOTE_MOVES.value,
                             "group": group, "female": h.female})]
 
@@ -739,7 +762,9 @@ def award_medal(state, battle) -> list:
     Then (asm 24a5..24ba) only when SCN 0xd0 + 2 * DS:41fa (the battle's attacking side,
     `battle_work.attacker`) is 0 (human) the pop-up is shown, and it rolls its two lines on the
     game's dice: (158, -1) at 2524 and (160, -1) at 2581 (ovl59:04f0 -> 02bf(1, n, -1)), kept
-    in `MedalAwarded.info["text_rolls"]` = (r1, r2)."""
+    in `MedalAwarded.info["text_rolls"]` = (r1, r2).  The pop-up's music: ovl58:0000(8) before
+    the text rolls (24c9) and ovl58:0000(1) after it closed (2668, after ovl61:10fb / ovl17:069c,
+    which roll nothing): events MusicStarted(8), MedalAwarded, MusicStarted(1) in that order."""
     events: list = []
     s = battle.setup
     stack = _medal_stack(state)
@@ -774,9 +799,12 @@ def award_medal(state, battle) -> list:
     info = {"army": a.id, "medals": a.medals, "gain": gain}
     att = s8(state.battle_work.attacker)
     if 0 <= att < len(state.players) and state.players[att].control == K.MEDAL_TEXT_HUMAN.value:
+        events += MU.play(state, KMU.MEDAL_MODE.value, "ovl36:24c9")
         n158, n160 = K.MEDAL_TEXT_COUNTS.value
         r1 = state.rng.rnd(1, n158, K.MEDAL_PICK_ADD.value)     # asm 2524: (158, -1)
         r2 = state.rng.rnd(1, n160, K.MEDAL_PICK_ADD.value)     # asm 2581: (160, -1)
         info["text_rolls"] = (r1, r2)
+        events.append(E.MedalAwarded(info))
+        return events + MU.play(state, KMU.MEDAL_AFTER_MODE.value, "ovl36:2668")   # pop-up closed
     events.append(E.MedalAwarded(info))
     return events

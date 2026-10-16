@@ -158,6 +158,85 @@ class AssetStore:
         return indexed_surface(self.bitmap(rel), key)
 
 
+GROUP8 = 8                          # the cache group of DS:51a9 / 51e4 (register X44)
+
+
+class CacheGroup8:
+    """Which picture of cache group 8 the EXE holds loaded (register X44).
+
+    Every cache call that draws or loads a picture (0997:00a2 / 0129 / 027e / 034a) first
+    tests the picture's loaded bit (+0 bit 2, e.g. 0135..0141): when it is set nothing is
+    loaded or unloaded; otherwise it unloads the first loaded picture with the same group
+    byte +5 (0143..0171: 059c clears bit 2 and frees the bitmap and mask records,
+    1012:0975 sets +0x34 = 0) and loads the new one (03a9 sets bit 2 at 04c2).  So at most
+    one of the 49 group-8 pictures is loaded, and it is the last one asked for.  0997:0066
+    (ovl57:0014, ovl49:0449) unloads every loaded picture whose directory (+0 bits 0-1) is
+    not 0: in group 8 the movebars, TOWER.PCK and CITYBACK.PCK (TERRAIN<n>) and SCENARIO.PCK
+    (<scenario>\\PICS).  Nothing else in the EXE writes the loaded bit or the
+    records DS:51a9 / 51e4 (0997:000e / 003a have no caller; 0997:03a9 and 059c are only
+    called from 0997 itself).  Before the first group-8 load nothing of the group is loaded.
+
+    `now`: the occupant after the last load point this program has passed, in the EXE's
+    order of its loads (the hooks `cache_load` / `cache_unload` sit where the UI does what
+    the EXE routine with the cache call does).  `shown`: every occupant since the last map
+    draw this program knows to be one of the EXE's (`map_drawn`, the computer turn's
+    ovl64:006c); the map on the screen is the one the EXE drew last, so the flag of a
+    planted item 11 / 12 drawn every frame can come from any of them.  A per-App word
+    (`App.group8`), not game state."""
+
+    def __init__(self, pictures):
+        self.pictures = pictures
+        self.now: int | None = None
+        self.shown: set[int | None] = {None}
+
+    def load(self, index: int) -> None:
+        """0997:00a2 / 0129 / 027e / 034a with picture `index` (other groups: no change)."""
+        if self.pictures[index].group != GROUP8:
+            return
+        self.now = index
+        self.shown.add(index)
+
+    def unload(self) -> None:
+        """0997:0066: the pictures of directory != 0 unloaded."""
+        if self.now is not None and self.pictures[self.now].directory != 0:
+            self.now = None
+            self.shown.add(None)
+
+    def map_drawn(self) -> None:
+        """An ovl64:006c of the EXE at this point of its order: the map holds `now`'s flag."""
+        self.shown = {self.now}
+
+
+def group8_of(owner) -> CacheGroup8 | None:
+    """The App's `CacheGroup8` from an App, an AssetStore, a Kit or anything with `.app`
+    (None for a store built without an App)."""
+    o = getattr(owner, "store", owner)                     # a Kit -> its AssetStore
+    o = getattr(o, "app", o)                               # an AssetStore / host -> the App
+    return getattr(o, "group8", None)
+
+
+def cache_load(owner, *pictures: int) -> None:
+    """The EXE's cache calls for `pictures`, in this order (`CacheGroup8.load`)."""
+    g = group8_of(owner)
+    if g is not None:
+        for k in pictures:
+            g.load(k)
+
+
+def cache_unload(owner) -> None:
+    """0997:0066 (`CacheGroup8.unload`)."""
+    g = group8_of(owner)
+    if g is not None:
+        g.unload()
+
+
+def map_drawn(owner) -> None:
+    """ovl64:006c reached in the EXE's order (`CacheGroup8.map_drawn`)."""
+    g = group8_of(owner)
+    if g is not None:
+        g.map_drawn()
+
+
 def _main_thread() -> None:
     if threading.current_thread() is not threading.main_thread():
         raise RuntimeError("pictures load on the main thread (pgsm hooks run on others)")

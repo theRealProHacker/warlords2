@@ -61,6 +61,7 @@ from ..widgets import ButtonRow, blit_opaque, kit, text_centred
 from .hero_offer import (answer, bevel, box_mark, line_mark, map_popup, raw, seen, site_markers, sprintf,
                          square_mark, wait)
 from .search_result import Searching
+from ...assets.store import cache_load
 
 SCREEN = 10
 SHOW, GEM, MAP, CLOSE = 279, 280, 281, 282
@@ -88,6 +89,12 @@ def entry_name(k, state, e: int) -> str:
 
 
 class Sage(Dialog):
+    @property
+    def event_loop(self) -> bool:
+        """The menu's buttons are 08a9 event-loop ones; the visit line's ovl58:01a9 / ovl59:0000(10)
+        and the outline's ovl59:0000(10) are tick waits without the poll."""
+        return self.visit_left <= 0 and self.view_box is None
+
     def __init__(self, host, offer, on_close=None):
         super().__init__(on_close)
         self.host, self.offer = host, offer
@@ -115,6 +122,7 @@ class Sage(Dialog):
         """ovl34:146f (1554..15ad) / 0e85(-1)."""
         st = self.host.state
         self.row = ButtonRow([self.all[i] for i in (SHOW, GEM, MAP)], self.k.picture)
+        cache_load(self.k, *(b.picture for b in self.row.buttons))   # DBUTTON buttons, 0771:0090 (X44)
         self.row.state[SHOW] = NORMAL if self.entries else DISABLED
         self.row.state[GEM] = NORMAL
         self.row.state[MAP] = NORMAL if st.options.hidden_map else DISABLED
@@ -128,6 +136,7 @@ class Sage(Dialog):
         self.erased = True
         self.picking = False
         self.row = ButtonRow([self.all[CLOSE]], self.k.picture)
+        cache_load(self.k, *(b.picture for b in self.row.buttons))   # DBUTTON buttons, 0771:0090 (X44)
 
     def add(self, s: str) -> None:
         """ovl34:15d5."""
@@ -258,6 +267,7 @@ class SageList(Dialog):
     `persist.saves.RunCarry`) every row holding an entry >= 0 draws `buffer.name(entry)`, also
     past the count (ovl51:00f3 tests only the row word), as the EXE draws what an earlier
     list left there; without one only entries < count are drawn."""
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     SCREEN, ROWS = 2, 5
     ROW_IDS, PAGE_UP, PAGE_DOWN, ONE_UP, ONE_DOWN, OK, CANCEL = range(114, 119), 119, 120, 121, 122, 123, 124
     POPUP, TITLE_AT, BOX, ROWS_AT = 3, 0x15C2, 0x15A6, 0x15AE

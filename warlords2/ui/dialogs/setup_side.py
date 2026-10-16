@@ -142,6 +142,11 @@ def bevel(fb: pygame.Surface, rect, a: int, b: int) -> None:
 
 
 class SetupSide(Dialog):
+    @property
+    def event_loop(self) -> bool:
+        """Buttons by 07be:04d8 from 08a9:000e; not while the retype ovl56:03a6 polls keys."""
+        return self.typing is None
+
     def __init__(self, k, sides, p: int, host, on_close=None):
         super().__init__(on_close)
         self.kit, self.sides, self.p, self.host = k, sides, p, host

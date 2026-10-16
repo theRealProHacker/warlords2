@@ -110,7 +110,7 @@ def test_begin_hands_newgameconfig_with_options_dat_words(app, game):
     got = []
     setup.request = lambda name, **kw: got.append((name, kw))
     setup.on_button(141)
-    assert len(got) == 1 and got[0][0] == "game" and set(got[0][1]) == {"new_game", "overview"}
+    assert len(got) == 1 and got[0][0] == "game" and set(got[0][1]) == {"new_game", "overview", "under"}
     cfg = got[0][1]["new_game"]
     assert isinstance(cfg, NewGameConfig) and cfg.scenario == "ERYTHEA" and cfg.seed == 7
     assert cfg.options.to_words() == words

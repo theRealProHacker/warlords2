@@ -30,6 +30,8 @@ from .constants import unverified_allowed
 from .economy import add_gold
 from .engine import IllegalCommand, NotImplementedCommand
 from . import heroes as H
+from . import music as MU
+from .constants import music as KMU
 from .visibility import reveal
 
 log = logging.getLogger(__name__)
@@ -159,7 +161,8 @@ def search_selection(state, cmd_cls=C.Search) -> list:
     the map's searched bit 0x4000 set -> nothing; a sage: hero + 3 exp (ovl47:04f1), news (6,
     0x65), the computer's sage choice ovl26:0080 (HOOKS ai_sage; a human side the sage dialog,
     SageOffered pending), searched bit; a temple: the blessing for a computer side (ovl25:09ab),
-    the temple menu for a human (TempleChoice answers it); any other kind: the ruin search
+    the temple menu for a human (TempleChoice answers it; its first call is the music
+    ovl58:0000(5) at ovl01:0006, MusicStarted after the SiteSearched); any other kind: the ruin search
     ovl34:01ab.  Used by `search` (the player's command) and the AI (ovl22:15c3, ovl20:12eb).
     The sage hook is required for a computer side (NotImplementedCommand of `cmd_cls` in strict
     mode before anything changes, logged and skipped with --allow-unverified).  Not written:
@@ -204,7 +207,8 @@ def search_selection(state, cmd_cls=C.Search) -> list:
     if site.kind == SiteKind.TEMPLE:
         if computer:
             return bless(state, si)
-        return [E.SiteSearched({"site": si, "kind": int(site.kind), "hero": hero.id, "temple_menu": True})]
+        music = MU.play(state, KMU.TEMPLE_MODE.value, "ovl01:0006")      # the menu's first call
+        return [E.SiteSearched({"site": si, "kind": int(site.kind), "hero": hero.id, "temple_menu": True})] + music
     return ruin_search(state, si, x, y)
 
 
@@ -394,14 +398,16 @@ def sage_entries(state, x: int, y: int) -> list[int]:
 def sage(state, si: int, x: int, y: int) -> list:
     """The human sage dialog: SageOffered (pending) with the list of places it can show; the gem
     is always offered, the map view only with Hidden Map.
-    Evidence: decomp ovl34:0aa0 -> ovl34:1610 (list), ovl34:146f: 0x117 (show) enabled iff the
+    The music ovl58:0000(6) comes after the list, before the menu (MusicStarted first).
+    Evidence: decomp ovl34:0aa0 -> ovl34:1610 (list), asm 0aad ovl58:0000(6), ovl34:146f: 0x117 (show) enabled iff the
     list is not empty, 0x118 (gem) always, 0x119 (map) iff SCN 0x124; the close button 0x11a only
     after a choice (ovl34:0b1a, 0e85, 0c50 enable it)."""
     entries = sage_entries(state, x, y)
+    music = MU.play(state, KMU.SAGE_MODE.value, "ovl34:0aad")
     ev = E.SageOffered({"site": si, "x": x, "y": y, "entries": entries,
                         "map_view": bool(state.options.hidden_map)})
     state.pending = ev
-    return [ev]
+    return music + [ev]
 
 
 def sage_choice(state, cmd: C.SageChoice) -> list:

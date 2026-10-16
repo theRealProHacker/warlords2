@@ -1,4 +1,5 @@
-"""Digital sound: effects, the advisor's speech and the sound settings (M10a; music is M10c).
+"""Digital sound: effects, the advisor's speech and the sound settings (M10a); the music is
+`audio.music` (player), `audio.music_triggers` (host hook-up) and `audio.music_render` (M10c).
 
 WARLORD2.EXE plays every sample through one DIGPAK voice (155e:04e9 load, 155e:065e play,
 155e:0736 wait for the end, 155e:075a playing?), always at 11000 Hz (docs/formats/sound.md).

@@ -149,22 +149,26 @@ def _assign(dst: Any, src: Any) -> Any:
 
 
 def snapshot(state: GameState) -> tuple:
-    """A copy of `state` and its AI process words (model.ai.AiProcess) for `restore`.  An RNG
-    that cannot be serialised (a test stand-in die source) is deep-copied instead."""
+    """A copy of `state`, its AI process words (model.ai.AiProcess) and its music words
+    (model.music.MusicWords, run memory outside the dump) for `restore`.  An RNG that cannot
+    be serialised (a test stand-in die source) is deep-copied instead."""
     words = state.ai.proc.dump()
+    music = state.music.copy()
     try:
-        return dump(state), None, words
+        return dump(state), None, words, music
     except AttributeError:
-        return dump(state, rng=False), copy.deepcopy(state.rng), words
+        return dump(state, rng=False), copy.deepcopy(state.rng), words, music
 
 
 def restore(state: GameState, snap: tuple) -> None:
     """Put `state` back to `snap` (from `snapshot`), in place: the GameState, its lists and the
     records in them keep their identity, so references held into the state stay valid; the
-    AI process object stays the same one, its words are put back."""
-    d, rng, words = snap
+    AI process object stays the same one, its words are put back; so does the music words
+    object (`MusicWords.assign`): a refused command's music call is undone with its dice."""
+    d, rng, words, music = snap
     proc = state.ai.proc
     _assign(state, load(d, rng=rng))
     for k, v in words.items():
         setattr(proc, k, list(v) if isinstance(v, list) else v)
     proc.blocks = state.ai.blocks
+    state.music.assign(music)

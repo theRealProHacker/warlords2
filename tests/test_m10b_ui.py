@@ -207,6 +207,7 @@ def test_load_button_101_and_cancel_paths(g, monkeypatch):
     registry.run_action(101, g).press(CANCEL)
     assert len(drawn) == 1                                # in a game: the game screen
     menu = Menu.__new__(Menu)
+    menu.app = g.app                                      # ovl60:0000(0) plays music mode 0 (M10c)
     setup = SimpleNamespace(app=g.app, dialogs=None)
     hits = []
     menu.refresh = lambda: hits.append("menu")

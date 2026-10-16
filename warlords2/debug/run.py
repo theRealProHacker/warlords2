@@ -4,7 +4,8 @@
 
 Flags after the script are `python -m warlords2` flags (e.g. `--headless`, `--shot-at`,
 `--record`, `--record-fps`); the script's own `args` come first.  The directory gets
-`frames/<shot>.png`, `run_<k>.mp4` (or the `--record` path) and `manifest.json`.  This
+`frames/<shot>.png`, `run_<k>.mp4` (or the `--record` path), `music.jsonl` (the run's music
+log, `audio.music.MusicLog`) and `manifest.json`.  This
 module owns the loop of section 3.1, so it calls `capture.after_frame` after each
 presented frame.
 
@@ -27,7 +28,7 @@ from . import evidence, script as script_mod
 from .capture import Capture
 from .recorder import Recorder
 
-STALE = ("frames/*.png", "run_*.mp4", "manifest.json")
+STALE = ("frames/*.png", "run_*.mp4", "manifest.json", "music.jsonl", "music.wav")
 
 
 def run(script: Path, out_dir: Path, flags: list[str] = (), enforce_golden: bool = True) -> dict:
@@ -88,10 +89,16 @@ def _run(script: Path, out_dir: Path, argv: list[str], enforce_golden: bool) -> 
             for st in getattr(getattr(app, "manager", None), "states", {}).values():
                 if isinstance(getattr(st, "state", None), GameState):
                     game_state = st.state
+            player = getattr(app, "music_player", None)
+            music = None
+            if player is not None:
+                player.log.write(out_dir / "music.jsonl")
+                music = player.summary()
             m = evidence.manifest(gd=app.gd, script=script, argv=argv, seed=cfg.seed, shots=capture.shots,
                                   segments=recorder.segments, checks=src.results if src else [],
                                   frames=app.frame, error=error,
-                                  state_hash=game_state.hash() if game_state is not None else None)
+                                  state_hash=game_state.hash() if game_state is not None else None,
+                                  music=music)
             evidence.write(out_dir, m)
             app.close()
     return m

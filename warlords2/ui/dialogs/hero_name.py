@@ -26,6 +26,7 @@ from ..widgets import kit
 
 
 class HeroName(Dialog):
+    event_loop = False                 # ovl56:03a6: the key poll ovl59:020d, its own loop
     def __init__(self, k, rect, old: str, max_len: int, max_width: int, on_close=None):
         super().__init__(on_close)
         self.k, self.rect, self.old = k, tuple(rect), old

@@ -28,6 +28,7 @@ from warlords2.rules import economy as EC
 from warlords2.rules import engine
 from warlords2.rules import heroes as H
 from warlords2.rules import movement as M
+from warlords2.rules import music as MU
 from warlords2.rules import pathfinding as P
 from warlords2.rules import quests as Q
 from warlords2.rules import ruins as RU
@@ -272,7 +273,7 @@ HUMAN_STEPS = ((S, "group_cleanup", "0b62:0d85"), (M, "refresh_moves", "ovl68:05
                (S, "fortify_marks", "ovl67:0000"), (EC, "settle", "ovl68:0827"),
                (S, "clear_turn_flags", "ovl67:0113"), (T, "centre_view", "ovl64:0629"),
                (M, "sink", "0b62:0ea0"), (Q, "check", "ovl01:1ded"), (T, "advice", "ovl58:026f"),
-               (H, "promote_all", "ovl47:0579"), (H, "human_offer", "ovl47:0000"),
+               (H, "promote_all", "ovl47:0579"), (H, "human_offer_check", "ovl47:0000"),
                (CT, "deliver", "ovl43:0000"), (CT, "restart_production", "ovl43:06bd"),
                (V, "load_view", "ovl64:0d39"))
 
@@ -283,11 +284,12 @@ def test_human_turn_order_turn_2(game, stubs, monkeypatch):
     st = two_humans(game)
     st.turn = 2
     st.players[0].gold = 0                                   # no hero offer (price > gold)
-    trace(monkeypatch, *HUMAN_STEPS)
+    trace(monkeypatch, *HUMAN_STEPS, (MU, "play", "ovl58:0000"))
     ev = T.human_turn(st)
     assert CALLS == ["ovl00:0db3", "ovl64:0d39", "0b62:0d85", "ovl68:05fb", "ovl67:0000",
                      "ovl68:0827", "ovl67:0113", "ovl64:0629", "0b62:0ea0", "ovl01:1ded",
-                     "ovl58:026f", "ovl47:0579", "ovl47:0000", "ovl43:0000", "ovl43:06bd"]
+                     "ovl58:026f", "ovl47:0579", "ovl47:0000", "ovl58:0000", "ovl43:0000",
+                     "ovl43:06bd"]
     names = [type(e).__name__ for e in ev]
     assert names.index("IncomeSettled") < names.index("TurnStarted")
     assert st.flags[0x159] == 1 and st.pending is None

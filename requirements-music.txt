@@ -1,0 +1,10 @@
+# Music rendering only: python -m warlords2.audio.music_render (docs/formats/music.md §8).
+# The game itself needs only requirements.txt; it plays the rendered WAVs from out/music/.
+#   uv pip install --python .venv/bin/python -r requirements-music.txt
+# pyopl: DOSBox DBOPL OPL2/OPL3 emulator, GPL-3.0-only (no permissive OPL core ships as a
+# wheel); only the rendered WAVs are used by the game, the emulator is not part of it.
+numpy
+pyopl==2.0
+# tinysoundfont (MIT, for --variant gm) is not listed because it depends on pyaudio (needs
+# system PortAudio to build) although offline rendering never imports it:
+#   uv pip install --python .venv/bin/python --no-deps tinysoundfont==0.3.7

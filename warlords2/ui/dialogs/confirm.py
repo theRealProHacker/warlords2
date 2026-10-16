@@ -34,6 +34,7 @@ INK, SHADOW = 15, 0
 
 
 class Confirm(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, k, title: str, lines: list[str], on_close=None, host=None):
         super().__init__(on_close)
         if host is not None:

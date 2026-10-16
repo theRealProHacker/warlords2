@@ -67,8 +67,9 @@ from ..dialog import Dialog
 from ..keys import popup_input
 from ..layout import DISABLED, NORMAL
 from ..palettes import painter_for
-from ..widgets import ButtonRow, is_dismiss, kit, text_centred
+from ..widgets import POPUP_PICTURE, ButtonRow, is_dismiss, kit, text_centred
 from . import fight as F
+from ...assets.store import cache_load
 
 log = logging.getLogger(__name__)
 
@@ -122,6 +123,7 @@ def roll(state, k, group: int) -> int:
 
 
 class Capture(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, host, event, on_close=None):
         global _return_list
         super().__init__(on_close)
@@ -142,6 +144,7 @@ class Capture(Dialog):
         self.lines_at = [ds_words(exe, o, 2) for o in LINES_AT]
         self.pillage, self.sack = RC.pillage_value(st, self.city), RC.sack_value(st, self.city)
         self.row = ButtonRow(list(k.layouts.screen(SCREEN).buttons), k.picture)
+        cache_load(k, POPUP_PICTURE[POPUP], *(b.picture for b in self.row.buttons))   # ovl17:0000, buttons (X44)
         self.row.state[PILLAGE] = NORMAL if self.pillage else DISABLED
         self.row.state[SACK] = NORMAL if self.sack else DISABLED
         if _return_list is None:
@@ -215,6 +218,7 @@ def lost_slots(state, ci: int, kind: int) -> list[tuple[int, int]]:
 
 class CaptureResult(Dialog):
     """ovl31:0508(kind)."""
+    event_loop = False                 # ovl31:0508 ends in ovl61:10fb(0): a wait without the poll
 
     def __init__(self, host, kind: int, city: str, lost: list, left: int, on_close=None):
         super().__init__(on_close)

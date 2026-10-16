@@ -28,7 +28,7 @@ from ..ui.keys import right_help
 from ..ui.layout import NORMAL
 from ..ui.menubar import TitleBar, title_bar, with_codes
 from ..ui.widgets import ButtonRow, draw_pointer, kit
-from .base import BaseState
+from .base import BaseState, event_loop_idle
 
 if TYPE_CHECKING:
     from ..ui.widgets import Kit
@@ -91,6 +91,10 @@ class ScreenHost(BaseState):
             self.entering = False
             self.enter_screen(k)
         return k
+
+    def music_idle(self) -> bool:
+        """The screen's event loop (08a9:0081) is idle: the music poll 155e:02ab."""
+        return event_loop_idle(self.dialogs)
 
     def enter_screen(self, k: Kit) -> None:
         """Entry set-up without dialogs or loads (may run from `paint`)."""

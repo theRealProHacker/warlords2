@@ -23,6 +23,8 @@ from ..model.ids import HERO_TYPE, NO_OWNER, Control, ItemState, Terrain
 from .bonuses import s8
 from .constants import heroes as K
 from . import heroes as H
+from . import music as MU
+from .constants import music as KMU
 
 CITY = Terrain.CITY
 
@@ -214,7 +216,8 @@ def check(state, words) -> tuple:
     4 and the target not intact -> failure 38.  3 (items): 1 and the item carried by the hero:
     the item leaves play (state 0), done.  Failure clears +0; a human gets the message (group
     as listed, ovl61:1160).  Done: +0 = 0, DS:3f64 = the continuation, ovl01:1909 / 1c02 reward;
-    a human hears it (ovl58:0000(3)) and sees ovl01:1520, closed by ovl01:18a1, which selects
+    a human hears it (ovl58:0000(3) at 272c, after 2723 ovl25:09ab == 0: `rules.music.play`,
+    a die) and sees ovl01:1520, closed by ovl01:18a1, which selects
     the stack at DS:5e5e's square again (0b62:007d, 0b62:09ec, ovl67:06eb)."""
     ev = int(words[0])
     value = int(words[2])
@@ -288,6 +291,7 @@ def check(state, words) -> tuple:
                                 "reward": kind, "value": v})]
     events += apply_reward(state, kind, v)
     if _human(state):
+        events += MU.play(state, KMU.QUEST_MODE.value, "ovl01:272c")
         events += _reselect(state)
     return 1, events
 

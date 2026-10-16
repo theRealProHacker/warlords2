@@ -33,6 +33,7 @@ from __future__ import annotations
 import pygame
 
 from ..assets.exe import ds_str, ds_words
+from ..assets.store import cache_load
 from ..assets.fonts import CHANCE17
 from .widgets import blit_opaque, kit, text_centred
 
@@ -92,6 +93,7 @@ class TurnBar:
     def progress(self, state, n: int) -> None:
         """ovl61:131b(n)."""
         self.bar = (state.current, n)
+        cache_load(self.k, MOVEBAR0 + state.current)     # 027e at 1374 (X44)
 
     # ---------------------------------------------------------------- drawing
 

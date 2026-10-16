@@ -116,29 +116,41 @@ def _threaded(st):
         go(lambda: T.run(st, max_sides=1))
 
 
+def _music_on(st):
+    """The music switch on (DS:0bee, M10c): ovl58:0000 then rolls the game's dice."""
+    st.music.on, st.music.mode, st.music.playing = 1, 1, 1
+
+
 @gamedata
+@pytest.mark.parametrize("music", [False, True], ids=["music_off", "music_on"])
 @pytest.mark.parametrize("scen,ctl,opts,rounds", GAMES, ids=lambda v: str(v))
-def test_runner_equals_plain_run(game, tmp_path, rolls, scen, ctl, opts, rounds):
+def test_runner_equals_plain_run(game, tmp_path, rolls, scen, ctl, opts, rounds, music):
     a = _app(game, tmp_path, scen, ctl, opts)
     g = _human_waits(a)
+    if music:
+        _music_on(g.state)
     plain, threaded = g.state.copy(), g.state.copy()
     a.close()
     for _ in range(rounds):
         apply(plain, C.EndTurn())
         _threaded(threaded)
-        assert threaded.hash() == plain.hash()
+        assert threaded.hash() == plain.hash() and threaded.music == plain.music
         _answer(plain)
         _answer(threaded)
     assert rolls[id(threaded.rng)] == rolls[id(plain.rng)] and rolls[id(plain.rng)]
+    assert plain.music.starts > 0 if music else plain.music.starts == 0
 
 
 @gamedata
+@pytest.mark.parametrize("music", [False, True], ids=["music_off", "music_on"])
 @pytest.mark.parametrize("scen,ctl,opts,rounds", GAMES[:3], ids=lambda v: str(v))
-def test_computer_phase_equals_plain_run(game, tmp_path, rolls, scen, ctl, opts, rounds):
+def test_computer_phase_equals_plain_run(game, tmp_path, rolls, scen, ctl, opts, rounds, music):
     """The game's End Turn with the computer phase drawing at every point: same state hashes
-    and the same rolls as the engine alone."""
+    and the same rolls as the engine alone (with the music on too: its dice are the engine's)."""
     a = _app(game, tmp_path, scen, ctl, opts)
     g = _human_waits(a)
+    if music:
+        _music_on(g.state)
     plain = g.state.copy()
     start = len(rolls[id(g.state.rng)])
     for _ in range(rounds):
@@ -154,4 +166,5 @@ def test_computer_phase_equals_plain_run(game, tmp_path, rolls, scen, ctl, opts,
         _answer(plain)
         assert g.state.hash() == plain.hash()
     assert rolls[id(g.state.rng)][start:] == rolls[id(plain.rng)]
+    assert g.state.music == plain.music and (plain.music.starts > 0) == music
     a.close()

@@ -59,6 +59,7 @@ from ..info import Panel
 from ..layout import DISABLED, NORMAL
 from ..palettes import blit_opaque, painter_for
 from ..widgets import ButtonRow, kit, text_centred
+from ...assets.store import cache_load
 
 POPUP, SCREEN = 0x0B, 0x1A                      # ovl38:0de4, 0e3b
 OK, CANCEL, RESET, UP, DOWN, SLOT = 425, 426, 427, 428, 429, 430     # 07be:0a3e..0a66
@@ -102,6 +103,7 @@ def swapped(row, a: int, b: int) -> list:
 
 
 class FightOrder(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, host, on_close=None):
         super().__init__(on_close)
         self.host = host
@@ -115,6 +117,7 @@ class FightOrder(Dialog):
         self.number_fmt = ds_str(k.exe, NUMBER_FMT)
         layout = k.layouts.screen(SCREEN)
         self.row = ButtonRow(layout.buttons, k.picture)
+        cache_load(k, *(b.picture for b in self.row.buttons))   # FORDER buttons, 0771:0090 (X44)
         self.states()
 
     @property

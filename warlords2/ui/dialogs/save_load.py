@@ -48,6 +48,7 @@ from __future__ import annotations
 import logging
 from typing import Callable, NamedTuple
 
+from ...assets.store import cache_unload
 from .. import registry
 from ..text_input import InputBox
 from ..widgets import kit
@@ -285,6 +286,7 @@ def open_load(host, n: int, where: str, done: Callable[[LoadResult], None], advi
         registry.open_dialog("progress", host, group=BUILD_GROUP, work=build_work(app, res.state, pixels),
                              on_close=lambda _: done(LoadResult(res, pixels, failed)))
 
+    cache_unload(app)                            # ovl49:0449 0997:0066, before the scroll (X44)
     hide = getattr(host, "hide_pointer", None)
     registry.open_dialog("progress", host, group=LOAD_GROUP, work=load_work(app, n, where, advisor, hide),
                          on_close=read_done)

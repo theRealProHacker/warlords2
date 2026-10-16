@@ -178,11 +178,14 @@ class NoGameInMemory(RuntimeError):
 class Saves:
     """The slot table and the save files of one user directory.  `user`: a
     `persist.userdir.UserDir`; `gd`: the game directory (FILE.DAT names, the seed of the slot
-    table, the army types and card files of a fresh-run load).  The table is read at once
-    (res_0a4c:0250 -> ovl49:0e5f at start-up)."""
+    table, the army types and card files of a fresh-run load); `music`: the run's music words
+    (`model.music.MusicWords`, the host's object) a fresh-run load carries into the loaded game
+    (`rules.saveload.fresh_run_part(music=)`).  The table is read at once (res_0a4c:0250 ->
+    ovl49:0e5f at start-up)."""
 
-    def __init__(self, user, gd, policy: str | None = None):
+    def __init__(self, user, gd, policy: str | None = None, music=None):
         self.user, self.gd = user, gd
+        self.music = music
         self.files = StringTable(gd.read("DATA/FILE.DAT"))
         self.policy = SEED_POLICY if policy is None else policy
         if self.policy not in SEED_POLICIES:
@@ -363,7 +366,7 @@ class Saves:
                 run = SL.run_part(live)
             else:
                 run = SL.fresh_run_part(rng, self.army_types(saved, alt_names), process=process,
-                                        list_names=carry.names, **(advisor or {}))
+                                        list_names=carry.names, music=self.music, **(advisor or {}))
             cards = cards if cards is not None else card_reader(self.gd)
             res = SL.load(saved, run, where=where, live_record=carry.record, live=live,
                           ai_read=lambda st: load_draws(st, cards, run.process))
@@ -373,8 +376,9 @@ class Saves:
     def finish_load(self, loaded: SL.Loaded, where: str = "game") -> None:
         """The rest of ovl49:02d3 after 0414 (`rules.saveload.after_load`): recounts, site
         tiles, map words, cost map and the present points of the game screen, the strip, the
-        message and the music.  The host sets DS:2a86 = 1 and DS:28c6 = 0."""
-        SL.after_load(loaded.state, loaded.rebuilt, where)
+        message and the music.  The host sets DS:2a86 = 1 and DS:28c6 = 0.  Returns after_load's
+        events (the music ovl58:0000(1) at 040a: [MusicStarted] or [])."""
+        return SL.after_load(loaded.state, loaded.rebuilt, where)
 
     def any_used(self) -> int:
         """ovl49:0e25."""

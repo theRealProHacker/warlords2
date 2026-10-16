@@ -65,6 +65,7 @@ import pygame
 
 from ..assets.exe import ds_str, ds_words
 from ..assets.fonts import CHANCE17
+from ..assets.store import cache_load
 from ..formats.scenario import parse_scenario_dat
 from ..model.newgame import NewGameConfig
 from ..rules.rng import Rng
@@ -175,6 +176,7 @@ class Menu(ScreenHost):
             self.index = dirs.index(self.directory)
         self.random = self.directory == ds_str(k.exe, RANDOM_DIR).upper()
         self.refresh()
+        self.music()
 
     def start_screen(self, k: Kit) -> None:
         """ovl60:0000(1) ends with the talking face ovl58:026f(2)."""
@@ -191,6 +193,7 @@ class Menu(ScreenHost):
 
     def refresh(self) -> None:
         """ovl60:011e."""
+        cache_load(self.app, 1)                 # STARTBU buttons (0771:0090), after ovl60:0332's SCENARIO.PCK (X44)
         self.set_button(NEW_SCENARIO, NORMAL)
         self.set_button(BEGIN, NORMAL)
         self.set_button(LOAD_GAME, NORMAL if saved_games(self.app) else DISABLED)
@@ -206,12 +209,20 @@ class Menu(ScreenHost):
             self.directory = self.records[index]["str_3c"].upper()
             self.random = False
             run_carry(self.app).record = self.records[index]      # ovl60:067c: the copy to DS:5d64
-        self.refresh()
+        self.refresh()                                            # 06c1 ovl60:0000(0), both paths
+        self.music()
 
     def redraw_screen(self) -> None:
         """ovl60:0000(0) (the Cancel paths of the Load list and of ovl34:1434): the buttons and
         the bar again, no face."""
         self.refresh()
+        self.music()
+
+    def music(self) -> None:
+        """ovl60:00fb: ovl58:0000(0) at every entry of ovl60:0000 (00e9..00fd run whatever
+        `draw`), after the buttons, before the face: STARTUP (8, 0), no die."""
+        from ..audio import music_triggers
+        music_triggers.pre_game(self.app, 0, "ovl60:00fb")
 
     def on_button(self, id: int) -> None:
         if id == NEW_SCENARIO:

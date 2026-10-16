@@ -310,6 +310,7 @@ def history_markers(sp, buf, state, owners) -> None:
 
 class History(Dialog):
     """JOIN screen 0x13 over popup 0x0a (modes 0..3)."""
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
 
     def __init__(self, host, mode: int, on_close=None):
         super().__init__(on_close)
@@ -630,6 +631,7 @@ def shield_src(side: int) -> tuple[int, int, int, int]:
 
 class Triumphs(Dialog):
     """JOIN screen 0x14 over popup 0 (ovl41:09eb)."""
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
 
     def __init__(self, host, on_close=None):
         super().__init__(on_close)

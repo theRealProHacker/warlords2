@@ -18,7 +18,9 @@ handler at once, except the victory screen, whose button writes state (Hidden Ma
 `Victory` is pending until CloseVictory (button 0x1e3).  `TurnCue{"kind": "surrender_declined"}`
 marks the decline screen for the presentation, and the events after it are its button's
 continuation (ovl61:2046 -> ovl68:04bd(0)).  End-state messages are present points of `check`.
-Not modelled (presentation only): music ovl58:0000, pictures ovl53:056a, message boxes
+The music calls ovl58:0000 (3 victory, 9 surrender offer, 10 declined) are `rules.music.play`
+(engine: DS:2632 and mode 3's die); the victory button plays none (ovl61:2004 -> ovl68:04bd(0)
+with 0x15b set).  Not modelled (presentation only): pictures ovl53:056a, message boxes
 ovl61:10fb / 11d1 / 1160 (their texts are events), redraws ovl61:011f, ovl64:15da, ovl63:2200.
 """
 from __future__ import annotations
@@ -33,6 +35,8 @@ from . import diplomacy as D
 from . import economy as EC
 from . import heroes as H
 from . import movement as M
+from . import music as MU
+from .constants import music as KMU
 from .constants import diplomacy as K
 from .constants import turn as KT
 from .engine import IllegalCommand
@@ -194,11 +198,13 @@ def victory_screen(state) -> list:
     """The victory screen of the side on turn (ovl68:04bd when 0x15b is set and 0x157 not):
     0x157 = 1 and the screen waits for its button (CloseVictory answers the pending `Victory`).
     Evidence: asm ovl61:1fbd..2003 (music 3, picture 0x20, button 0x1e3, 0x157 = 1 at 1ff6) and
-    returns to the main loop with the screen up; nothing else changes until the button."""
+    returns to the main loop with the screen up; nothing else changes until the button.  The
+    music ovl58:0000(3) is its first call (1fc0; a die)."""
+    music = MU.play(state, KMU.VICTORY_MODE.value, "ovl61:1fc0")
     state.flags[KT.SCN_ACK_VICTORY.value] = 1
     ev = E.Victory({"player": state.current})
     state.pending = ev
-    return [ev]
+    return music + [ev]
 
 
 def close_victory(state, cmd: C.CloseVictory) -> list:
@@ -217,11 +223,12 @@ def surrender_offer(state) -> list:
     """The surrender offer to the side on turn (ovl68:04bd when 0x15d is set and 0x15f not):
     0x15f = 1 and the question is pending (AcceptSurrender answers it).
     Evidence: asm ovl61:1f68..1fbc: music 9, picture 0x1e, STRING 17 dialog, buttons 0x1e5 /
-    0x1e6 enabled, 0x15f = 1 (1faf)."""
+    0x1e6 enabled, 0x15f = 1 (1faf); the music ovl58:0000(9) at 1f76 (no die)."""
+    music = MU.play(state, KMU.SURRENDER_MODE.value, "ovl61:1f76")
     state.flags[KT.SCN_ACK_SURRENDER.value] = 1
     ev = E.SurrenderOffered({"player": state.current, "text": 17})
     state.pending = ev
-    return [ev]
+    return music + [ev]
 
 
 def accept_surrender(state, cmd: C.AcceptSurrender) -> list:
@@ -232,7 +239,8 @@ def accept_surrender(state, cmd: C.AcceptSurrender) -> list:
     start goes on.
     Evidence: accept, button 0x1e5 -> asm ovl61:1e4e..1ecc: 0x137[d] = 0 for live d with d0 == 1
     (1e55..1e8b); 0x15b = 1 (1e92); ovl41:1244(0x110, 7, 0x110, 0, "") (1eaf); ovl61:1fbd (1ec3).
-    Decline, button 0x1e6 -> ovl61:1ecd..1f67: music 0xa, picture 0x1f, button 0x1e4; for every
+    Decline, button 0x1e6 -> ovl61:1ecd..1f67: music 0xa (1edb, no die; the turn start's
+    mode 1 at ovl68:0546 then rolls one), picture 0x1f, button 0x1e4; for every
     live c and every live human: 0x10f3[c] = 0x110 (1f0a..1f63); button 0x1e4 -> ovl61:2046..2073:
     redraw ovl61:011f(0, 0, 0), ovl68:04bd(0)."""
     from . import turn
@@ -247,11 +255,12 @@ def accept_surrender(state, cmd: C.AcceptSurrender) -> list:
         state.flags[SCN_VICTORY] = 1
         H.news(state, p, K.NEWS_VICTORY.value, p, 0, "")
         return victory_screen(state)
+    music = MU.play(state, KMU.DECLINED_MODE.value, "ovl61:1edb")
     if any(pl.alive and pl.control == HUMAN for pl in state.players):
         for c in range(N_SIDES):
             if state.players[c].alive:
                 state.flags[SCN_WORD_10F3 + 2 * c] = p   # asm ovl61:1f54
-    return [E.TurnCue({"kind": "surrender_declined"})] + turn.resume(state, 0)
+    return music + [E.TurnCue({"kind": "surrender_declined"})] + turn.resume(state, 0)
 
 
 # ------------------------------------------------------------------------------- Resign

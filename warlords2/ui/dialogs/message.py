@@ -20,6 +20,7 @@ INK, SHADOW = 15, 0
 
 
 class Message(Dialog):
+    event_loop = False                 # ovl61:10fb / ovl59:0142: its own wait loop
     def __init__(self, k, lines: list[str], on_close=None):
         super().__init__(on_close)
         if len(lines) not in (1, 2):

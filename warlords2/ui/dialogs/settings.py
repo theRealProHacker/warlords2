@@ -40,10 +40,14 @@ the talking advisor's gate that rolls the game's dice at each human turn start (
 command `SetSpeech` (rules/turn.py) writes the engine's copy `GameState.advisor_talking`, the
 file is written by `audio.settings.toggle`.
 
-The music box: without a music driver ovl58:0bc5 forces DS:0bee = 0 (0c32..0c45; DS:37a3 = 0),
-so the box shows unticked whatever OPTIONS.SND says (`audio.settings` keeps the digit as read
-for M10c); the effects box likewise from DS:0bec, which `audio.settings.parse` already forces
-without a digital driver (0c48..0c5b).
+The music box (M10c): DS:0bee is the run's `MusicWords.on` (`App.music_words`, the engine's
+`GameState.music`), DS:37a3 its `driver` (`--music on` and SOUND.DAT); without a driver
+ovl58:0bc5 forces DS:0bee = 0 (0c32..0c45) and ovl33:0079 disables the box.  Box 276 ->
+ovl33:0576(0): the command `SetMusic(not on)` (`rules.music.set_music`: the sequence stopped,
+DS:0bee toggled, on -> ovl58:0000(1) with its die), then OPTIONS.SND written
+(`audio.settings.toggle`, ovl33:05d8..062b); the player stops at once (155e:0782) or sounds
+the new track.  A refused command (the engine's IllegalCommand) toggles nothing.  The effects
+box shows DS:0bec, which `audio.settings.parse` forces without a digital driver (0c48..0c5b).
 """
 from __future__ import annotations
 
@@ -72,7 +76,11 @@ SCN_INK, SCN_SHADOW = 0xA0, 0xB0
 INK, SHADOW = 15, 0
 HUMAN_LEVEL = 3
 MUSIC, EFFECTS, SPEECH = 0, 1, 2                 # ovl33:0576 argument
-MUSIC_DRIVER = False                             # DS:37a3: no music playback before M10c
+
+
+def music_driver(app) -> bool:
+    """DS:37a3 (ovl33:0079 enables box 276 with it)."""
+    return bool(app.music_words.driver)
 
 
 def _pairs(exe, off, n):
@@ -81,6 +89,7 @@ def _pairs(exe, off, n):
 
 
 class Settings(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, host, on_close=None):
         super().__init__(on_close)
         self.host = host
@@ -113,8 +122,9 @@ class Settings(Dialog):
 
     def sound_of(self) -> tuple:
         from ...audio import audio
-        s = audio(self.host.app).settings
-        return (s.music and MUSIC_DRIVER, s.effects, s.speech)       # DS:0bee forced
+        app = self.host.app
+        s = audio(app).settings
+        return (bool(app.music_words.on), s.effects, s.speech)        # DS:0bee
 
     # ovl33:0067
     def build_buttons(self) -> None:
@@ -127,7 +137,10 @@ class Settings(Dialog):
             if st.players[p].alive:
                 live |= {HUMAN + p, ENHANCE + p, OBSERVE + p}
         self.row = ButtonRow([b for b in layout.buttons if b.id in live], self.k.picture)
-        self.row.state[MUSIC_B] = NORMAL if MUSIC_DRIVER else DISABLED         # DS:37a3
+        # DS:37a3; with a question pending the engine refuses SetMusic (not in rules.engine.ANYTIME:
+        # whether menu 498 is live under those pop-ups is not established), so the box is off then
+        live = music_driver(self.host.app) and st.pending is None
+        self.row.state[MUSIC_B] = NORMAL if live else DISABLED
         self.row.state[EFFECTS_B] = NORMAL if a.mixer.available else DISABLED  # DS:37a2
 
     def update(self, events, dt) -> None:
@@ -153,11 +166,33 @@ class Settings(Dialog):
             p = id - OBSERVE
             g.command(C.SetObserve(p, not st.players[p].shown))
             self.rows[p] = self.row_of(st, p)                                 # ovl33:0137(p, 0)
-        elif id in (MUSIC_B, EFFECTS_B, SPEECH_B):
-            s = AS.toggle(g.app, {MUSIC_B: MUSIC, EFFECTS_B: EFFECTS, SPEECH_B: SPEECH}[id])
+        elif id == MUSIC_B:
+            self.music()
+        elif id in (EFFECTS_B, SPEECH_B):
+            s = AS.toggle(g.app, {EFFECTS_B: EFFECTS, SPEECH_B: SPEECH}[id])
             if id == SPEECH_B:
                 g.command(C.SetSpeech(bool(s.speech)))                       # DS:26c8 == 0
             self.sound = self.sound_of()
+
+    def music(self) -> None:
+        """ovl33:0576(0): SetMusic with the switch toggled; OPTIONS.SND; the player."""
+        from ...audio import audio, music_triggers
+        from ...audio import settings as AS
+        g = self.host
+        app = g.app
+        words = app.music_words
+        if self.row.state[MUSIC_B] != NORMAL:    # disabled (ovl33:0079; a pending question)
+            return
+        on = not words.on
+        events = g.command(C.SetMusic(on))
+        if events is None:                       # refused: nothing toggled
+            return
+        audio(app).settings.music = not on       # the file's digit follows DS:0bee
+        AS.toggle(app, MUSIC)
+        p = music_triggers.player(app)
+        p.stop("settings")                       # 155e:0782: stopped either way
+        p.events(events)                         # on: ovl58:0000(1)
+        self.sound = self.sound_of()
 
     # ovl33:0137
     def text(self, fb, x, y, s, how, ink, shadow) -> None:

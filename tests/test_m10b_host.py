@@ -534,3 +534,251 @@ def test_fresh_run_part_shares_the_run_buffer(tmp_path, monkeypatch):
         assert seen and seen[0] is b.run_carry.names and res.state.list_names is b.run_carry.names
     finally:
         b.close()
+
+
+# ------------------------------------------------------------------ the action palette's ground
+
+
+def _ground_check(g, want_marble: bool) -> None:
+    """Game.paint over DS:2a94: outside the screen-0 button rectangles the marble (0, 0) of
+    picture 25 after ovl61:0000 (0a9d at 007b), else SCREEN0-3's own pixels; every drawn button
+    over it in its own art (0174 after 0a9d)."""
+    import numpy as np
+    from warlords2.assets.exe import ds_words
+    from warlords2.ui.widgets import kit
+    k = kit(g.app)
+    x, y, w, h = ds_words(k.exe, 0x2A94, 4)
+    fb = g.app.screen.fb
+    g.paint(fb)
+    px = pygame.surfarray.array2d(fb)[x:x + w, y:y + h]
+    gaps = np.ones((w, h), bool)
+    for b in k.layouts.screen(0).buttons:
+        bx, by, bw, bh = b.rect
+        gaps[max(bx - x, 0):max(bx + bw - x, 0), max(by - y, 0):max(by + bh - y, 0)] = False
+    if want_marble:
+        want = pygame.surfarray.array2d(k.picture(25))[0:w, 0:h]
+    else:
+        want = pygame.surfarray.array2d(g.app.assets.picture("screen.pck"))[x:x + w, y:y + h]
+    assert (px[gaps] == want[gaps]).all()
+    assert gaps.sum() > 2000 and (want_marble or not g.screen_up)
+    pal = getattr(g.begin_phase or g.phase, "palette", None)
+    if pal is None and g.phase_name == "building":
+        pal = g.run_palette                       # the frame before the turn-start phase
+    for b in (pal.row.buttons if pal is not None else []):
+        bx, by, bw, bh = b.rect
+        if x <= bx and bx + bw <= x + w and y <= by and by + bh <= y + h:
+            sx, sy, _, _ = b.source(pal.row.state[b.id])
+            art = pygame.surfarray.array2d(pal.row.picture(b.picture))[sx:sx + bw, sy:sy + bh]
+            assert (px[bx - x:bx - x + bw, by - y:by - y + bh] == art).all(), b.id
+
+
+def test_palette_ground_from_begin_through_the_computer_turn(erythea):
+    """Before Begin the game frame's own pixels (no ovl61:0000 yet); ovl61:0000(0, 1) covers
+    DS:2a94 with marble and the buttons go over it: the human turn 1, the computer turn after
+    End Turn (ovl61:0418's disabled buttons) and the next human turn keep it."""
+    a = erythea
+    for _ in range(50):
+        a.step([])
+        g = a.manager.current_state()
+        if a.manager.current_state_str() == "game" and g.sprites is not None and g.dialogs:
+            break
+    assert g.phase_name == "building" and not g.screen_up
+    _ground_check(g, False)
+    g = _human(a)
+    assert g.screen_up
+    _ground_check(g, True)
+    g.end_turn()
+    assert g.phase_name == "computer"
+    _ground_check(g, True)
+    g = _human(a, 4000)
+    assert g.state.turn == 2
+    _ground_check(g, True)
+
+
+def test_palette_ground_after_a_load_from_game_start(tmp_path):
+    """A load in a fresh run (the Game Start screen under the scroll, no Begin): 02d3's
+    ovl61:0000(DS:28c6, 0) covers DS:2a94 with marble before the buttons."""
+    user = tmp_path / "u"
+    a = _app(user, "--scenario", "ERYTHEA", "--controls", "HCCCCCCC")
+    try:
+        _save(_human(a), 0)
+    finally:
+        a.close()
+    b = _app(user)
+    try:
+        menu = _settle(b, "menu")
+        d = registry.run_action(101, menu)
+        d.press(114)
+        d.press(123)
+        b.step([])
+        game = b.manager.current_state()
+        assert game.load_backdrop == "menu" and not game.screen_up
+        for _ in range(400):
+            b.step([])
+            if getattr(_top(game), "dialog_id", None) == "message":
+                break
+        assert game.phase_name == "human" and game.screen_up
+        _ground_check(game, True)
+    finally:
+        b.close()
+
+
+def test_begin_message_without_humans_over_begins_screen(tmp_path):
+    """No live human: ovl61:0000(0, 1) draws the strip (0076), the ground (007b), the buttons
+    (0174) disabled by 0418 (009f), no map (si = 1, no ovl64:006c) and the overview (00b8)
+    before its message (0110); the loop's computer phase starts from that picture."""
+    import numpy as np
+    from warlords2.states.phases.computer import END_TURN_OFF
+    from warlords2.ui.layout import DISABLED
+    from warlords2.ui.mapview import AREA
+    from warlords2.ui.minimap import RECT
+    a = _app(tmp_path / "u", "--scenario", "ERYTHEA", "--controls", "CCCCCCCC")
+    try:
+        g = None
+        for _ in range(200):
+            a.step([])
+            g = a.manager.current_state()
+            if getattr(_top(g), "dialog_id", None) == "message":
+                break
+        assert g.phase_name == "building" and g.begin_phase is not None
+        pal = g.begin_phase.palette
+        assert all(pal.row.state[i] == DISABLED for i in END_TURN_OFF if i in pal.row.state)
+        _ground_check(g, True)
+        px = pygame.surfarray.array2d(g.app.screen.fb)
+        back = pygame.surfarray.array2d(g.app.assets.picture("screen.pck"))
+        x, y, w, h = AREA
+        assert (px[x:x + w, y:y + h] == back[x:x + w, y:y + h]).all()          # no 006c
+        ox, oy, ow, oh = RECT
+        assert (px[ox:ox + ow, oy:oy + oh] != back[ox:ox + ow, oy:oy + oh]).sum() > ow * oh // 2   # 00b8
+        ph = g.begin_phase
+        a.step([UP])
+        for _ in range(50):
+            if g.phase_name == "computer":
+                break
+            a.step([])
+        assert g.phase is ph and g.begin_phase is None                        # the same picture runs on
+    finally:
+        a.close()
+
+
+# ------------------------------------------------------------------ Begin from the Setup screen
+
+
+def _setup_begin(tmp_path, computers: int, hidden: bool):
+    """Game Start -> Setup (ERYTHEA) with the first `computers` sides computer-played and
+    Hidden Map as given; returns (app, setup, game) right after Begin (ovl57:0cfe)."""
+    from warlords2.model.options import GameOptions
+    a = _app(tmp_path / "u")
+    _settle(a, "menu").on_button(103)
+    s = _settle(a, "setup")
+    for p in range(computers):
+        s.on_button(125 + p)                                  # ovl57:0a4e: human -> level 0
+        for _ in range(10):
+            a.step([])
+    words = list(s.words)
+    words[3] = int(hidden)
+    s.words[:] = words
+    assert bool(GameOptions.from_words(s.words).hidden_map) == hidden
+    s.on_button(141)
+    for _ in range(100):
+        a.step([])
+        if a.manager.current_state_str() == "game":
+            break
+    return a, s, a.manager.current_state()
+
+
+def kit_picture(g, n):
+    from warlords2.ui.widgets import kit
+    return kit(g.app).picture(n)
+
+
+def _area(fb, r):
+    x, y, w, h = r
+    return pygame.surfarray.array2d(fb)[x:x + w, y:y + h]
+
+
+def _steps_to(a, g, cond, n=400):
+    for _ in range(n):
+        if cond(g):
+            return
+        a.step([])
+    raise AssertionError("not reached")
+
+
+def test_setup_begin_keeps_the_setup_screen_in_the_map_area(tmp_path):
+    """ovl57:0cfe draws only the strip (0eb3) before ovl61:0000(0, 1), which skips ovl64:006c:
+    the Setup screen stays up until 0000 (no bare frame) and in the map area DS:2ab0 under the
+    no-humans message and in the computer phase's picture until its first map draw."""
+    from warlords2.ui.mapview import AREA
+    from warlords2.ui.minimap import RECT
+    a, s, g = _setup_begin(tmp_path, 8, False)
+    try:
+        under = g.under
+        assert under is not None and not g.map_ready
+        fb = g.app.screen.fb
+        g.paint(fb)
+        for r in (AREA, RECT, (400, 355, 224, 114), (16, 403, 360, 66)):
+            assert (_area(fb, r) == _area(under, r)).all()           # ovl57:0e24..0eae
+        assert (_area(under, AREA) != _area(g.app.assets.picture("screen.pck"), AREA)).any()
+        _steps_to(a, g, lambda g: getattr(_top(g), "dialog_id", None) == "message")
+        _ground_check(g, True)
+        assert (_area(fb, AREA) == _area(under, AREA)).all()
+        assert (pygame.surfarray.array2d(g.begin_phase.map) == _area(under, AREA)).all()
+    finally:
+        a.close()
+
+
+def test_setup_begin_with_hidden_map_is_black(tmp_path):
+    """With Hidden Map ovl57:0ec5 fills the map and the overview with colour 0 (ovl61:0a6e);
+    nothing draws them before the no-humans message."""
+    from warlords2.ui.mapview import AREA
+    from warlords2.ui.minimap import RECT
+    a, s, g = _setup_begin(tmp_path, 8, True)
+    try:
+        _steps_to(a, g, lambda g: getattr(_top(g), "dialog_id", None) == "message")
+        fb = g.app.screen.fb
+        _ground_check(g, True)
+        assert not _area(fb, AREA).any() and not _area(fb, RECT).any()
+    finally:
+        a.close()
+
+
+def test_setup_begin_hot_seat_hidden_map_turn_start(tmp_path):
+    """Eight humans with Hidden Map: the first turn start (ovl68:0259 di = 0) draws nothing
+    before its pop-up, so the map and the overview are ovl57:0ec5's black, under Begin's
+    disabled buttons from the first frame of the game on."""
+    from warlords2.ui.mapview import AREA
+    from warlords2.ui.minimap import RECT
+    a, s, g = _setup_begin(tmp_path, 0, True)
+    try:
+        _steps_to(a, g, lambda g: g.map_ready)
+        assert g.phase_name == "building" and g._next == "turn_start"
+        _ground_check(g, True)                                         # the run's buttons drawn
+        fb = g.app.screen.fb
+        assert not _area(fb, AREA).any() and not _area(fb, RECT).any()
+        marble = pygame.surfarray.array2d(kit_picture(g, 25))[0:360, 60:126]
+        assert g.bar_blank and (_area(fb, (16, 403, 360, 66)) == marble).all()   # ovl68:034c only
+        _steps_to(a, g, lambda g: getattr(_top(g), "dialog_id", None) == "turn_start")
+        g.paint(fb)
+        assert not _area(fb, AREA).any() and not _area(fb, RECT).any()
+    finally:
+        a.close()
+
+
+def test_setup_begin_frame_before_the_turn_start_phase(tmp_path):
+    """Without Hidden Map (di = 1) the turn start draws the map, the overview and the info area
+    (0344 / 039c / 03a4) before its pop-up; the frame before the turn-start phase shows them
+    over Begin's buttons."""
+    from warlords2.ui.palettes import painter_for
+    a, s, g = _setup_begin(tmp_path, 0, False)
+    try:
+        _steps_to(a, g, lambda g: g.map_ready)
+        assert g.phase_name == "building" and g._next == "turn_start" and not g.bar_blank
+        _ground_check(g, True)
+        fb = g.app.screen.fb
+        want = fb.copy()
+        painter_for(g).info_area(want, g.state)
+        r = (16, 403, 360, 66)
+        assert (_area(fb, r) == _area(want, r)).all()
+    finally:
+        a.close()

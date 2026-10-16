@@ -304,6 +304,12 @@ class SetSpeech(Command):
 
 
 @dataclass(frozen=True)
+class SetMusic(Command):
+    """The Settings music box 276 (ovl33:0576(0)): the new value of the switch DS:0bee."""
+    on: bool
+
+
+@dataclass(frozen=True)
 class SetView(Command):
     x: int
     y: int
@@ -336,5 +342,5 @@ COMMANDS = (
     SetVector, RenameCity, RazeOwnCity, EditSign, Propose, SetControl, SetEnhance, SetObserve,
     SetSpeech, SetView, AcceptSurrender, Resign, EndTurn,
     SetPalette, Advise, TakeAll, SortSlots, ChooseProduction, ScreenTutorial, RedirectVectors,
-    QuestPage, CloseVictory, ReportPage,
+    QuestPage, CloseVictory, ReportPage, SetMusic,
 )

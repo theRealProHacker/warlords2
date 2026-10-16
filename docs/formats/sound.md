@@ -86,35 +86,49 @@ follow the same prefix scheme for the START.EXE intro **[inferred]**.
 
 ### Track usage
 
-`ovl58:0000` (flat 0x7d9f0) is `play_music(mode)` **[EXE]**; a negative index asks the
-string getter for a random member of the group.
+`ovl58:0000` (flat 0x7d9f0; file offset 0x73b40) is `play_music(mode)` **[EXE]**, read from a
+raw-byte disassembly (the `out/asm` listing of its head is broken by case labels; the far
+calls in the bytes are unrelocated, `0130:04a8` = `155e:04a8`). A negative FILE.DAT index
+makes ovl59:052f draw `rnd(1, n, -1)` on the game's dice (n = the group's entry count, one
+die also for a 1-entry group), so the music is game logic (`rules/music.py`, plan register
+X32). The call returns at once with the music off (`DS:0bee == 0`, before `DS:2632` is
+written) and when the mode equals the last one (`DS:2632`) while the sequence still plays
+(`155e:04a8`); else `DS:2632 = mode`, a playing sequence is stopped (`155e:0466`, a hard cut),
+the track is picked and loaded (`155e:032f`) and started with `155e:0412(0, repeat)`.
 
-| mode | FILE.DAT group → tracks | called from | occasion |
-|---:|---|---|---|
-| 0 | 8 → STARTUP | ovl57:0000, ovl60:0000, ovl49:12f2 | title / setup screens [EXE call sites] |
-| 1 | 10, random → INT0, 4, 6, 9, 10, 16, 17, 23 | ovl33:0576 (sound options), ovl36:2274 (after a medal), ovl49:02d3 ("thy turn continues"), ovl68:04bd | general in-game music pool [inferred] |
-| 2 | see below | ovl61:2123 | computer/other player's turn [inferred] |
-| 3 | 9, random → INT12, INT21, INT12 | ovl01:1ded (quest failed/invalid, "Alas!"), ovl61:1fbd | bad news [inferred] |
-| 4 | 12 → INT11 | ovl68:04bd | [unknown] |
-| 5 | 13, random → INT1, INT8 | ovl01:0000 (temple dialog) | temple [EXE call site] |
-| 6 | 14 → INT14 | ovl34:0aa0 (search result popup) | ruin/sage result [inferred] |
-| 7 | 15 → INT15 | ovl47:0672 (hero dialog) | hero offer/arrival [inferred] |
-| 8 | 16 → INT18 | ovl36:2274 (medal award) | medal [EXE call site] |
-| 9 | 17 → INT19 | ovl61:1f68 | end-of-game sequence A [unknown which] |
-| 10 | 18 → INT20 | ovl61:1ecd | end-of-game sequence B [unknown which] |
-| 11 | 19 → INT22 | ovl57:0cfe | INT22 is a 382-byte file — effectively silence [inferred] |
+| mode | FILE.DAT (group, index) → tracks | die | called from | occasion |
+|---:|---|---|---|---|
+| 0 | (8, 0) → STARTUP | none | ovl60:00fb (Game Start screen, every entry), ovl57:003a (Game Setup entry), ovl49:13b7 (load of a saved map) | pre-game screens **[EXE]** |
+| 1 | (10, -1) → INT0, 4, 6, 9, 10, 16, 17, 23 | rnd(1, 8, -1) | ovl68:0546 (human turn start, no hero offer), ovl49:040a (end of a load), ovl36:2668 (medal pop-up closed), ovl33:05a0 (Settings: music switched on) | the human phase **[EXE]** |
+| 2 | see below | 1 or 2 | ovl61:21d4 (main loop, every computer side, before ovl68:0000) | the computer phase **[EXE]** |
+| 3 | (9, -1) → INT12, INT21, INT12 | rnd(1, 3, -1) | ovl01:272c (quest completed, human, after the reward), ovl61:1fc0 (victory screen) | success **[EXE]** |
+| 4 | (12, 0) → INT11 | none | ovl68:0529 (human turn start with a hero offer, before the offer dialog ovl47:0d5c) | hero offer **[EXE]** |
+| 5 | (13, -1) → INT1, INT8 | rnd(1, 2, -1) | ovl01:0006 (temple menu ovl01:0000, human) | temple **[EXE]** |
+| 6 | (14, -1) → INT14 | rnd(1, 1, -1) | ovl34:0aad (sage ovl34:0aa0, human) | sage **[EXE]** |
+| 7 | (15, 0) → INT15 | none | ovl47:0726 (hero promotion pop-up ovl47:0672, human) | hero level up **[EXE]** |
+| 8 | (16, 0) → INT18 | none | ovl36:24c9 (medal pop-up ovl36:2274, human attacker) | medal **[EXE]** |
+| 9 | (17, 0) → INT19 | none | ovl61:1f76 (surrender offer ovl61:1f68) | surrender offer **[EXE]** |
+| 10 | (18, 0) → INT20 | none | ovl61:1edb (surrender declined, button 0x1e6 ovl61:1ecd) | surrender declined **[EXE]** |
+| 11 | (19, 0) → INT22 | none | ovl57:0e24 (Begin) | Begin; INT22 is a 17.8 s piece (music.md) **[EXE]** |
 
-After loading, every mode starts the sequence with `155e:0412(0, 1)`, except mode 2 which
-passes `(0, 0)`; the meaning of that second argument (repeat?) is **[unknown]**.
+The calls with a human gate test ovl25:09ab (computer side on turn) or the battle's attacker
+(DS:41fa). The second argument of `155e:0412` is the repeat flag (`DS:37a9`): 1 for every
+mode but 2, which passes 0 (`ovl58:011b`). The poller `155e:02ab` (event loop 08a9:0081 on
+idle, main loop ovl61:2206 after each computer side) restarts an ended sequence with bit 0
+set (the same track, no new die) and stops one without it, so every mode but 2 loops and mode
+2 plays once **[EXE]**. Nothing fades, segues or pauses (`155e:04c3`, `0c5d`, `049a`, `048c`
+have no caller); effects and speech play on DIGPAK beside it.
 
-Mode 2 **[EXE]** (`ovl58:0096..0120`): if at least one active human player exists
-(`2c04:0137[p] != 0` and `2c04:00d0[p] == 0`), a random track of group 11
-(INT2, 3, 5, 7, 13) is played. If there is none, r = 1..100 is rolled: r < 6 → group 12
-(INT11), r ≥ 53 → random track of group 10, otherwise group 11.
+Mode 2 **[EXE]** (`ovl58:0096..011d`): if at least one live human side exists
+(`2c04:0137[p] != 0` and `2c04:00d0[p] == 0`, p < 8), a random track of group 11
+(INT2, 3, 5, 7, 13: one die). If there is none, r = rnd(1, 100, 0) is drawn first: r < 6 →
+group 12 (INT11, its 1-entry pick still draws), r ≥ 53 → group 10, otherwise group 11.
 
 Tracks INT22/INT23 exist for every prefix; there is no INT24+.
-Music is skipped when `DS:0bee` is 0 (OPTIONS.SND digit 0) or the music driver is
-`NO_SOUND`.
+Music is skipped when `DS:0bee` is 0 (OPTIONS.SND digit 0; forced 0 without a music driver,
+ovl58:0c32..0c45) or the music driver is `NO_SOUND` (`DS:37a3 == 0`: `155e:032f`, `0412`,
+`04a8` do nothing). The Settings switch (ovl33:0576(0)) stops the sequence whichever way it
+goes and, switched on, calls mode 1.
 
 ## 3. SOUND.DAT
 
@@ -126,5 +140,4 @@ meaning is **[unknown]**.
 
 - Exact occasion for dramatic/orch/war/splash and the advisor-speech selection rules
   (`ovl58:026f`, not traced).
-- Which end-game situations use INT19 and INT20; what INT11 (mode 4) marks.
 - DING0.SND's rate is inferred (see §1).

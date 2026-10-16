@@ -44,6 +44,7 @@ from ..palettes import DIPLOMACY
 from ..widgets import ButtonRow, blit_opaque, kit, text_centred
 from .diplomacy_report import POPUP, switch
 from .hero_offer import outline, raw
+from ...assets.store import cache_load
 
 SCREEN = 22
 DONE, REPORT = 370, 371
@@ -91,10 +92,12 @@ def cells(state, si: int):
 
 
 class DiplomacyAction(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, host, on_close=None):
         super().__init__(on_close)
         self.host = host
         k = self.k = kit(host.app)
+        cache_load(k, DIPLOM)                           # ovl00:05f0.. 0129, buttons of screen 22 (X44)
         lay = k.layouts.screen(SCREEN)
         self.row = ButtonRow([lay.button(i) for i in (DONE, REPORT, *cell_ids())], k.picture)
 

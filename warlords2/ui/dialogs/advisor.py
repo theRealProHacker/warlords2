@@ -30,6 +30,7 @@ from .. import registry
 from ..dialog import Dialog
 from ..keys import popup_input
 from ..widgets import ButtonRow, blit_opaque, kit, text_centred
+from ...assets.store import cache_load
 
 POPUP, SCREEN, CLOSE = 12, 25, 424
 PICTURE, PICTURE_SRC, PICTURE_AT = 48, (0, 0, 0x80, 0x82), (0x100, 0x75)
@@ -39,10 +40,12 @@ INK, SHADOW = 15, 0
 
 
 class Advisor(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, host, event, on_close=None):
         super().__init__(on_close)
         self.host = host
         k = self.k = kit(host.app)
+        cache_load(k, 48)                               # ADVISOR.PCK: ovl36:1fb5 0129 (X44)
         self.row = ButtonRow([b for b in k.layouts.screen(SCREEN).buttons if b.id == CLOSE], k.picture)
         info = event.info
         self.verdict = info["verdict"]                               # ovl36:1fd3

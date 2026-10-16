@@ -36,6 +36,7 @@ from ..info.city import shield
 from ..keys import popup_input
 from ..widgets import ButtonRow, blit_opaque, kit, text_centred
 from .hero_offer import outline, raw
+from ...assets.store import cache_load
 
 POPUP, SCREEN = 11, 21
 DONE, ACTION = 368, 369
@@ -81,10 +82,12 @@ def switch(dialog: Dialog, to: str) -> Dialog:
 
 
 class DiplomacyReport(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, host, on_close=None):
         super().__init__(on_close)
         self.host = host
         k = self.k = kit(host.app)
+        cache_load(k, DIPLOM)                           # ovl00:0201 0129, buttons of screen 21 (X44)
         lay = k.layouts.screen(SCREEN)
         self.row = ButtonRow([lay.button(DONE), lay.button(ACTION)], k.picture)
 

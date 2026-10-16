@@ -507,7 +507,7 @@ def test_present_surface_has_window_format_and_bad_indices_fail(app):
 def test_unimplemented_flags_say_so(capsys):
     parse_args(["--seed", "1", "--music", "off", "--state-hash-at", "3"])
     err = capsys.readouterr().err
-    assert "--music: accepted but not implemented" in err and "--state-hash-at" in err
+    assert "--state-hash-at" in err and "--music" not in err            # M10c implements --music
     parse_args(["--seed", "1", "--shot-at", "1", "--record", "r.mp4", "--no-voice"])
     assert capsys.readouterr().err == ""
 

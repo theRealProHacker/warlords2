@@ -86,6 +86,12 @@ class LineEditor:
 class InputBox(Dialog):
     """ovl56:0000.  `text` is DS:58d8; it closes with the text (189, ok) or None (190,
     cancel); subclasses override `answer`."""
+    @property
+    def event_loop(self) -> bool:
+        """The box's buttons run in the event loop 08a9:000e (155e:02ab polled); while the line
+        editor ovl56:03a6 types, its key poll ovl59:020d is its own loop (no music poll)."""
+        return self.editor is None
+
 
     def __init__(self, k, title: str, lines: list[str], text: str, limit: int, width: int,
                  cancel_live: bool = True, on_close=None, host=None):

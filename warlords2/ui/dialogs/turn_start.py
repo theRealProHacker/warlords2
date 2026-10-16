@@ -37,7 +37,8 @@ from ...assets.fonts import CHANCE36
 from ...model import events as E
 from .. import registry
 from ..dialog import Dialog
-from ..widgets import is_dismiss, kit, text_centred
+from ..widgets import POPUP_PICTURE, is_dismiss, kit, text_centred
+from ...assets.store import cache_load
 
 log = logging.getLogger(__name__)
 
@@ -70,9 +71,11 @@ def turn_number(state) -> int:
 
 
 class TurnStart(Dialog):
+    event_loop = False                 # ovl68:03a9: the sample wait 155e:0736, then ovl59:0142
     def __init__(self, k, state, on_close=None):
         super().__init__(on_close)
         self.kit = k
+        cache_load(k, POPUP_PICTURE[POPUP])            # popup 6 CITY: ovl17:020c 034a (X44)
         self.name = state.players[state.current].name
         self.turn = ds_str(k.exe, TURN_FMT) % turn_number(state)
         self.state = state

@@ -12,6 +12,12 @@ import pygame
 
 
 class Dialog:
+    # The dialog waits in the EXE's one event loop 08a9:000e (its buttons dispatched by
+    # 07be:04d8 / keys by 07be:0064), whose idle pass 0081 calls the music poller 155e:02ab;
+    # False for the pop-ups with a wait loop of their own (ovl61:10fb / ovl59:0142, tick waits,
+    # the line editor ovl56:03a6).  Set per dialog class from its EXE routine (M10c).
+    event_loop = False
+
     def __init__(self, on_close: Callable[[Any], None] | None = None):
         self.on_close = on_close
         self.stack: DialogStack | None = None

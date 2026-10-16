@@ -61,6 +61,7 @@ from ..dialog import Dialog
 from ..keys import hand_on, popup_input
 from ..layout import DISABLED, NORMAL, PRESSED
 from ..widgets import ButtonRow, blit_opaque, kit, text_centred
+from ...assets.store import cache_load
 
 log = logging.getLogger(__name__)
 
@@ -271,6 +272,7 @@ def ticks(k):
 
 
 class HeroOffer(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, host, offer, on_close=None):
         super().__init__(on_close)
         self.host, self.offer = host, offer
@@ -289,6 +291,7 @@ class HeroOffer(Dialog):
         self.ticks = ticks(k)
         lay = k.layouts.screen(SCREEN)
         self.row = ButtonRow(list(lay.buttons), k.picture)
+        cache_load(k, FHERO if self.female else MHERO, *(b.picture for b in self.row.buttons))   # ovl47:1074, buttons (X44)
         self.states()
 
     def states(self) -> None:
@@ -326,6 +329,7 @@ class HeroOffer(Dialog):
                                  max_len=NAME_MAX, max_width=NAME_WIDTH, on_close=self.renamed)
         elif id in (MALE, FEMALE):                          # ovl47:12f9
             self.female = int(id == FEMALE)
+            cache_load(self.k, FHERO if self.female else MHERO)   # ovl47:133c 0129 (X44)
         self.states()
 
     def renamed(self, name) -> None:

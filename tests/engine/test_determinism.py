@@ -59,14 +59,14 @@ def test_dump_load_mid_sequence_keeps_hash(game):
 
 
 def test_dispatch_covers_closed_command_list():
-    assert set(engine.DISPATCH) == set(C.COMMANDS) and len(C.COMMANDS) == 53
+    assert set(engine.DISPATCH) == set(C.COMMANDS) and len(C.COMMANDS) == 54
     for milestone, target in engine.DISPATCH.values():
         mod, fn = target.split(":")
         assert mod.startswith("warlords2.rules.") and fn.isidentifier() and milestone
 
 
 def test_event_list_closed():
-    assert len(E.EVENTS) == 50 and set(engine.ANSWERS) == set(E.PENDING)
+    assert len(E.EVENTS) == 51 and set(engine.ANSWERS) == set(E.PENDING)
 
 
 @pytest.mark.gamedata

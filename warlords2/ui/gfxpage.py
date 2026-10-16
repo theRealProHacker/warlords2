@@ -18,12 +18,15 @@ then waits for a key or a mouse release (ovl61:10fb) and closes the popup.
 """
 from __future__ import annotations
 
+from itertools import takewhile
+
 import pygame
 
 from ..assets.fonts import CHANCE17, CHANCE36
+from ..assets.store import cache_load
 from ..formats.gfxscript import parse_gfx
 from .dialog import Dialog
-from .widgets import is_dismiss
+from .widgets import POPUP_PICTURE, is_dismiss
 
 INK, SHADOW = 15, 0
 TUTORIAL_POPUP, HELP_POPUP = 0x0E, 4
@@ -73,14 +76,21 @@ def render(fb: pygame.Surface, script: bytes, origin: tuple[int, int], fonts, pi
 class GfxPages(Dialog):
     """One or more GFX pages shown one after the other in a popup, each dismissed by a
     key or a mouse release (ovl61:16f5 / 168d + ovl61:10fb)."""
+    event_loop = False                 # pages wait in ovl61:10fb
 
     def __init__(self, kit, scripts: list[bytes], popup: int | None = None, on_close=None):
         super().__init__(on_close)
         self.kit, self.scripts, self.popup = kit, list(scripts), popup
         self.page = 0
+        self.loads()
 
     def popup_type(self, script: bytes) -> int:
         return self.popup if self.popup is not None else TUTORIAL_POPUP + prescan(script)
+
+    def loads(self) -> None:
+        """The cache calls of a page (X44): its popup (ovl17:0000), then each `#G` (ovl59:0895)."""
+        s = self.scripts[self.page]
+        cache_load(self.kit, POPUP_PICTURE.get(self.popup_type(s), 25), *(c[5] for c in takewhile(lambda c: c[0] != "E", parse_gfx(s)) if c[0] == "G"))
 
     def update(self, events, dt) -> None:
         for e in events:
@@ -88,6 +98,7 @@ class GfxPages(Dialog):
                 self.page += 1
                 if self.page == len(self.scripts):
                     return self.close(None)
+                self.loads()
 
     def draw(self, fb: pygame.Surface) -> None:
         s = self.scripts[self.page]

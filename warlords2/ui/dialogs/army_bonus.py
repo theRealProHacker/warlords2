@@ -53,6 +53,7 @@ from ..palettes import ABITS, painter_for
 from ..widgets import ButtonRow, blit_opaque, kit, text_centred
 from .setup_side import bevel
 from .stack import KIND_BOTH, KIND_FLY, KIND_FOREST, KIND_HILLS, STACK_PCK, bonus_text
+from ...assets.store import cache_load
 
 log = logging.getLogger(__name__)
 
@@ -85,10 +86,12 @@ def type_order(state) -> list[int]:
 
 
 class ArmyBonus(Dialog):
+    event_loop = True                  # buttons by 07be:04d8 / 0064 from the event loop 08a9:000e (its 0081 polls 155e:02ab)
     def __init__(self, host, on_close=None):
         super().__init__(on_close)
         self.host = host
         k = self.k = kit(host.app)
+        cache_load(k, 46)                               # STACK.PCK: ovl66:20a0 027e (X44)
         exe = k.exe
         self.order = type_order(host.state)
         self.first = 0                                  # DS:67d8
