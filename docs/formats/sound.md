@@ -43,20 +43,21 @@ File names come from FILE.DAT (group, index); the `.TXT` caption with the same b
 
 | FILE.DAT group | files | use | confidence |
 |---|---|---|---|
-| 37 | dramatic.8SN, orch.8SN | stingers; `ovl58:01a9` (flat 0x7db99) plays index 0 or 1 by argument | [EXE] loading; occasions [unknown] |
-| 38 | war.8SN | `ovl58:0206` (flat 0x7dbf6) | [EXE]; "battle start" [inferred] from the name |
-| 39 | splash.8SN | `ovl58:023d` (flat 0x7dc2d) | [EXE]; "army lost at sea / boat" [inferred] |
-| 40–46 | vlose05 … vlose35 | advisor speech, losing (group 45 repeats vlose25; there is no vlose30) | [bytes]; selection logic in `ovl58:026f` not traced |
-| 47–53 | vwin05(a) … vwin35 | advisor speech, winning | as above |
-| 54, 55 | vgold00, vgold01(a) | advisor speech about treasury | as above |
-| 56, 57 | vhero00, vhero01 | advisor speech about heroes. Group 87 names the caption `vhero1.TXT` while the sound is `vhero01.8SN` — the caption file on disk is indeed VHERO1.TXT | [bytes] |
-| 58 | vmess00 … vmess03 | advisor remarks, one picked at random (`ovl58:06f7` passes index −1 for the caption group 88) | [EXE] |
+| 37 | dramatic.8SN, orch.8SN | stingers; `ovl58:01a9` (flat 0x7db99) plays index 0 or 1 by argument and waits for its end: dramatic at a human's ruin search (ovl34:01fe) and sage visit (ovl34:0af7), orch after a human hero's guardian message (ovl34:02b1) | [EXE] (`audio.effects`) |
+| 38 | war.8SN | `ovl58:0206` (flat 0x7dbf6), waits for its end: a human attacker's battle start (ovl36:1a28) | [EXE] (`audio.effects`) |
+| 39 | splash.8SN | `ovl58:023d` (flat 0x7dc2d): armies sunk for lack of a boat (0b62:11f8), a dying hero's items lost on Water (ovl36:173b), a human's drop on Water (ovl47:09a1) | [EXE] (`audio.effects`) |
+| 40–46 | vlose05 … vlose35 | advisor speech, losing (group 45 repeats vlose25; there is no vlose30): the side's city count c fell below the bucket kept in SCN 0x108[p]; the new bucket t = c / 5 * 5 picks the group, else 46 | [EXE] ovl58:02ab..0718 (`rules.turn.advice_file`) |
+| 47–53 | vwin05(a) … vwin35 | advisor speech, winning: c reached the bucket + 5, group by t, else 47 | as above |
+| 54, 55 | vgold00, vgold01(a) | advisor speech about treasury, every 7th turn: gold < 100 / gold > 2800 | as above |
+| 56, 57 | vhero00, vhero01 | advisor speech about heroes, every 7th turn: no hero / five or more. Group 87 names the caption `vhero1.TXT` while the sound is `vhero01.8SN` — the caption file on disk is indeed VHERO1.TXT | [bytes] |
+| 58 | vmess00 … vmess03 | advisor remarks, every 7th turn otherwise when rnd(1, 5, 0) == 1, one picked at random (`ovl58:06f7` passes index −1 for the caption group 88) | [EXE] |
 | 59–62 | vgreet0, vmoment, vbegin, vquit (+ .TXT) | greeting, "one moment", begin, quit | [inferred] from names/captions |
-| 63 | turn.8SN | turn change | [inferred] |
+| 63 | turn.8SN | `ovl58:0b93`: a human side's turn start, while the "Turn" pop-up shows (ovl68:0415) | [EXE] (`audio.effects`) |
 | 64 | army.8SN (0), ding.8SN (1), chord.8SN (2), army2.8SN (5) | preloaded at start-up by `ovl58:0bc5` (flat 0x7e5b5) into slots `DS:5974..597e`; `ovl58:0181` plays army/army2 | [EXE]; UI click/ack sounds [inferred] |
 
-The numbers in the `vwin`/`vlose` names (05…35) are **[unknown]** (thresholds of some
-score comparison — to be confirmed from `ovl58:026f`).
+The numbers in the `vwin`/`vlose` names (05…35) are the city-count buckets c / 5 * 5
+(`ovl58:02ab..0718`, SCN 0x100[p] / 0x108[p]; no face on turn 1) **[EXE]**; face, captions and
+blink are ovl58:0293..0ef2 (`audio.voice`).
 
 Effects are skipped when `DS:0bec` is 0 (OPTIONS.SND digit 1, tables.md §9) and when the
 digital driver is `NO_SOUND` or `IBMBAK.COM` (`155e:0104` sets `DS:37ab` for that name; `155e:065e` then prints a BEL
@@ -83,7 +84,8 @@ group 7) + one prefix letter + base name (`STARTUP.XMI`, `INTn.XMI`) **[EXE]**:
 (The letters are the strings "s", "m", "r" at `DS:3872/3874/3876`.) At most 10000 bytes of
 a file are read into a fixed buffer (`155e:03cc`); the largest XMI is 9296 bytes.
 MINT21.XMI and SINT21.XMI are byte-identical **[bytes]**. START/MANIM, RANIM, SANIM.XMI
-follow the same prefix scheme for the START.EXE intro **[inferred]**.
+follow the same prefix scheme for the START.EXE intro (0c07:0344..0375, docs/research/start_exe.md)
+**[EXE]**.
 
 ### Track usage
 
@@ -139,6 +141,6 @@ meaning is **[unknown]**.
 
 ## 4. Unknowns
 
-- Exact occasion for dramatic/orch/war/splash and the advisor-speech selection rules
-  (`ovl58:026f`, not traced).
-- DING0.SND's rate: closed, 11000 Hz from START.EXE 0c07:06a8 (see §1).
+Register T4 is closed: the effects' occasions are the callers listed in §1
+(`audio.effects`), the advisor's choice is ovl58:02ab..0718 (`rules.turn.advice_file`), and
+DING0.SND plays at 11000 Hz (§1).

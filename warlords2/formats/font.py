@@ -16,8 +16,8 @@ class FontInfo:
     first_char: int       # 32
     sheet_width: int      # == FNT bitmap width
     line_height: int      # height of one glyph row in the sheet
-    ascent: int           # byte 5; baseline offset (meaning not verified)
-    unk6: int             # byte 6 (0/1/2; meaning not verified)
+    ascent: int           # byte 5; stored at font record +9 by ovl50:03ea, read only by the uncalled ovl50:0b47
+    unk6: int             # byte 6 (0/1/2); record +0xa, read only by the uncalled ovl50:0b72
     rows: int             # glyph rows per colour block
     widths: list[int]     # bitmap width of each glyph in the sheet
     advances: list[int]   # pen advance of each glyph

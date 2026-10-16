@@ -182,15 +182,18 @@ Exact sizes and frame counts of all 95 files are the `EXPECTED` table in the tes
     1   u8      first    first character code (32)
     2   u16 BE  width    sheet width (= FNT width)
     4   u8      line     height of one glyph row
-    5   u8      ?        12 / 12 / 25 (baseline? not traced)
-    6   u8      ?        0 / 1 / 2 (not traced)
+    5   u8      ?        12 / 12 / 25: kept, never used (below)
+    6   u8      ?        0 / 1 / 2: kept, never used (below)
     7   u16 BE  rows     glyph rows per colour block
     9   u16 BE  nvar     number of colour variants
     11  u8[n]   bitmap width of each glyph
     11+n u8[n]  second per-glyph width: equal to the first except space and some
                 swash capitals, where it is smaller -> the pen advance [code]: START.EXE's
                 character loop 09e8:04a4 advances by it (font +0x18, 09e8:07c6) and the
-                text width 09e8:0a88 sums it (docs/research/start_exe.md §4)
+                text width 09e8:0a88 sums it (docs/research/start_exe.md §4); the same in
+                WARLORD2.EXE: 11e2:0008 stores the first table at font +0x14 (cell
+                layout, the glyph blit 11e2:01f7 at 031a / 03b3) and the second at +0x18
+                (the pen advance at 03e9, the width 11e2:0a53 / 0a8e)
     11+2n  nvar x 3 u16 BE: (ink colour, shadow colour, background colour)
 
 File size is `11 + 2n + 6*nvar` **[data]**. Characters are ASCII 32–127; code 127 is a
@@ -220,6 +223,10 @@ transparent and map ink and shadow to the requested colours.
 Font slots: START.EXE loads Chance36 as font 1 and Chance17 as font 2 **[code]**
 (0x48A9). WARLORD2.EXE uses slot 0 TEXT, 1 CHANCE36, 2 CHANCE17 **[code]**: ovl50:0000
 loads the three fonts into the records that `SetFont` ovl50:06ae selects as these slots.
+Its FIN reader ovl50:03ea stores bytes 4 / 5 / 6 at record +8 / +9 / +0xa (0509..0541);
++8 goes to the glyph builder 11e2:0008 as the line height, while +9 and +0xa are read only
+by the getters ovl50:0b47 / 0b72 (one per slot), which nothing calls (the overlay's called
+entries are 0000, 063e and 06ae), so bytes 5 and 6 change no pixel.
 
 ## 5. GFX — text page scripts
 
@@ -266,8 +273,8 @@ sheets are confirmed by shape and colour only, not by position on screen.
 
 ## 7. Open points
 
-- Which cell each army type, terrain code, road code and city type selects (needs the map
-  drawing code and `TERRAIN0/ARMYTYPE.DAT`); the grids above are solid, the indices are not.
-- Rectangles inside the button sheets, ABITS, ATRANS2, WAR, HIDDEN, SPECBITS, HELPGFX.
-- FIN bytes 5 and 6 (the second FIN width is the pen advance in START.EXE, §4).
-- STAND.PCK cursor hotspots and key colour.
+None left. Settled since: the cell of each army type, tile byte, road piece, tower and city
+(`assets.sprites`, register G1: ovl64:2756 / 1cc2, 1eb4, 1fe8, 0335); the rectangles of every
+sheet, read from the EXE by its milestone (register G2); FIN bytes 5 and 6 (§4, never used;
+the second width is the pen advance in both EXEs, register G3); STAND.PCK's key colour 10,
+cell n at (16 n, 0, 16, 16) and hotspots from the DS:048c table (`assets.cursors`, register G4).

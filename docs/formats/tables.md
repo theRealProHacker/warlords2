@@ -158,9 +158,9 @@ Read by `ovl63:2a11` (flat 0x85ac1) in this order **[EXE]**: 4 × 256 bytes, 3 �
 
 | off | size | content | confidence |
 |----:|-----:|---------|------------|
-| 0 | 4 × u8[256] | four colour tables indexed by map tile number (values 0..15; tiles 192..254 are 0, tile 255 = 13) | layout [EXE]; "tile → overview-map colour, four sub-pixels" [inferred] |
-| 1024 | 3 × u16[16] | first table is the identity 0..15; the others remap a few entries | layout [EXE]; meaning [unknown] (palette remaps?) |
-| 1120 | 4 × u8[20] | all 13 except a single 10 at index 10, 7, 9, 8 respectively | layout [EXE]; meaning [unknown] |
+| 0 | 4 × u8[256] | four colour tables indexed by map tile number (values 0..15; tiles 192..254 are 0, tile 255 = 13): the four pixels of a square of the overview (ovl63:232b); a square of index 0x50..0x5f (mountains) takes its four colours unmapped from the 256 rnd(1, 3, 1) values drawn before the loop (ovl63:2479) instead | [EXE] (`ui.minimap`, `assets.sprites.MapColors`) |
+| 1024 | 3 × u16[16] | colour remaps per terrain set SCN 0x161 (ovl63:2404); the first is the identity 0..15, the others remap a few entries; ovl63:2785 always takes the first (DS:5e72) | [EXE] |
+| 1120 | 4 × u8[20] | the four pixels of a square by road piece r − 1: all 13 except a single 10 at index 10, 7, 9, 8 respectively | [EXE] |
 
 ## 4. DATA/TERRAIN.DAT (54 bytes)
 
@@ -225,10 +225,10 @@ Record 0 of every group is all zero.
 | off | size | field | confidence |
 |----:|-----:|-------|------------|
 | 0 | u16 | button id (same id space as HELP ids and UDB ids) | [bytes]/[inferred] |
-| 2 | 4 | zero | [bytes] |
+| 2 | 4 | zero in the file; run-time fields of the copy ovl53:06ee..070c makes at every activation: +2 word (set / read only by 08a9:0428 / 0511, which nothing calls), +4 state byte, +5 drawn flag (08a9:066e sets it after drawing, the hit test 08a9:0756 skips records with 0, 08a9:0345 zeroes +4 / +5 at activation) | [bytes]; [EXE] |
 | 6 | u16, u16 | x, y on screen | [inferred] |
 | 10 | u8, u8 | width, height | [inferred] |
-| 12 | 7 | zero | [bytes] |
+| 12 | 7 | zero in the file; run-time: +0xc far pointer to a text label (set only by the uncalled 08a9:0493; non-NULL would make 0a0a:0005 draw a text button 0a0a:02be, +0x10 its font flag), +0x12 the state last drawn (0771:00a4, never read); +0x11 has no reader | [bytes]; [EXE] |
 | 19 | 6 × u16 | three (x, y) pairs — source positions of the button images: pair *s* at +0x13 + 4·*s* for state *s* = 0 pressed, 1 normal, 2 disabled (`0771:0001` blits the pair of the state byte at run-time record +4) | [EXE] |
 | 31 | u16 | index into FILE.DAT group 3 (picture file; 4 = button.pck, 63 = citybu.pck, 61 = dbutton.pck, …); 0 = no picture | [inferred] from the values |
 

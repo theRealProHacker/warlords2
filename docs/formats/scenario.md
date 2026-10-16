@@ -65,7 +65,7 @@ scenarios:
 | Tile ids | Terrain | Notes |
 |---|---|---|
 | 0 | 9 | signpost; one per `.SGN` record, positions match exactly |
-| 1, 9, 31, 111, 127 | 7 | plain. 9 and 31 are the checkerboard grass fill. Tile 1: purpose unknown. 111 and 127 never appear |
+| 1, 9, 31, 111, 127 | 7 | plain. 9 and 31 are the checkerboard grass fill. Tile 1: no code tests it (no compare of a map tile byte with 1). 111 and 127 never appear |
 | 2–8 | 9 | not present in any shipped map (towers, by the terrain name) |
 | 10–12 | 11 | ruin/temple picture; one per site record. Variant does not encode site type |
 | 13–15, 29, 30, 46 | 8 | marsh |
@@ -270,9 +270,9 @@ the layout, tested against the SCN counts.
 | 0 | char[20] | title |
 | 20 | char[8] | directory / file base name |
 | 28 | char[30] | description, NUL-terminated (the longest, record 3, is 29 characters with its NUL at byte 57) |
-| 58 | u16 | 7, or 6 for Dragon — unknown. Checked on the bytes: 58-59 hold 7/6 in every record, so the description field cannot be char[32] (as `tables.md` §11 once said) |
-| 60 | char[8] | repeats the directory name — unknown purpose |
-| 68 | char[8] | repeats the directory name — unknown purpose |
+| 58 | u16 | 7, or 6 for Dragon. Read by nothing: the record is only copied whole (ovl60:06c8 into DS:5d64 or a stack buffer, ovl49:0626 / 0acd with a saved map), and no code reads +0x3a (DS:5d9e) or a buffer's +0x3a. Checked on the bytes: 58-59 hold 7/6 in every record, so the description field cannot be char[32] (as `tables.md` §11 once said) |
+| 60 | char[8] | the scenario's file directory (DS:5da0): `%s\%s.sgn`, `.CTY`, `.SPC` are opened from it |
+| 68 | char[8] | the name a load compares to choose the overview (DS:5da8) |
 | 76 | u16 | city count |
 | 78 | u16 | site count |
 | 80 | u16 | number of players |
@@ -306,13 +306,14 @@ names. Event layout **unknown**; not needed to load scenarios.
 
 ## RANDOM/RANDOM.DAT — random world generator data (42336 bytes)
 
-Read whole into memory (exe@0x3e563, size 0xA560). Only the first ≈6.9 KB are
-non-zero. Layout **mostly unknown**:
-
-- 0x000–0x763: `u16` parameters.
-- 0x764: side names, 20 bytes each (39 entries).
-- after that: name syllables in 10-byte slots, name templates such as `%s's Tower`,
-  description words in 16-byte slots, signpost phrases in 30-byte slots.
+Read whole into the generator's work buffer (far pointer DS:3f8a, farmalloc(0xA560) and one
+read of 0xA560 bytes, ovl02:001d..006a). The generator reads and writes it in place: header
+words (e.g. +0x2a city count, +0x34 / +0x36 ridge seeds, +0x38 / +0x3a rivers, +0x3c forest
+density, each plus the slider's table entry, ovl02:0095..00f2), tables, the name and text
+pools (side names at 0x764, 20 bytes each; syllables, templates, description words, signpost
+phrases), the city / site description texts (+0x1f56, +0x3e96) and the 112 × 156 terrain
+grid at +0x6120 (byte y · 0x70 + x). Every offset used is a `Const` with its address in
+`warlords2/rules/constants/randmap.py` (`rules.randmap.buffer.Buffer`).
 
 `tools/dump_scenario.py` lists every string with its offset in `_global.json`.
 
@@ -322,19 +323,22 @@ non-zero. Layout **mostly unknown**:
 |---|---|---|
 | `DATA/MAPINFO.DAT`, `DATA/SAVEINFO.DAT` | text slot lists, one entry per slot: 1 digit used flag, 2 digits = name length + 1, name with `_` for spaces, 2-byte line end (CR LF in MAPINFO, LF CR in SAVEINFO). 5 map slots, 10 save slots | H |
 | `DATA/TERRAIN.DAT` | `u16 count`, then 52-byte records: `u16` (0) + char[50] label. One record | M |
-| `TERRAIN0/MAPCOLOR.DAT` | 1200 bytes: four 256-byte tables indexed by tile id (overview-map colours; why four is unknown), three 16-word remap tables at 0x400, 80 bytes at 0x460 | L |
+| `TERRAIN0/MAPCOLOR.DAT` | 1200 bytes: four 256-byte tables indexed by tile id: the four pixels of an overview square; four 20-byte tables by road piece; 16-word colour remaps per terrain set (`tables.md` §3) | L |
 | `TERRAIN0/ARMYTYPE.DAT`, `ARMYTYP2.DAT` | 29 records of 62 bytes: `u16` army id, char[20] name, then `u16` strength (+0x16), turns (+0x18), cost (+0x1A), movement (+0x1C), `i16` purchase price (+0x1E, negative for allies), 15 more words (terrain and special bonuses, unknown) | H for the named fields |
 | `UDB/UDB.DAT` | `u16 count` (21), then 68-byte records: `u16` id, char[50] label, 8 × `u16` (two rectangles). User-definable buttons | M |
 | `UDB/UDB.CUR` | 8 bytes, current button assignment | L |
-| `DATA/AREA.DAT` | screen area definitions for the UI; records start with `00 7D`. Not decoded | unknown |
+| `DATA/AREA.DAT` | screen area definitions for the UI, see `tables.md` §6 | EXE |
 
 ## Still unknown
 
 - SCN header words listed as unknown above, and the runtime regions 0x223–0x60A and
   0x101B–0x157A.
 - City byte 20 and the 21 runtime bytes at the end of a city record.
-- Meaning of tile 1 and of the two extra straight road pieces 16/17.
-- `SCENARIO.DAT` word at 58 and the two repeated names.
 - The 22000 bytes after the map and the second tile layer in saved maps.
-- `CURRENT.HST` event records, `RANDOM.DAT` parameters, `AREA.DAT`, `MAPCOLOR.DAT`
-  table roles, the last 15 words of an `ARMYTYPE.DAT` record.
+- `CURRENT.HST` event records, the last 15 words of an `ARMYTYPE.DAT` record.
+
+Settled since: tile 1 has no meaning of its own (drawn and costed like any tile byte; no
+code compares a map tile byte with 1); road pieces 16 / 17 are the generator's markers
+(ROAD.PCK cells 15 / 16); `SCENARIO.DAT` +58 is read by nothing and +60 / +68 are the
+directory and the load's overview name; `RANDOM.DAT` is the generator's work buffer (above);
+`AREA.DAT` and `MAPCOLOR.DAT` are in `tables.md` §6 and §3.

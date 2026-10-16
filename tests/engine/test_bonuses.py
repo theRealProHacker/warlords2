@@ -230,9 +230,9 @@ def test_cancel_mode_3_cancels_other_stack_bonus():
 
 
 def test_cancel_plus_one_is_not_applied():
-    """Register T2b: the "+1" of modes 2/3 is not added by ovl38:008b; it stays Unverified."""
-    from warlords2.rules.constants import Unverified
-    assert isinstance(K.CANCEL_PLUS_ONE, Unverified) and K.CANCEL_PLUS_ONE.row == "T2b"
+    """Register T2b (closed): no "+1" of modes 2/3 in ovl38:008b, ovl66:1b9c, ovl34:07ad."""
+    from warlords2.rules.constants import Const
+    assert isinstance(K.CANCEL_PLUS_ONE, Const) and K.CANCEL_PLUS_ONE.value == 0
     s = _cancel_state(2, 0)
     assert s.a_total == 4                               # no +1
 

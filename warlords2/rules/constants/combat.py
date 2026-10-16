@@ -7,7 +7,7 @@ WARLORD2.EXE at file offset 0x33250 + xxxx.
 """
 from __future__ import annotations
 
-from . import Const, Unverified
+from . import Const
 
 # ---------------------------------------------------------------- battle class (ovl38:0000)
 # asm ovl38:0050: fortified square (map high byte bit 0x20) -> class 0; else jump table
@@ -33,11 +33,12 @@ CANCEL_CITY, CANCEL_HERO, CANCEL_STACK = (
     Const(1, "decomp 06a6ab: w15 == 1 on side A only (asm ovl38:078d)"),
     Const(2, "decomp 06a6ab: w15 == 2 (asm ovl38:0798, 08c8)"),
     Const(3, "decomp 06a6ab: w15 == 3 (asm ovl38:07a3, 08d3)"))
-CANCEL_PLUS_ONE = Unverified(
-    "+1 of cancel modes 2/3", "T2b", 0,
-    "EL §3.3 [U]; ovl38:008b..0d19 re-read by M5a: no +1 is added anywhere in the battle set-up, "
-    "so the battle uses only the cancel.  Not read by the battle code; kept for the display "
-    "texts (ovl66:1aba..1b05) and the register row")
+CANCEL_PLUS_ONE = Const(
+    0, "register T2b: no +1 of cancel modes 2/3 anywhere: the battle set-up ovl38:008b..0d19 "
+    "(M5a), the stack dialog's strengths ovl66:1b9c..1e3a (min(strength + terrain bonus, 9) + the "
+    "stack bonus, no w15 test), the cancel texts ovl66:1aba..1b05 (w15 == 2 / 3 / 1 only pick "
+    "STRING (163, 3 / 4 / 6)) and the ruin fight ovl34:07ad..089d (no w15); the +1 is only in the "
+    "help texts")
 
 # ---------------------------------------------------------------- fight order (ovl38:008b)
 FIGHT_ORDER_ROWS = Const(9, "EL §3.2 SCN 0x60b, 9 rows x 29; defender row = min(owner nibble, 8)")

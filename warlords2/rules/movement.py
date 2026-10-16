@@ -16,7 +16,7 @@ Events (info keys):
             sound of ovl58:0b5f)
   Embarked  armies (now aboard)          Landed  armies (no longer aboard)
   ItemTaken item, army, auto (computer heroes pick up items they walk over, ovl28:0427)
-  Sunk      armies, count
+  Sunk      armies, count, square ((x, y) as called; (-1, -1) for the all-squares form)
 """
 from __future__ import annotations
 
@@ -608,7 +608,7 @@ def sink(state, x: int = -1, y: int = -1) -> list:
     if x >= 0 and y >= 0:                                # asm 0b62:127c..128e, after the message
         from .turn import centre_view                    # circular at module level
         centre_view(state, x, y)                         # ovl64:0629
-    return [E.Sunk({"armies": tuple(a.id for a in gone), "count": len(gone)})]
+    return [E.Sunk({"armies": tuple(a.id for a in gone), "count": len(gone), "square": (x, y)})]
 
 
 # ------------------------------------------------------------------------------- computer moves
