@@ -24,8 +24,14 @@ class PyDice:
         self.r = random.Random(seed)
 
     def die(self, sides: int) -> int:
-        """Uniform 1..sides.
-        Evidence: distribution of the ovl59:02f5 die (EL §2); sequence not the original's (X06)."""
+        """Uniform 1..sides.  A negative side count (the random-map forest blobs, ovl05) takes
+        one 15-bit draw through the EXE's formula trunc(r / 32767.0 * sides + 1), i.e. 1 for
+        r == 0, else 0 .. sides + 1: the distribution of `BorlandRand.die`, one draw per die
+        (randint(1, sides) cannot take sides < 1).
+        Evidence: distribution of the ovl59:02f5 die (EL §2); sequence not the original's (X06);
+        ovl59:02fd..031e for sides < 0 (fimul with the signed word [bp+8])."""
+        if sides < 0:
+            return int(self.r.randint(0, RAND_MAX.value) / DIE_DIVISOR.value * sides + 1)
         return self.r.randint(1, sides)
 
     def state(self) -> dict:
@@ -81,13 +87,22 @@ class Rng:
         self.src = _SOURCES[source](seed)
 
     def rnd(self, dice: int, sides: int, add: int) -> int:
-        """`add` + sum of `dice` dice of 1..sides, clamped to [dice+add, dice*sides+add];
-        `sides == 0` returns `add` without rolling.
-        Evidence: EL §2, ovl59:02bf."""
+        """`add` + sum of `dice` dice of 1..sides; `sides == 0` returns `add` without rolling.
+        The clamp is the EXE's if / else: below dice + add -> dice + add, else above
+        dice * sides + add -> dice * sides + add.  For sides > 0 that is the plain clamp; for
+        sides < 0 (each die <= 1, one draw each) it gives dice + add unless every die came out
+        1 (rand() == 0), which falls through to the upper bound dice * sides + add.
+        Evidence: EL §2, ovl59:02bf: 02e4 sides == 0 -> add; 02f5..0327 one rand() per die;
+        0329..033a dice + add > total + add -> dice + add; 033c..034e dice * sides + add <
+        total + add -> dice * sides + add."""
         if sides == 0:
             return add
         total = sum(self.src.die(sides) for _ in range(dice)) + add
-        return max(dice + add, min(total, dice * sides + add))
+        if dice + add > total:
+            return dice + add
+        if dice * sides + add < total:
+            return dice * sides + add
+        return total
 
     def state(self) -> dict:
         """Serialisable state of the die source.

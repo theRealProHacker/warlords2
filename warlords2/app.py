@@ -38,6 +38,7 @@ MOUSE_FILE = "STAND.PCK"
 MENUBUTT = 43                             # MENUBUTT.PCK, cache group 8
 SETTLE_TIMEOUT = 10.0                     # seconds a pgsm hook thread may take
 BANNER_FMT, BANNER_VERSION = 0x27C9, 0x27F8   # res_0a4c:02f3 / 02f7: printf(DS:27c9, DS:27f8)
+FATAL_FMT = 0x1656                        # ovl52:0038: printf(DS:1656, message)
 
 
 def discover_states(app: App) -> dict[str, BaseState]:
@@ -87,8 +88,16 @@ class App:
         self.music_words = music_triggers.make_words(self)   # DS:2632 / 379e / 37a9 / 0bee / 37a3 (M10c)
         self.music_log = MusicLog()
         music_triggers.register(self)
+        from .persist.maps import Maps
+        from .persist.randomdir import RandomDir
         from .persist.saves import RunCarry, Saves
-        self.saves = Saves(self.user, self.gd, music=self.music_words)   # res_0a4c:0250 -> ovl49:0e5f
+        self.random_dir = RandomDir(self.user, self.gd)   # the generated RANDOM\RANDOM.* (X55)
+        self.random_dir.attach()                      # served before the game's copies from now on
+        rd = self.random_dir
+        self.saves = Saves(self.user, self.gd, music=self.music_words,       # res_0a4c:0250 -> ovl49:0e5f
+                           random_texts=rd.texts, random_write=rd.write_texts)
+        self.maps = Maps(self.user, self.gd, saves=self.saves,               # res_0a4c:0255 -> ovl49:1029
+                         random_texts=rd.texts, random_write=rd.write_texts)
         self.run_carry = RunCarry()                   # the run's memory across games (EL §10.4)
 
         # everything is read here, synchronously, before pgsm exists
@@ -237,6 +246,26 @@ class App:
         sys.stdout.write(printf(ds_str(exe, BANNER_FMT), ds_str(exe, BANNER_VERSION)))
         sys.stdout.flush()
         self.running = False
+
+    def fatal(self, error: tuple[int, int], name: str) -> None:
+        """ovl52:0000, the fatal-error routine, with the message sprintf(ERROR.DAT `error`, `name`)
+        (ovl59:051a + 0000:4944 at its callers): text mode (14d0:0002(0)), the chord (ovl58:0b5f
+        at 002e), printf(DS:1656, message) to the console, a wait for a key (ovl59:012b: not
+        modelled, there is no keyboard once the screen is gone [stand-in]), then the end of the
+        program (`exit_program`, 0a4c:02b5 at 0048).  The caller returns at once afterwards.
+        ovl52:000e..002b (a screen-rect fill, 116d:002e / 0288) is not modelled: it has no
+        effect after text mode.  A generation's failed create (ovl09:02d4 / 0346, stage 98)
+        fires inside the EXE's generation scroll; here it fires after the scroll closes
+        (`states.setup.Setup._generated`), a cosmetic stand-in.
+        Evidence: asm ovl52:0000..004e (002e ovl58:0b5f, 003b 0000:43ac(DS:1656, msg), 0043
+        ovl59:012b, 0048 0a4c:02b5); ovl59:012b..0141 (loops until 020d returns a key)."""
+        from .assets.exe import ds_str
+        from .assets.text import printf
+        from .audio import effects
+        effects.chord(self)
+        exe = self.gd.read(EXE_NAME)
+        sys.stdout.write(printf(ds_str(exe, FATAL_FMT), self.assets.error(error, name)))
+        self.exit_program()
 
     def close(self) -> None:
         """Release the display and the thread hook (safe to call twice)."""

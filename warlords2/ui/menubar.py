@@ -425,5 +425,7 @@ def saved_games(app) -> bool:
 
 
 def saved_maps(app) -> bool:
-    """ovl49:0e42: a map slot DS:4672 is used; the map slots are M11's (none before)."""
-    return False
+    """ovl49:0e42: a map slot DS:4672 of the run's map slot table is used (`persist.maps.Maps.
+    any_used`): Load Map 504 and the Game Start / Setup / game bars."""
+    from .dialogs.map_slots import maps
+    return maps(app).any_used() != 0

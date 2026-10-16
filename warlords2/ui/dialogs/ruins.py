@@ -36,7 +36,7 @@ from __future__ import annotations
 
 import pygame
 
-from ...assets.exe import ds_str, ds_words
+from ...assets.exe import ds_words
 from ...assets.fonts import CHANCE17, CHANCE36
 from ...model.ids import MAP_EXPLORED, MAP_W, SiteKind
 from ...rules.setup import distance
@@ -58,7 +58,7 @@ KIND_AT, STATE_AT = 0x0EB4, 0x0EB8
 G_KIND, G_STATE, G_LEGEND, G_PANEL = 113, 114, 115, 122
 BOX, BOX_COLOUR = 0x0F50, 2
 LEGEND_ICONS, LEGEND_AT, LEGEND_TEXT = 0x0F28, 0x0F58, 0x0F68
-TEXT_AT, TEXT_FILE, TEXT_MARK, TEXT_LIMIT = 0x0EC8, (0x16, 1), 0x0FFE, 8000
+TEXT_AT = 0x0EC8
 START = 1000
 INK, SHADOW = 15, 0
 
@@ -78,17 +78,12 @@ def nearest_site(host, x: int, y: int) -> int:
     return idx
 
 
-def site_text(k, scenario: str, s: int) -> list[str]:
-    """ovl45:1e02 / 1f06."""
-    fmt = k.files.get(*TEXT_FILE)
-    data = k.store.read(fmt.replace("%s", scenario, 1).replace("%s", scenario, 1))[:TEXT_LIMIT]
-    data = data.replace(b"|", b"\0")
-    mark = b"#" + (ds_str(k.exe, TEXT_MARK) % s).encode("cp437") + b"\0"
-    i = data.find(mark)
-    if i < 0:
-        return []
-    parts = data[i + len(mark):].split(b"\0")
-    return [p.decode("cp437") for p in parts[:3]]
+def site_text(app, scenario: str, s: int) -> list[str]:
+    """ovl45:1e02 / 1f06(2, s) through the run's description buffer (`city_info.description_lines`,
+    register X64); [] when no entry matches, a line not found ""."""
+    from .city_info import DL_SPC, description_lines
+    got = description_lines(app, DL_SPC, scenario, s)
+    return [] if got is None else [t if t is not None else "" for t in got]
 
 
 class Ruins(Dialog):
@@ -102,8 +97,10 @@ class Ruins(Dialog):
 
     def show(self, s: int) -> None:
         self.site = s
+        fn = getattr(self.host, "scenario_dir", None)          # DS:5da0 (the game's record)
         cfg = getattr(self.host, "config", None)
-        self.text = site_text(self.k, cfg.scenario, s) if cfg is not None else []
+        scen = fn() if fn is not None else (cfg.scenario if cfg is not None else None)
+        self.text = site_text(self.host.app, scen, s) if scen is not None else []
 
     def update(self, events, dt) -> None:
         for e, code in with_codes(events, self.host.app.input):

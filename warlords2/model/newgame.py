@@ -26,7 +26,11 @@ class NewGameConfig:
     before the loader's (`states.menu.session_dice`).  `new_game` continues it (its source
     decides the die; `seed` and `rng` only name where it began); None starts the stream at
     `seed` with `rng`, as `--scenario` does (no Game Start, so nothing rolls before the
-    loader).
+    loader).  `rules.setup.begin` (Load Map's Begin, which continues the live stream) refuses
+    a cfg with rng_state or setup_rolls set.
+    random_flag: DS:28c8, the Game Start screen's random-map flag (`rules.randmap.RandomRun.
+    random`), which ovl57:007f writes into SCN 0x120 at every ovl57:0000 entry; `new_game`
+    sets SCN 0x120 from it (0 for a scenario from the list).
     """
     scenario: str
     controls: tuple[int, ...]
@@ -41,3 +45,4 @@ class NewGameConfig:
     greatest: int | None = None
     setup_rolls: tuple[tuple[int, int, int], ...] = ()
     rng_state: dict | None = None
+    random_flag: int = 0

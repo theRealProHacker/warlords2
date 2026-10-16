@@ -1,0 +1,1043 @@
+{
+ "note": "M11 random maps and Save / Load Map, host wiring (package G). Game Start: Random Map 102 (ovl60:05f5, DS:28c8 = 1), two slider clicks (106 at x 420 -> 2, 107 at x 480 -> 5; ovl60:0512), Begin 103 (ovl60:060f -> ovl57:0000(1, 1, 1, 0) -> 10e8): the id dice and the generator in the scroll (STRING group 136), RANDOM\\\\RANDOM.* into the user directory, ovl57:0194(0) and 232b (group 137), RMAPTEMP (ovl49:11f3), SCN 0x120 = DS:28c8 = 1 (007f): the Setup screen of the generated sides. Side 1 computer, sides 2..7 off (125..132). Alt+M on the Setup screen (ovl49:1214: 0x130 0, 0x120 1, DS:28c6 0) -> slot 0, the description, OK. Begin 141: the first game with the generator's path cache (X62); turn 1 (hero offer, production), Alt+E: side 1, turn 2. Alt+S: save slot 0 of the random game (SPC / CTY blocks, SCN 0x120). Alt+N: New Game -> the Game Start screen (DS:5da0 'random': ovl60:0029 sets DS:28c8, the panel). Alt+Z: Load Map (ovl49:128a / 12f2, group 134 then 137) -> ovl57:0000(0, 1, 0, 1): the Setup screen on the snapshot (no OPTIONS.DAT read, no second 256), the same side choices, Begin 141 -> rules.setup.begin on the loaded memory. Alt+L: the random game of slot 0 (0414, RANDOM.SPC / .CTY written back, ovl45:1de4).",
+ "args": [
+  "--seed",
+  "11",
+  "--no-voice"
+ ],
+ "steps": [
+  [
+   2,
+   {
+    "assert_state": {
+     "state": "menu",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   3,
+   {
+    "press_button": 102
+   }
+  ],
+  [
+   5,
+   {
+    "click": [
+     420,
+     226
+    ]
+   }
+  ],
+  [
+   7,
+   {
+    "click": [
+     480,
+     256
+    ]
+   }
+  ],
+  [
+   8,
+   {
+    "shot": "01_panel"
+   }
+  ],
+  [
+   10,
+   {
+    "press_button": 103
+   }
+  ],
+  [
+   12,
+   {
+    "wait_dialog": "progress",
+    "frames": 4
+   }
+  ],
+  [
+   30,
+   {
+    "shot": "02_generating"
+   }
+  ],
+  [
+   64,
+   {
+    "assert_state": {
+     "state": "setup",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   65,
+   {
+    "shot": "03_setup_random_sides"
+   }
+  ],
+  [
+   70,
+   {
+    "press_button": 126
+   }
+  ],
+  [
+   86,
+   {
+    "press_button": 127
+   }
+  ],
+  [
+   102,
+   {
+    "press_button": 127
+   }
+  ],
+  [
+   118,
+   {
+    "press_button": 127
+   }
+  ],
+  [
+   134,
+   {
+    "press_button": 127
+   }
+  ],
+  [
+   150,
+   {
+    "press_button": 128
+   }
+  ],
+  [
+   166,
+   {
+    "press_button": 128
+   }
+  ],
+  [
+   182,
+   {
+    "press_button": 128
+   }
+  ],
+  [
+   198,
+   {
+    "press_button": 128
+   }
+  ],
+  [
+   214,
+   {
+    "press_button": 129
+   }
+  ],
+  [
+   230,
+   {
+    "press_button": 129
+   }
+  ],
+  [
+   246,
+   {
+    "press_button": 129
+   }
+  ],
+  [
+   262,
+   {
+    "press_button": 129
+   }
+  ],
+  [
+   278,
+   {
+    "press_button": 130
+   }
+  ],
+  [
+   294,
+   {
+    "press_button": 130
+   }
+  ],
+  [
+   310,
+   {
+    "press_button": 130
+   }
+  ],
+  [
+   326,
+   {
+    "press_button": 130
+   }
+  ],
+  [
+   342,
+   {
+    "press_button": 131
+   }
+  ],
+  [
+   358,
+   {
+    "press_button": 131
+   }
+  ],
+  [
+   374,
+   {
+    "press_button": 131
+   }
+  ],
+  [
+   390,
+   {
+    "press_button": 131
+   }
+  ],
+  [
+   406,
+   {
+    "press_button": 132
+   }
+  ],
+  [
+   422,
+   {
+    "press_button": 132
+   }
+  ],
+  [
+   438,
+   {
+    "press_button": 132
+   }
+  ],
+  [
+   454,
+   {
+    "press_button": 132
+   }
+  ],
+  [
+   480,
+   {
+    "assert_state": {
+     "state": "setup",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   482,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   484,
+   {
+    "key": "m"
+   }
+  ],
+  [
+   486,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   488,
+   {
+    "wait_dialog": "sage_list",
+    "frames": 6
+   }
+  ],
+  [
+   496,
+   {
+    "press_button": 114
+   }
+  ],
+  [
+   498,
+   {
+    "press_button": 123
+   }
+  ],
+  [
+   500,
+   {
+    "wait_dialog": "input_box",
+    "frames": 4
+   }
+  ],
+  [
+   506,
+   {
+    "press_button": 191
+   }
+  ],
+  [
+   508,
+   {
+    "key": "i",
+    "text": "I"
+   }
+  ],
+  [
+   510,
+   {
+    "key": "s",
+    "text": "s"
+   }
+  ],
+  [
+   512,
+   {
+    "key": "l",
+    "text": "l"
+   }
+  ],
+  [
+   514,
+   {
+    "key": "e",
+    "text": "e"
+   }
+  ],
+  [
+   516,
+   {
+    "key": "space",
+    "text": " "
+   }
+  ],
+  [
+   518,
+   {
+    "key": "o",
+    "text": "o"
+   }
+  ],
+  [
+   520,
+   {
+    "key": "n",
+    "text": "n"
+   }
+  ],
+  [
+   522,
+   {
+    "key": "e",
+    "text": "e"
+   }
+  ],
+  [
+   524,
+   {
+    "key": "return"
+   }
+  ],
+  [
+   526,
+   {
+    "press_button": 189
+   }
+  ],
+  [
+   532,
+   {
+    "assert_state": {
+     "state": "setup",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   534,
+   {
+    "press_button": 141
+   }
+  ],
+  [
+   538,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 60
+   }
+  ],
+  [
+   600,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   602,
+   {
+    "wait_dialog": "hero_offer",
+    "frames": 10
+   }
+  ],
+  [
+   616,
+   {
+    "press_button": 287
+   }
+  ],
+  [
+   618,
+   {
+    "wait_dialog": "production",
+    "frames": 10
+   }
+  ],
+  [
+   632,
+   {
+    "press_button": 192
+   }
+  ],
+  [
+   636,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   637,
+   {
+    "state_hash": "random_game",
+    "want": "2c591d9899be244ac8f6390b7cf9d7de6aeff6c4ec971698c623c0835f0bfe23"
+   }
+  ],
+  [
+   638,
+   {
+    "shot": "04_generated_map"
+   }
+  ],
+  [
+   640,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   641,
+   {
+    "key": "e"
+   }
+  ],
+  [
+   642,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   644,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 1500
+   }
+  ],
+  [
+   740,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   760,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   762,
+   {
+    "state_hash": "turn_2",
+    "want": "2d92cae79472c9b186bc1577f729e3f1c2164e2d4d6ef58871757cffa0eb1bce"
+   }
+  ],
+  [
+   764,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   765,
+   {
+    "key": "s"
+   }
+  ],
+  [
+   766,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   767,
+   {
+    "wait_dialog": "sage_list",
+    "frames": 6
+   }
+  ],
+  [
+   775,
+   {
+    "press_button": 114
+   }
+  ],
+  [
+   777,
+   {
+    "press_button": 123
+   }
+  ],
+  [
+   779,
+   {
+    "wait_dialog": "input_box",
+    "frames": 4
+   }
+  ],
+  [
+   785,
+   {
+    "press_button": 191
+   }
+  ],
+  [
+   787,
+   {
+    "key": "r",
+    "text": "R"
+   }
+  ],
+  [
+   788,
+   {
+    "key": "a",
+    "text": "a"
+   }
+  ],
+  [
+   789,
+   {
+    "key": "n",
+    "text": "n"
+   }
+  ],
+  [
+   790,
+   {
+    "key": "d",
+    "text": "d"
+   }
+  ],
+  [
+   791,
+   {
+    "key": "o",
+    "text": "o"
+   }
+  ],
+  [
+   792,
+   {
+    "key": "m",
+    "text": "m"
+   }
+  ],
+  [
+   793,
+   {
+    "key": "space",
+    "text": " "
+   }
+  ],
+  [
+   794,
+   {
+    "key": "t",
+    "text": "t"
+   }
+  ],
+  [
+   795,
+   {
+    "key": "w",
+    "text": "w"
+   }
+  ],
+  [
+   796,
+   {
+    "key": "o",
+    "text": "o"
+   }
+  ],
+  [
+   797,
+   {
+    "key": "return"
+   }
+  ],
+  [
+   799,
+   {
+    "press_button": 189
+   }
+  ],
+  [
+   803,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   805,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   806,
+   {
+    "key": "n"
+   }
+  ],
+  [
+   807,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   808,
+   {
+    "wait_dialog": "confirm",
+    "frames": 4
+   }
+  ],
+  [
+   814,
+   {
+    "key": "return"
+   }
+  ],
+  [
+   824,
+   {
+    "assert_state": {
+     "state": "menu",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   826,
+   {
+    "shot": "05_game_start_after_new_game"
+   }
+  ],
+  [
+   828,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   829,
+   {
+    "key": "z"
+   }
+  ],
+  [
+   830,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   831,
+   {
+    "wait_dialog": "sage_list",
+    "frames": 6
+   }
+  ],
+  [
+   839,
+   {
+    "press_button": 114
+   }
+  ],
+  [
+   841,
+   {
+    "press_button": 123
+   }
+  ],
+  [
+   843,
+   {
+    "wait_dialog": "progress",
+    "frames": 6
+   }
+  ],
+  [
+   880,
+   {
+    "assert_state": {
+     "state": "setup",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   882,
+   {
+    "shot": "06_loaded_map_setup"
+   }
+  ],
+  [
+   884,
+   {
+    "press_button": 126
+   }
+  ],
+  [
+   900,
+   {
+    "press_button": 127
+   }
+  ],
+  [
+   916,
+   {
+    "press_button": 127
+   }
+  ],
+  [
+   932,
+   {
+    "press_button": 127
+   }
+  ],
+  [
+   948,
+   {
+    "press_button": 127
+   }
+  ],
+  [
+   964,
+   {
+    "press_button": 128
+   }
+  ],
+  [
+   980,
+   {
+    "press_button": 128
+   }
+  ],
+  [
+   996,
+   {
+    "press_button": 128
+   }
+  ],
+  [
+   1012,
+   {
+    "press_button": 128
+   }
+  ],
+  [
+   1028,
+   {
+    "press_button": 129
+   }
+  ],
+  [
+   1044,
+   {
+    "press_button": 129
+   }
+  ],
+  [
+   1060,
+   {
+    "press_button": 129
+   }
+  ],
+  [
+   1076,
+   {
+    "press_button": 129
+   }
+  ],
+  [
+   1092,
+   {
+    "press_button": 130
+   }
+  ],
+  [
+   1108,
+   {
+    "press_button": 130
+   }
+  ],
+  [
+   1124,
+   {
+    "press_button": 130
+   }
+  ],
+  [
+   1140,
+   {
+    "press_button": 130
+   }
+  ],
+  [
+   1156,
+   {
+    "press_button": 131
+   }
+  ],
+  [
+   1172,
+   {
+    "press_button": 131
+   }
+  ],
+  [
+   1188,
+   {
+    "press_button": 131
+   }
+  ],
+  [
+   1204,
+   {
+    "press_button": 131
+   }
+  ],
+  [
+   1220,
+   {
+    "press_button": 132
+   }
+  ],
+  [
+   1236,
+   {
+    "press_button": 132
+   }
+  ],
+  [
+   1252,
+   {
+    "press_button": 132
+   }
+  ],
+  [
+   1268,
+   {
+    "press_button": 132
+   }
+  ],
+  [
+   1288,
+   {
+    "press_button": 141
+   }
+  ],
+  [
+   1290,
+   {
+    "wait_dialog": "turn_start",
+    "frames": 60
+   }
+  ],
+  [
+   1350,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   1352,
+   {
+    "wait_dialog": "hero_offer",
+    "frames": 10
+   }
+  ],
+  [
+   1366,
+   {
+    "press_button": 287
+   }
+  ],
+  [
+   1368,
+   {
+    "wait_dialog": "production",
+    "frames": 10
+   }
+  ],
+  [
+   1382,
+   {
+    "press_button": 192
+   }
+  ],
+  [
+   1386,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   1387,
+   {
+    "state_hash": "loaded_map_game",
+    "want": "9c4c0cbd714b3fa2558392ef77bb3ce52e120a65174b048ac23b3eb87fce79e2"
+   }
+  ],
+  [
+   1388,
+   {
+    "shot": "07_loaded_map_game"
+   }
+  ],
+  [
+   1390,
+   {
+    "key": "left alt",
+    "hold": true
+   }
+  ],
+  [
+   1391,
+   {
+    "key": "l"
+   }
+  ],
+  [
+   1392,
+   {
+    "keyup": "left alt"
+   }
+  ],
+  [
+   1394,
+   {
+    "wait_dialog": "sage_list",
+    "frames": 6
+   }
+  ],
+  [
+   1402,
+   {
+    "press_button": 114
+   }
+  ],
+  [
+   1404,
+   {
+    "press_button": 123
+   }
+  ],
+  [
+   1406,
+   {
+    "wait_dialog": "progress",
+    "frames": 6
+   }
+  ],
+  [
+   1410,
+   {
+    "wait_dialog": "message",
+    "frames": 60
+   }
+  ],
+  [
+   1450,
+   {
+    "click": [
+     320,
+     240
+    ]
+   }
+  ],
+  [
+   1454,
+   {
+    "assert_state": {
+     "state": "game",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   1455,
+   {
+    "state_hash": "loaded_random_save",
+    "want": "29cb884a553401f251afde802903d6ee0b07bce9d29fa103c61af3975b95c8ce"
+   }
+  ],
+  [
+   1456,
+   {
+    "shot": "08_loaded_random_save"
+   }
+  ]
+ ]
+}

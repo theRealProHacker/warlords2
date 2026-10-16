@@ -541,7 +541,6 @@ class CityScreen(Dialog):
         self.canvas = pygame.Surface((640, 480), depth=8)
         self.canvas.set_palette(IDENTITY)
         self.polled = None                 # frame of the last area-6 press
-        self._descriptions: dict[int, list[str]] = {}
 
     # -------------------------------------------------------------- shorthands
     @property
@@ -562,15 +561,15 @@ class CityScreen(Dialog):
         return self.host.sprites
 
     def description(self, file: int) -> list[str]:
-        if self.ci not in self._descriptions:
-            fn = getattr(self.host, "scenario_dir", None)          # DS:5da0 (the game's record)
-            if fn is not None:
-                scen = fn()
-            else:
-                cfg = getattr(self.host, "config", None)
-                scen = getattr(cfg, "scenario", "") if cfg is not None else ""
-            self._descriptions[self.ci] = city_info.description(self.kit, scen, self.ci)
-        return self._descriptions[self.ci]
+        """ovl45:1f06(file, city) at each draw of the page, through the run's description buffer
+        (`city_info.description`, register X64: no cache of this dialog's own)."""
+        fn = getattr(self.host, "scenario_dir", None)          # DS:5da0 (the game's record)
+        if fn is not None:
+            scen = fn()
+        else:
+            cfg = getattr(self.host, "config", None)
+            scen = getattr(cfg, "scenario", "") if cfg is not None else ""
+        return city_info.description(self.host.app, scen, self.ci)
 
     # -------------------------------------------------------------- ovl45:0000
     def open(self, mode: int, x: int, y: int) -> bool:

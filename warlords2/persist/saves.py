@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import re
+import struct
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -29,6 +30,8 @@ from ..formats.tables import StringTable, parse_armytypes
 from ..model.army import ArmyType
 from ..model.state import GameState, SCN_TERRAIN_SET
 from ..rules import saveload as SL
+from ..rules.descriptions import DescCache
+from ..rules.randmap import RandomRun
 
 N_SLOTS = 10                         # ovl49:0e38 / 0f14 / 026b / 093b: cmp si, 0xa
 DESC_BUF = 15                        # DS:471c + 15 i (imul 0xf)
@@ -86,36 +89,55 @@ class SlotTable:
 
     @classmethod
     def from_bytes(cls, data: bytes) -> SlotTable:
-        """ovl49:0e5f: per slot 1 byte (used iff '1'), 2 bytes into the stack buffer bp-0x1c with
-        a NUL after them (0ebd), sscanf "%d" of them into bp-4 (n: leading white space, a sign,
-        digits, junk after them ignored), n + 1 bytes read over the start of the same buffer, the
-        NUL at buf[n - 1] (0eec..0ef4: bp-0x1d + n; outside the buffer when n < 1), the
-        description = the buffer up to its first NUL with '_' turned into ' ' (0f03..0f09).  So
-        n = 0 gives the one byte read and the field's second digit, n = -1 (count 0) the field
-        itself.  Not modelled [unverified]: a field sscanf cannot read (bp-4 keeps the previous
-        line's n; 1 for the first line), n < -1 (a read of 0xffff-ish bytes onto the stack),
-        n > 27 (past the 28-byte buffer), and a short file (the rest stay unused and empty; the
-        EXE keeps its stack values there)."""
+        """ovl49:0e5f (and 1029, the map slots): per slot 1 byte into bp-5 (used iff '1'), 2 bytes
+        into the stack buffer bp-0x1c (28 bytes) with a NUL after them (0ebd), sscanf "%d" of
+        it into bp-4 (n: leading white space, a sign, digits, junk after them ignored; a field
+        it cannot read keeps the previous n, 1 before the first line), n + 1 bytes read over the
+        start of the same buffer, the NUL at buf[n - 1] (0eec..0ef4: bp-0x1d + n; outside the
+        buffer when n < 1), '_' turned into ' ' in the buffer itself up to its strlen
+        (0f03..0f09), the description = the buffer up to its first NUL.  So n = 0 gives the one
+        byte read and the field's second digit, n = -1 (count 0) the field itself.
+        The three stack variables live across the slots and a read at the end of the file reads
+        nothing and leaves its target alone, so a short file gives its later slots the leftovers
+        [I: from the asm under DOS read / sscanf semantics, not run]: with the game's 5-line
+        MAPINFO.DAT slots 5..9 keep bp-5 = '0' (unused), n = 9 (sscanf of the buffer's first two
+        bytes fails), the NUL at 2 cuts slot 4's text after two characters.  Not modelled
+        [unverified]: the stack's contents before the first read (zeros here), n < -1 (a read
+        of 0xffff-ish bytes onto the stack: the table stops), n > 27 (past the 28-byte buffer:
+        the buffer grows), n < 1's NUL outside the buffer (dropped)."""
         t = cls()
-        pos, n = 0, 1
+        pos, n, b5, buf = 0, 1, 0, bytearray(28)
+
+        def read(k: int) -> bytes:
+            nonlocal pos
+            got = data[pos:pos + max(k, 0)]
+            pos += len(got)
+            return got
+
         for i in range(N_SLOTS):
-            if pos + 3 > len(data):
-                break
-            used = data[pos] == USED
-            fld = data[pos + 1:pos + 3]
-            m = _SCANF_D.match(fld)
+            got = read(1)
+            if got:
+                b5 = got[0]
+            fld = read(2)
+            buf[:len(fld)] = fld
+            buf[2] = 0
+            m = _SCANF_D.match(bytes(buf[:2]).split(b"\0")[0])
             if m:
                 n = int(m.group(1))
             if n < -1:
                 break
-            body = data[pos + 3:pos + 3 + n + 1]
-            pos += 3 + n + 1
-            buf = bytearray(fld + b"\0")
+            body = read(n + 1)
+            if len(body) > len(buf):
+                buf += bytes(len(body) - len(buf))
             buf[:len(body)] = body
             if 1 <= n <= len(buf):
                 buf[n - 1] = 0
-            t.used[i] = used
-            t.desc[i] = bytes(buf).split(b"\0")[0].decode(ENC).replace("_", " ")
+            text = bytes(buf).split(b"\0")[0].replace(b"_", b" ")
+            # (0f03 also writes the ' ' back into the buffer; not kept: a later slot sees it only
+            # through sscanf after a field read at the end of the file, where the n it may change
+            # puts its NUL behind the one at buf[2] and nothing more is read)
+            t.used[i] = b5 == USED
+            t.desc[i] = text.decode(ENC)
         return t
 
 
@@ -136,20 +158,49 @@ class RunCarry:
       game lists), `map_row` DS:1290 (the map lists, M11): EXE image zeros.
     * `names`: the ovl51 name buffer DS:483c (32 bytes per entry), shared by every ovl51 list
       (the slot lists, the sage, the place list ...): rows past a list's count draw what an
-      earlier list left here.  Empty = BSS zeros."""
+      earlier list left here.  Empty = BSS zeros.
+    * `random_map`: the random-map run words (`rules.randmap.RandomRun`: the site-zone rotor
+      DS:02d4 and the Game Start words DS:28c8..28d8), EXE image values in a fresh run.
+    * `descriptions`: the city / site description buffer DS:0fc0 / 0fc2 / 4484
+      (`rules.descriptions.DescCache`, register X64): read by the city and site dialogs
+      through `rules.descriptions.lines`, dropped by New Game and a random-game load.
+    * `images`: the map words 1e1d:0000 and the road layer 19d9:0000 as bytes (0x8880, 0x4440)
+      when the last writer of them was not a game: the Game Setup screen's scenario loader
+      (ovl57:0194, also a generation's), None = the run's last game holds them (`game.world`)
+      or a fresh run (zeros).  A generation starts from them (register X62).
+    * `pathfinder`: the pathfinder's run memory (`rules.randmap.PathRun`) as the last random-map
+      generation left it, None = as the run's last game left it (`game.path_cache` /
+      `dist_table`) or a fresh run's.  The next Begin starts with it (X62)."""
     game: GameState | None = None
     record: dict | None = None
     slot: int = 0
     row: int = 0
     map_row: int = 0
     names: list[str] = field(default_factory=list)
+    random_map: RandomRun = field(default_factory=RandomRun)
+    descriptions: DescCache = field(default_factory=DescCache)
+    images: tuple[bytes, bytes] | None = None
+    pathfinder: Any = None
 
     def enter(self, state: GameState, record: dict | None) -> None:
         """A game is the run's memory now (Begin of a new game, a load); its list name buffer
         is the run's (`GameState.list_names` is `names`, so the engine's ovl51:03d9 writes and
-        the dialogs' lists share DS:483c)."""
+        the dialogs' lists share DS:483c); its map images and pathfinder words are the run's
+        (`images` / `pathfinder` None)."""
         self.game, self.record = state, record
+        self.images = self.pathfinder = None
         state.list_names = self.names
+
+    def run_images(self) -> tuple[bytes | None, bytes | None]:
+        """The map words and road layer as the run left them (`images`, else the last game's
+        world, else (None, None): a fresh run's zeros)."""
+        if self.images is not None:
+            return self.images
+        if self.game is None or self.game.world is None:
+            return None, None
+        w = self.game.world
+        words = struct.pack("<%dH" % len(w.tiles), *((t & 0xFF) | (f & 0xFF) << 8 for t, f in zip(w.tiles, w.flags)))
+        return words, bytes(r & 0xFF for r in w.roads)
 
     def write_names(self, names: list[str]) -> None:
         """An ovl51 list fills entries 0..len-1 of DS:483c (the rest keep their bytes)."""
@@ -181,11 +232,21 @@ class Saves:
     table, the army types and card files of a fresh-run load); `music`: the run's music words
     (`model.music.MusicWords`, the host's object) a fresh-run load carries into the loaded game
     (`rules.saveload.fresh_run_part(music=)`).  The table is read at once (res_0a4c:0250 ->
-    ovl49:0e5f at start-up)."""
+    ovl49:0e5f at start-up).  `random_texts`: the reader of RANDOM\\RANDOM.SPC / .CTY as they
+    are on disk now, `random_texts() -> {"SPC": bytes, "CTY": bytes}` (package P's RANDOM
+    overlay, `persist.randomdir`, plugs in here; register X55): a random-map game's save
+    (SCN 0x120 != 0) calls it, any other save does not.  None: such a save is refused
+    (ValueError from `rules.saveload.saved_part`).  `random_write`: the writer of a random-map
+    game's load, `random_write({"SPC": bytes, "CTY": bytes})` (`persist.randomdir.RandomDir.
+    write_texts`: ovl49:0728 / 07a9 write the file's blocks over those files, open mode 9);
+    None: not written (tests)."""
 
-    def __init__(self, user, gd, policy: str | None = None, music=None):
+    def __init__(self, user, gd, policy: str | None = None, music=None, random_texts=None,
+                 random_write=None):
         self.user, self.gd = user, gd
         self.music = music
+        self.random_texts = random_texts
+        self.random_write = random_write
         self.files = StringTable(gd.read("DATA/FILE.DAT"))
         self.policy = SEED_POLICY if policy is None else policy
         if self.policy not in SEED_POLICIES:
@@ -258,15 +319,20 @@ class Saves:
         changes no game state.  Refuses (ValueError, before anything is written) what the EXE
         cannot reach: no record, a pending question (the dialogs are modal), a description
         longer than `DESC_MAX` (the editor ovl56:03a6 takes a character only while limit 15 - 1
-        > the count typed, ovl56:04c1, so 14 at most fill the 15-byte buffers DS:471c), and a
-        slot outside 0..9."""
+        > the count typed, ovl56:04c1, so 14 at most fill the 15-byte buffers DS:471c), a
+        slot outside 0..9, and a random-map game (SCN 0x120) without the `random_texts`
+        reader.  A random-map game's file also holds RANDOM.SPC / .CTY as the reader returns
+        them (ovl49:0bbe / 0c46)."""
         rec = carry.record if record is None else record
         if rec is None:
             raise ValueError("no scenario record (DS:5d64) to save")
         if desc is not None and len(desc) > DESC_MAX:
             raise ValueError("description longer than %d characters" % DESC_MAX)
         _check_slot(carry.slot)
-        text = json.dumps({"envelope": ENVELOPE, "saved": SL.saved_part(state, rec)},
+        texts = None
+        if state.flags.get(SL.K.SCN_RANDOM_MAP.value, 0) and self.random_texts is not None:
+            texts = self.random_texts()                 # ovl49:0bbe / 0c46 open them now
+        text = json.dumps({"envelope": ENVELOPE, "saved": SL.saved_part(state, rec, random_texts=texts)},
                           separators=(",", ":"))
         n = carry.slot
         if desc is not None:
@@ -343,8 +409,9 @@ class Saves:
         and `advisor` (advisor_talking / advisor_digital / advisor_groups).  The AI read is
         `ai.cards.load_draws(state, cards, run.process)` (`cards`: default the game dir's card
         files).  A failed open runs on `carry.game` in place (D3); with none in memory it
-        raises NoGameInMemory (X47 open) before touching anything.  Afterwards the loaded game
-        and its record are the run's memory (`carry.enter`).
+        raises NoGameInMemory (X47 open) before touching anything.  A random-map game's file
+        (SCN 0x120) writes its RANDOM.SPC / .CTY back through `random_write` (ovl49:0728 /
+        07a9).  Afterwards the loaded game and its record are the run's memory (`carry.enter`).
         The run has one dice stream (DS:3d84): in a same run it is `carry.game.rng`, and an
         `rng` that is another object raises ValueError (joining `states.menu.session_dice` and
         `GameState.rng` into one stream is the host's).
@@ -360,7 +427,8 @@ class Saves:
         if saved is None:
             if live is None:
                 raise NoGameInMemory("failed open of save file %d with no game in memory" % n)
-            res = SL.load(None, None, where=where, live_record=carry.record, live=live)
+            res = SL.load(None, None, where=where, live_record=carry.record, live=live,
+                          descriptions=carry.descriptions)
         else:
             if live is not None:
                 run = SL.run_part(live)
@@ -369,7 +437,10 @@ class Saves:
                                         list_names=carry.names, music=self.music, **(advisor or {}))
             cards = cards if cards is not None else card_reader(self.gd)
             res = SL.load(saved, run, where=where, live_record=carry.record, live=live,
-                          ai_read=lambda st: load_draws(st, cards, run.process))
+                          ai_read=lambda st: load_draws(st, cards, run.process),
+                          descriptions=carry.descriptions)
+            if res.random_texts is not None and self.random_write is not None:
+                self.random_write(res.random_texts)     # 0728 / 07a9, inside 0414
         carry.enter(res.state, res.record)
         return res
 

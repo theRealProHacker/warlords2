@@ -47,7 +47,7 @@ from ...rules.bonuses import s8
 from .. import registry
 from ..info import POPUP, Panel, panel_rect, two_lines
 from ..info.city import capital_of, intact, shield
-from ..widgets import blit_opaque, text_centred
+from ..widgets import blit_opaque, kit, text_centred
 
 NAME_AT = (0x1B0, 0x3E)
 SHIELDS_AT = (0x0EA0, 0x0EA4)
@@ -61,7 +61,7 @@ CITYBACK, CITYBACK_SRC, CITYBACK_AT = 55, (0, 0, 0xF0, 0x56), (0x138, 0xAA)
 TILES_AT = (((0x188, 0xB0), (0, 0)), ((0x188, 0xD8), (0, 1)), ((0x1B0, 0xB0), (1, 0)), ((0x1B0, 0xD8), (1, 1)))
 SHEETS = 2                                       # ovl64:0860: tile / 0x60 picks the slot DS:5133 + 0x3b n
 CROWN_AT = (0x198, 0xAA)
-CTY_FILE, CTY_LIMIT, CTY_SEP, CTY_MARK, CTY_NUMBER = (22, 0), 0x1F40, 0x7C, 0x23, 0x0FFE
+DESC_GROUP, DL_CTY, DL_SPC = 22, 1, 2            # FILE.DAT (22, kind - 1): "%s\\%s.CTY" / ".SPC"
 CTY_LINES = 3
 SLOT_X0, SLOT_PITCH, SLOT_MAX = 0x134, 0x38, 4  # ovl45:1c4a..1c62
 NO_PRODUCTION_TEXT, PICTURE_TEXT = 0x0FCC, 0x0FE7
@@ -77,30 +77,36 @@ def shows_slots(state, c) -> bool:
     return intact(state, c) and (not state.options.view_production or (c.owner & 0xFF) == state.current)
 
 
-def description(k, scenario: str, index: int) -> list[str]:
-    """ovl45:1e02 / 1f06(1, index): the three lines of the city's .CTY entry."""
-    rel = k.files.get(*CTY_FILE)
-    rel = rel.replace("%s", scenario, 2).replace("\\", "/")
+def description_lines(app, kind: int, directory: str, index: int) -> list | None:
+    """ovl45:1f06(kind, index): the three lines of entry "#%03d" of the run's description buffer
+    (`rules.descriptions.lines` over `RunCarry.descriptions`, register X64): read only when the
+    kind differs from DS:0fc0, then from FILE.DAT (22, kind - 1) % (DS:5da0, DS:5da0) (`directory`,
+    the record's +0x3c) through the game directory and its RANDOM overlay.  A failed open is
+    ovl52:0000 with ERROR.DAT (1, 0) and the file name (`App.fatal`: the end of the program);
+    None then, as for an entry not found.
+    Evidence: asm ovl45:1e02..2012, 1e5f..1eb6 (sprintf of DS:5da0 twice, ovl52:0000)."""
+    from ...rules import descriptions as DL
+    from .save_load import run_carry
+    k = kit(app)
+    name = k.files.get(DESC_GROUP, kind - 1).replace("%s", directory, 1).replace("%s", directory, 1)
+
+    def read():
+        try:
+            return app.gd.read(name.replace("\\", "/"))
+        except OSError:
+            return None
     try:
-        data = bytearray(k.store.read(rel)[:CTY_LIMIT])
-    except FileNotFoundError:
-        return [""] * CTY_LINES
-    data = data.replace(bytes([CTY_SEP]), b"\0")
-    key = (ds_str(k.exe, CTY_NUMBER) % index).encode(ENC)
-    for i, b in enumerate(data):
-        if b != CTY_MARK:
-            continue
-        end = data.find(b"\0", i + 1)
-        if (data[i + 1:] if end < 0 else data[i + 1:end]) != key:
-            continue
-        out, j = [], i
-        while len(out) < CTY_LINES and j < len(data):
-            if data[j] == 0:
-                e = data.find(b"\0", j + 1)
-                out.append(bytes(data[j + 1:] if e < 0 else data[j + 1:e]).decode(ENC))
-            j += 1
-        return out + [""] * (CTY_LINES - len(out))
-    return [""] * CTY_LINES
+        return DL.lines(run_carry(app).descriptions, kind, index, read)
+    except DL.FatalOpen as e:
+        app.fatal(e.error, name)                         # bp-0x32 as 0000:4944 wrote it: FILE.DAT's two backslashes
+        return None
+
+
+def description(app, directory: str, index: int) -> list[str]:
+    """ovl45:1f06(1, index): the three lines of the city's .CTY entry; a line or entry not found
+    leaves the caller's stack buffers as they were (garbage in the EXE): "" here."""
+    got = description_lines(app, DL_CTY, directory, index) or [None] * CTY_LINES
+    return [s if s is not None else "" for s in got]
 
 
 def owner_line(k, state, c) -> str:

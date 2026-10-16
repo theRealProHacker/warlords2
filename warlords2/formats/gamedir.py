@@ -28,9 +28,16 @@ def default_root() -> Path:
 
 
 class GameDir:
+    """`overlay`: an optional `overlay(rel) -> Path | None` asked first by `path` (so by every
+    reader: `read`, the asset store, the scenario loader) with `rel` normalised to upper case and
+    '/' separators; a Path it returns is served instead of the game's file, None falls through.
+    It stands for files the original writes into its own directory (`persist.randomdir`, the
+    generated RANDOM\\RANDOM.* of register X55); nothing here writes."""
+
     def __init__(self, root: Path):
         self.root = Path(root)
         self._listings: dict[Path, dict[str, str]] = {}
+        self.overlay = None
 
     def _entries(self, d: Path) -> dict[str, str]:
         """Upper-cased name -> name on disk for one directory (empty if it is none)."""
@@ -44,7 +51,13 @@ class GameDir:
 
     def path(self, rel: str) -> Path:
         """Path of `rel` ('/' or '\\\\' separated, any case) below the root.  Components
-        that do not exist are kept as given, so the result may not exist."""
+        that do not exist are kept as given, so the result may not exist.  The `overlay`
+        is asked first."""
+        if self.overlay is not None:
+            key = "/".join(s for s in str(rel).replace("\\", "/").upper().split("/") if s not in ("", "."))
+            hit = self.overlay(key)
+            if hit is not None:
+                return hit
         p = self.root
         for part in str(rel).replace("\\", "/").split("/"):
             if part in ("", "."):

@@ -234,6 +234,7 @@ class Game(BaseState):
     def __init__(self, app):
         super().__init__(app)
         self.config = self.load_slot = self.overview = None
+        self.begin_state = None
         self.state = None
         self.phase_name: str | None = None
         self.phase = None
@@ -256,8 +257,10 @@ class Game(BaseState):
         self.load_where = self.load_backdrop = self.load_prev = None
         self.load_started = self.pointer_hidden = False
 
-    def on_enter(self, frm: str, new_game=None, load_slot=None, overview=None, under=None) -> None:
+    def on_enter(self, frm: str, new_game=None, load_slot=None, overview=None, under=None,
+                 begin_state=None) -> None:
         self.config, self.load_slot, self.overview = new_game, load_slot, overview
+        self.begin_state = begin_state            # Load Map's memory for Begin (`rules.setup.begin`)
         self.dialogs = GameDialogs(self)
         self.load_where = self.load_backdrop = self.load_prev = None
         self.load_started = self.pointer_hidden = False
@@ -324,7 +327,6 @@ class Game(BaseState):
         block, the list name buffer and the army records.  The new game is then the run's memory
         with the scenario record DS:5d64 (`RunCarry.enter`), and its dice are the run's one
         stream (`states.menu.session_dice`, X06)."""
-        from ..audio import audio
         from ..formats.scenario import load_scenario
         from ..formats.tables import parse_armytypes
         from ..rules.saveload import run_part
@@ -335,6 +337,8 @@ class Game(BaseState):
             raise RuntimeError("game entered without new_game= or load_slot=")
         from .setup import terrain_set
         a = self.app.assets
+        if self.begin_state is not None:
+            return self._begin_loaded_map()
         sc = sc or load_scenario(self.app.gd, cfg.scenario)
         types = parse_armytypes(a.read(f"TERRAIN{terrain_set(sc)}/ARMYTYP{'2' if cfg.army_set else 'E'}.DAT"))
         from ..rules.heroes import load_hero_names
@@ -343,9 +347,19 @@ class Game(BaseState):
         run = run_part(carry.game) if carry.game is not None else None
         st = self.state = new_game(sc, cfg, list(types), unused_name=unused_side_name(a.read("WARLORD2.EXE")),
                                    hero_names=load_hero_names(self.app.gd, terrain_set(sc)),
-                                   cards=card_reader(self.app.gd), process=self.app.ai_process, run=run)
+                                   cards=card_reader(self.app.gd), process=self.app.ai_process, run=run,
+                                   pathfinder=carry.pathfinder)
+        self._enter_game(st)
+
+    def _enter_game(self, st) -> None:
+        """The tail of both Begins (`start_engine`, `_begin_loaded_map`): the new game `st` is
+        the run's memory with the scenario record DS:5d64 (`RunCarry.enter`), its dice the run's
+        stream, then the advisor words, the menus (no Setup screen only), the minimap."""
+        from ..audio import audio
+        from ..ui.dialogs.save_load import run_carry
+        carry = run_carry(self.app)
         st.music = self.app.music_words           # the run's music words (DGROUP, model.music; M10c)
-        carry.enter(st, scenario_record(self.app, cfg.scenario, carry.record))
+        carry.enter(st, scenario_record(self.app, self.config.scenario, carry.record))
         cache_load(self.app, 70)                  # ovl53:013a -> ovl29:010b -> ovl61:137e: BSCROLL (popup 0x17 / 070b) (X44)
         self.app.session_dice = st.rng            # the run's one stream goes on in the game
         snd = audio(self.app)                     # DS:26c8 / 37a4 and the FILE.DAT group sizes
@@ -354,8 +368,45 @@ class Game(BaseState):
         st.advisor_groups = {g: snd.members(g) for g in sorted(advice_groups())}
         if self.no_setup:
             self.bar.pre_game(saved_games(self.app), saved_maps(self.app), st.flags[SCN_SAVE_MAP] != 0)
-        self.minimap = Minimap(self.sprites, MapColors.load(a, st.flags[SCN_TERRAIN_SET]), self.overview)
+        self.minimap = Minimap(self.sprites, MapColors.load(self.app.assets, st.flags[SCN_TERRAIN_SET]), self.overview)
         self.view.follow(st)
+
+    def _begin_loaded_map(self) -> None:
+        """Begin after Load Map (M11): `rules.setup.begin` on the memory the Setup screen showed
+        (`begin_state`, 0414's), its dice live on the run's stream (no loader replay, no second
+        256: the overview is 0414's 232b bitmap); the .itm "%s\\%s.itm" of DS:5da0 / DS:5d78
+        (record +0x3c, +0x14; ovl35:04f8..0509) and the .sgn "%s\\%s.sgn" of DS:5da0 twice
+        (ovl13:0103), which after Load Map is RANDOM\\RANDOM.SGN of the last generation through
+        the RANDOM overlay (quirk Q3, register X63; a failed open keeps CURRENT.SGN: None)."""
+        from ..ai.cards import card_reader
+        from ..formats.scenario import parse_itm, parse_sgn
+        from ..rules import setup as S
+        from ..ui.dialogs.save_load import run_carry
+        from dataclasses import replace
+        gd = self.app.gd
+        rec = run_carry(self.app).record or {}
+        d, d14 = rec.get("str_3c", ""), rec.get("dir", rec.get("str_3c", ""))
+
+        def opened(rel, parse):
+            try:
+                return parse(gd.read(rel))
+            except FileNotFoundError:
+                return None
+        itm = opened(f"{d}/{d14}.ITM", parse_itm)
+        signs = opened(f"{d}/{d}.SGN", parse_sgn)
+        cfg = replace(self.config, rng_state=None, setup_rolls=())
+        st = self.state = S.begin(self.begin_state, cfg, itm=itm, signs=signs, cards=card_reader(gd),
+                                  process=self.app.ai_process)
+        self.begin_state = None
+        self._enter_game(st)                      # no_setup is False here: Load Map's Begin is the Setup screen's
+
+    def map_loaded(self, r) -> None:
+        """Load Map in a game (ovl49:12f2 -> ovl57:0000(0, 1, 0, 1)): the loaded memory is the
+        run's (`RunCarry.game`, kept by `on_exit`), then the Game Setup screen
+        (`states.host.enter_loaded_map`)."""
+        from .host import enter_loaded_map
+        self.state = r.loaded.state
+        enter_loaded_map(self, r)
 
     # ------------------------------------------------------------------ Load Game (M10b)
 
@@ -468,8 +519,9 @@ class Game(BaseState):
         face's).  The game stays the run's memory (`RunCarry.game`)."""
         from ..ai.cards import card_reader, setup_all
         from ..rules import saveload as SL
+        from ..ui.dialogs.save_load import run_carry
         st = self.state
-        SL.new_game(st)
+        SL.new_game(st, descriptions=run_carry(self.app).descriptions)   # 0207 ovl45:1de4
         cards = card_reader(self.app.gd)
         self.request("menu", after_face=lambda: setup_all(st, cards))
 

@@ -231,7 +231,7 @@ def test_site_panel_and_screen(app):
     g.dialogs.remove(d)
     from warlords2.ui.dialogs.ruins import nearest_site, site_text
     assert nearest_site(g, s.x, s.y) == si
-    assert len(site_text(kit(g.app), "TUTORIA", si)) == 3
+    assert len(site_text(g.app, "TUTORIA", si)) == 3
 
 
 @gamedata

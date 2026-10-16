@@ -540,10 +540,11 @@ def test_begin_sets_ds16a6_only_with_hidden_map_and_one_human(game):
     assert b.reveal_at_first_human_turn == 1
 
 
-def test_random_map_games_are_refused_until_m11(game):
+def test_random_map_games_save_their_texts_m11(game):
+    # M11 lifted the refusal: the save needs RANDOM.SPC / .CTY (tests/engine/test_saveload_maps.py)
     st = scenario_state(game, "TUTORIA")
     st.flags[0x120] = 1
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(ValueError):
         SL.saved_part(st, record(game))
 
 

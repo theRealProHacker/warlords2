@@ -77,7 +77,7 @@ def test_load_game_and_random_map_inert(app):
     import pygame
     frames(app, 2)
     menu = app.manager.current_state()
-    assert registry.has_action(101) and not registry.has_action(102)    # 101: M10b's Load Game
+    assert registry.has_action(101) and registry.has_action(102)    # 101: M10b's Load Game, 102: M11's panel
     assert menu.buttons.state[101] == DISABLED                # no saves (ovl49:0e25)
     assert menu.buttons.state[102] == NORMAL
     b = next(b for b in menu.buttons.buttons if b.id == 101)            # a press on the disabled 101

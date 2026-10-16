@@ -92,6 +92,12 @@ Truncation toward zero is therefore **[V]**.)* A die
 is uniform on 1..sides except that rand() = 32767 gives sides+1, which only the final clamp
 can catch (probability 1/32768 per die). `rnd(1, N, -1)` is therefore uniform 0..N-1.
 Seeding from the clock means games are not reproducible from a save **[V]**.
+*(Addition, M11 [V asm ovl59:0329..034e].)* The clamp is an if / else: `if dice + add > total:
+total = dice + add; elif dice*sides + add < total: total = dice*sides + add`. The same as the
+clamp above for dice >= 0 and sides > 0 (with dice < 0 the EXE returns dice*sides + add; no
+caller passes negative dice); for a negative side count (the random-map forest blobs, ovl05) every
+die is trunc(rand() / 32767.0 * sides + 1) <= 1 and draws one rand(), so the result is dice + add,
+except dice*sides + add when every draw was 0. `rules.rng.Rng.rnd`.
 
 ## 3. Combat
 
@@ -332,6 +338,24 @@ ovl58:0b5f (0426). Index 0 of every screen table is the group's all-zero first B
 (a left press, 08a9:012c) chords on a button of state 0 (pressed) or 2 (disabled). A right press
 (08a9:012c event 3) runs ovl15:0000 for the shown button under the pointer whatever its state
 (08a9:0756 skips only hidden ones, byte +5).
+
+*(Addition, M11 G, the pre-game screens [V].)* Without a pop-up (DS:166a = 0) 07be:0064 first
+calls 1372:0047 with a pointer to the code (00b5) and does not test its result: 1372:0047
+rewrites the code only for F1 / Ins (0063..006e: the menu's result), a title's key (00cb..00ea,
+then the same) and an item's key whose item is enabled (111b: 11b8 writes 0); 0x0d and 0x1b
+are none of them. So Esc / Return then press the first state-1 button of DS:1514 / DS:155c
+through 07be:04d8 (00ef), as on a pop-up: on the Game Start screen Return presses Begin (103 is
+the second entry of DS:155c; DS:1514 has no Game Start button, so Esc goes on to the switch and
+chords at 032c); on the Game Setup screen Return presses Begin 141 and Esc Main Menu 142.
+`states.host.list_key`.
+
+*(Addition, M11 G, the fatal-error routine ovl52:0000 [V].)* 14d0:0002(0) (text mode), the chord
+ovl58:0b5f (002e), printf(DS:1656 "\nfatal error : %s\n", message) (003b), ovl59:012b (waits
+for a key: loops on 020d until it returns one), 0a4c:02b5 (the end of the program, its banner).
+Its callers build the message with ovl59:051a(ERROR.DAT entry) and sprintf of the file name:
+the generator's .MAP / .RD / .CTY / .SPC creates (ovl09:02d4 / 0346 / 03b8 / 0435), the
+description file open (ovl45:1e8e..1eb6), the scenario open of ovl57:0194 (0259..027d).
+`App.fatal` (the key wait is not modelled).
 
 Military Advisor, ovl36:1f19(x, y) (cursor 9, ovl46:0162): nothing with SCN 0x12c == 0; popup
 type 12 (176, 60, 288, 300); SetFont(1) (0x7b, 0) at (0x140, 0x43); screen 25 (424 Done);
@@ -2110,13 +2134,24 @@ FILE or ERROR.DAT, 04f0 / 0505 / 051a). ovl60:060f with DS:28c8 (random map) cal
 (087b: (0x3c, 1) / (0x3c, 0) -> 0944), also one roll. The
 only exit before 094c is DS:26c8 != 0 (talking advisor off, 0293); 071b..0826 has no roller.
 Then ovl57:0000 loads and ovl63:232b draws its 256 rnd(1,3,1) at 2479..2492 (si < 0x100).
-Order with the talking advisor on: face(2) [, Begin random map face(0)], 256 loader rolls,
-quotation (ovl57:0fe8), Random Characters, Begin face(1) (ovl57:0e2c); each Main Menu ->
+Order with the talking advisor on: face(2) [, Begin random map: face(0), the map id 6 x
+rnd(1, 90, 0) (ovl57:10f8, + 0x20 -> DS:5da8), rnd(1, 7, -1) per slider whose DS:28d0 is 7
+(ovl57:11aa, never: the panel sets 0..6), the generator's stages ovl02:011c in order], 256 loader
+rolls, quotation (ovl57:0fe8), Random Characters, Begin face(1) (ovl57:0e2c); each Main Menu ->
 Begin adds another face(2), 256, quotation, and so on. The music on this way draws no die:
 ovl58:0000(0) before the face (ovl60:00fb / 00fd) and at the setup entry (ovl57:003a / 003c)
 reads FILE.DAT (8, 0) / (7, 0), Begin's ovl58:0000(11) (ovl57:0e24 / 0e26) (19, 0) / (7, 0);
 the modes that roll (1, 2, 3, 5, 6) are listed in register X32. Modelled by `states.menu.session_dice` and
 `NewGameConfig.rng_state`.
+*(Addition, M11 G [V asm, host].)* A random Begin keeps this order with no other die between:
+ovl57:0000(1, 1, 1, 0) opens the popup (0047), 10e8 rolls the id, the sliders' (dead) dice and the
+stages, writes the files, copies "random" / the id into DS:5d64, calls 0194(0) (no text, no wait)
+and 232b's 256, then ovl49:11f3 (no die), then 007f, OPTIONS.DAT (223b) and the quotation. Load
+Map's Begin (ovl49:12f2 -> ovl57:0000(0, 1, 0, 1)) has 0414's 256 (232b always, `rebuild` 1)
+before the screen, then only the quotation and the Setup screen's rolls; Begin runs no 232b, so
+there is no second 256 on that way (`rules.setup.begin` on the loaded memory). The host test is
+tests/test_m11_host.py (the session stream's log: face(2), face(0), 6 x rnd(1, 90, 0), the
+generator's rolls, 256 x rnd(1, 3, 1), the quotation, face(1)).
 
 *(Addition, planted-standard slots 11 / 12, register X44.)* ovl64:2d7c scans items 21..0;
 an item on a square with road bit 0x40 (2e66..2e78) writes (n & 15) << 1 into the cell

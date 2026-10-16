@@ -1,0 +1,21 @@
+{
+ "args": ["--seed", "7", "--no-voice"],
+ "steps": [
+  [2, {"assert_state": {"state": "menu", "dialog": null}}],
+  [3, {"press_button": 102}],
+  [5, {"shot": "panel_defaults"}],
+  [6, {"click": [384, 226]}],
+  [8, {"click": [503, 256]}],
+  [10, {"click": [444, 286]}],
+  [12, {"press_button": 113}],
+  [14, {"press_button": 105}],
+  [16, {"press_button": 104}],
+  [18, {"shot": "panel_changed"}],
+  [20, {"press_button": 113}],
+  [22, {"shot": "panel_query_pressed_again"}],
+  [24, {"press_button": 109}],
+  [26, {"press_button": 105}],
+  [28, {"assert_state": {"state": "menu", "dialog": null}}],
+  [28, {"shot": "panel_query_back"}]
+ ]
+}

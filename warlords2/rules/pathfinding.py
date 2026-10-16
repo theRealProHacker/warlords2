@@ -27,6 +27,14 @@ only where the original calls 0555:0d9e, always for SCN 0x110 (`rebuild_cost_map
 The search patches the target city into it and restores it afterwards in place (0555:0bde),
 and the restore is not the inverse of the patch (see `_restore_target_city`).
 
+The road-builder mode DS:00e0 (`road_mode`): 0555:0d9e sets DS:00e0 = 1 when it builds the
+cost map for side 0xE (DS:3f6c), which only the random-map road builder ovl12:00e3 does, and
+back to 0 for any other side (every caller passes force = 1, so the next game's first 0d9e,
+ovl29:0402, resets it before that game's first search).  In this mode the search runs pass 0
+only (box margin 6), relaxes interior squares to their four orthogonal neighbours, and the
+backtrace takes a diagonal step only into non-bridge water and takes the first neighbour of
+equal distance (`rules.randmap.roads`).  A state without the attribute is a game: DS:00e0 = 0.
+
 The path cache (`GameState.path_cache`, 20 `PathSlot`s, 0555:02f2) is looked up before the
 direct step and before any search, and a search result is stored in it (`find_path`); it is
 cleared only by 0555:0350: at its allocation (0555:02f2, first use) and by the game load
@@ -252,8 +260,22 @@ def _init_field(state, cm, dst, mode) -> list[int]:
     return dist
 
 
-def _neighbours(x: int, y: int):
-    """DS:00e2 / 00f6 / 0162 list for the square's edge case (asm 0555:05xx)."""
+# DS:00e2 entry the road-builder mode uses for interior squares (four neighbours N, E, S, W).
+ROAD_INTERIOR_LIST = 9                 # asm 0555:05ea..05f8: DS:00e0 != 0 -> list index 9, else 0
+
+
+def road_mode(state) -> bool:
+    """DS:00e0: the cost map was built for side 0xE (the random-map road builder).
+    Evidence: asm 0555:0dc9..0dd6 (DS:00e0 = side == 0xe on every rebuild); the only caller
+    with side 0xE is ovl12:00e3 (grep of every `-> 0555:0d9e`: ovl12:00e3, ovl29:0402,
+    ovl36:0f69, ovl49:0391 / 138a, ovl61:2194); `state.road_mode` set by rules.randmap.roads,
+    absent on GameState (= 0)."""
+    return bool(getattr(state, "road_mode", False))
+
+
+def _neighbours(x: int, y: int, interior: int = 0):
+    """DS:00e2 / 00f6 / 0162 list for the square's edge case (asm 0555:05xx); `interior` is
+    the list index of a square off the edges (0, or 9 in the road-builder mode)."""
     if y == 0:
         k = 1 if x == 0 else 3 if x == W - 1 else 2
     elif y == H - 1:
@@ -263,7 +285,7 @@ def _neighbours(x: int, y: int):
     elif x == W - 1:
         k = 5
     else:
-        k = 0
+        k = interior
     j = K.NEIGHBOUR_START.value[k]
     ndx, ndy, end = K.NEIGHBOUR_DX.value, K.NEIGHBOUR_DY.value, K.NEIGHBOUR_END.value
     while ndx[j] != end:
@@ -273,6 +295,8 @@ def _neighbours(x: int, y: int):
 
 # The neighbour list of every square as flat indices (`_neighbours`, DS:00e2 order).
 _NB = tuple(tuple(ny * W + nx for nx, ny in _neighbours(i % W, i // W)) for i in range(W * H))
+_NB_ROAD = tuple(tuple(ny * W + nx for nx, ny in _neighbours(i % W, i // W, ROAD_INTERIOR_LIST))
+                 for i in range(W * H))
 
 
 class _Search:
@@ -287,6 +311,7 @@ class _Search:
         if self.cm[di] & K.CM_CITY.value and not self.cm[di] & K.CM_COST.value:
             self.patched = _open_target_city(state, self.cm, *dst)   # asm 0555:090c..0928
         self.state = state
+        self.road = road_mode(state)                           # DS:00e0
         self.penalty = 0
         if mode == K.MODE_LAND.value:
             self.penalty = (K.LANDING_PENALTY_WATER.value
@@ -309,7 +334,11 @@ class _Search:
         box whose field value is < 1 is settled (value negated) and relaxes its neighbours in
         the DS:00e2 list order (`_NB`); CX keeps the last cost the loop computed.  Written for
         speed (precomputed neighbour indices, locals, flat index); tests/engine/test_flood_fast
-        keeps the plain version and compares the two."""
+        keeps the plain version and compares the two.
+        Road-builder mode (DS:00e0): pass 1 returns 0 at once (asm 03ac..03bc), and interior
+        squares relax the four-neighbour list 9 (05ea..05f8)."""
+        if self.road and pass_no != 0:
+            return 0
         sx, sy = self.src
         dx, dy = self.dst
         dmap = bool(self.mask & K.MASK_DISTANCE_MAP.value)
@@ -324,7 +353,7 @@ class _Search:
         xlo, xhi = max(min(dx, sx) - margin, 0), min(max(dx, sx) + margin, W - 1)
         ylo, yhi = max(min(dy, sy) - margin, 0), min(max(dy, sy) + margin, H - 1)
         dist, cm, mode, mask = self.dist, self.cm, self.mode, self.mask
-        nbs = _NB
+        nbs = _NB_ROAD if self.road else _NB
         blocked = K.BLOCKED.value
         water, cross, city = K.CM_WATER.value, K.CM_CROSSING.value, K.CM_CITY.value
         costm, hills, woods = K.CM_COST.value, K.CM_HILLS.value, K.CM_WOODS.value
@@ -392,13 +421,18 @@ class _Search:
             self.cx = cx
 
     def backtrace(self) -> list[int]:
-        """0555:117b: direction codes from the start down the field (<= 198)."""
+        """0555:117b: direction codes from the start down the field (<= 198).  Road-builder
+        mode (DS:00e0): a diagonal candidate needs cost-map water (bit 8) and a terrain other
+        than Bridge, tested before the on-map test (asm 1261..12b2; off the map it is dropped
+        either way), and a candidate whose |T| equals the best is taken while none has been
+        (asm 136d..137d: [bp-8] == -1)."""
         x, y = self.src
         dist = self.dist
         best = abs(dist[y * W + x])
         di, cx = K.BACKTRACE_ENTRY_DI.value, self.cx
         cm, mode = self.cm, self.mode
         water, cross = K.CM_WATER.value, K.CM_CROSSING.value
+        road = self.road
         codes: list[int] = []
         dst = self.dst
         while (x, y) != dst:
@@ -414,6 +448,9 @@ class _Search:
                 di, cx = nx, ny
                 if not (0 <= nx < W and 0 <= ny < H):
                     continue
+                if road and k & 1 and (not cm[ny * W + nx] & water
+                                       or _terrain(self.state, nx, ny) == Terrain.BRIDGE):
+                    continue
                 v = dist[ny * W + nx]
                 if v in (K.UNVISITED.value, K.BLOCKED.value):
                     continue
@@ -421,7 +458,7 @@ class _Search:
                     nb = cm[ny * W + nx]
                     if not nb & cross and mode == K.MODE_LAND.value and bool(here_water) != bool(nb & water):
                         continue
-                if abs(v) < best:
+                if abs(v) < best or (road and bx == -1 and abs(v) == best):
                     best, bx, by, pick = abs(v), nx, ny, k
             if len(codes) >= K.PATH_MAX.value or bx == -1:
                 self.dst = dst = (x, y)                       # asm 0555:13aa: path cut here

@@ -2,8 +2,9 @@
 
 Evidence (EL = docs/research/exe_logic.md; addresses as in docs/research/parts/00_image.md):
 
-* entry ovl60:0000(draw): DS:28c8 (random map) = the scenario directory equals "random"
-  (DS:2a67); JOIN screen 1 (ovl53:056a(1)); with `draw`: palette (ovl55:0000), backdrop
+* entry ovl60:0000(draw): DS:28c8 (random map) = 1 when the scenario directory DS:5da0 equals
+  "random" (DS:2a67, ovl60:0029; never cleared here: only the list OK 06b8 clears it, and the
+  word is the run's, `RunCarry.random_map.random`); JOIN screen 1 (ovl53:056a(1)); with `draw`: palette (ovl55:0000), backdrop
   FILE.DAT group 66 = PICS\\STARTUP0-3 (ovl61:092a(1)); on the first visit only (DS:2a0c)
   the SCENARIO.DAT record whose directory is "Erythea" (DS:2a6e) becomes current
   (DS:28ce, record copy DS:5d64), else record 0; then the picture (ovl60:0332), the
@@ -25,7 +26,10 @@ Evidence (EL = docs/research/exe_logic.md; addresses as in docs/research/parts/0
   (DS:5da0), DS:28c8 = 0, ovl60:0000(0) (no face); Cancel ovl60:0b90 -> 067c(-1).
 
 * Begin ovl60:060f: with DS:28c8 set first the talking face ovl58:026f(0) (ovl60:0621),
-  then the Game Setup screen.
+  then the Game Setup screen (ovl57:0000(1, 1, 1, 0): with DS:28c8 the generator ovl57:10e8,
+  `states.setup.Setup` with `random_map`).
+* Return (0x0d) and Esc press the first live button of DS:155c / DS:1514 (`states.host`):
+  Return presses Begin 103 here.
 
 The menu bar is the program's one `ui.menubar.TitleBar` (`title_bar`).  Every entry
 (ovl60:0000) repeats the record lookup and ovl60:011e / 0332 / 02bf (`enter_screen`); the
@@ -54,7 +58,7 @@ The current record is DS:5d64 (`persist.saves.RunCarry.record`): set on the firs
 by the scenario list, and by a load (the file's record); a later entry shows its directory
 (after New Game the abandoned game's scenario, ovl60:005e: DS:2a0c is set).  Button 101 and
 menu item 502 are live iff a game slot is used (ovl49:0e25, `ui.menubar.saved_games`); 102
-runs its registered action and is inert until M11 registers it.
+and the panel 104..113 are `ui.random_panel`'s (M11).
 """
 from __future__ import annotations
 
@@ -69,11 +73,11 @@ from ..assets.store import cache_load
 from ..formats.scenario import parse_scenario_dat
 from ..model.newgame import NewGameConfig
 from ..rules.rng import Rng
-from ..ui import registry
+from ..ui import random_panel, registry
 from ..ui.dialogs.save_load import run_carry
 from ..ui.layout import DISABLED, NORMAL
 from ..ui.menubar import saved_games, saved_maps
-from ..ui.widgets import blit_opaque, text_centred
+from ..ui.widgets import blit_opaque, kit, text_centred
 from .host import ScreenHost
 
 if TYPE_CHECKING:
@@ -138,10 +142,25 @@ class Menu(ScreenHost):
         self.records: list[dict] | None = None
         self.index = 0                       # DS:28ce
         self.directory: str | None = None    # DS:5da0 (record +0x3c)
-        self.random = False                  # DS:28c8
         self.greet = False                   # ovl58:026f(2) pending
         self.after_face = None               # New Game's ovl25:0519 after the face
         self.forced = False                  # `scenario=` given at the entry
+
+    @property
+    def random(self) -> bool:
+        """DS:28c8, the one word: `RunCarry.random_map.random` (`rules.randmap.RandomRun`)."""
+        return bool(random_panel.run_words(self.app).random)
+
+    @random.setter
+    def random(self, on: bool) -> None:
+        random_panel.run_words(self.app).random = int(bool(on))
+
+    def random_rule(self, k: Kit) -> None:
+        """ovl60:0015..0029: DS:28c8 = 1 when DS:5da0 (the record's +0x3c) is "random" (DS:2a67,
+        strcmp: case counts); never cleared here."""
+        rec = run_carry(self.app).record
+        if rec is not None and rec["str_3c"] == ds_str(k.exe, RANDOM_DIR):
+            self.random = True
 
     def on_enter(self, frm: str, scenario: str | None = None, draw: bool = True, after_face=None, **kw) -> None:
         """ovl60:0000(draw).  `scenario` (a directory name) makes that scenario current.  `draw`
@@ -174,7 +193,7 @@ class Menu(ScreenHost):
             carry.record = self.records[self.index]          # 00a2..00ae / 00d2..00de: the copy to DS:5d64
         elif self.directory in dirs:
             self.index = dirs.index(self.directory)
-        self.random = self.directory == ds_str(k.exe, RANDOM_DIR).upper()
+        self.random_rule(k)                                  # ovl60:0029 (before 0054's record test)
         self.refresh()
         self.music()
 
@@ -198,8 +217,7 @@ class Menu(ScreenHost):
         self.set_button(BEGIN, NORMAL)
         self.set_button(LOAD_GAME, NORMAL if saved_games(self.app) else DISABLED)
         self.set_button(RANDOM_MAP, DISABLED if self.random else NORMAL)
-        for id in RANDOM_PANEL:
-            self.hide_button(id)            # the panel is M11's (random_map)
+        random_panel.set_buttons(self)      # 104..113 (M11, ui/random_panel)
         self.bar.pre_game(saved_games(self.app), saved_maps(self.app), False)
 
     def choose(self, index: int | None) -> None:
@@ -207,14 +225,16 @@ class Menu(ScreenHost):
         if index is not None:
             self.index = index
             self.directory = self.records[index]["str_3c"].upper()
-            self.random = False
             run_carry(self.app).record = self.records[index]      # ovl60:067c: the copy to DS:5d64
+            self.random = False                                   # 06b8: the only clear of DS:28c8
+        self.random_rule(kit(self.app))                             # 06c1 ovl60:0000(0): its 0029
         self.refresh()                                            # 06c1 ovl60:0000(0), both paths
         self.music()
 
     def redraw_screen(self) -> None:
         """ovl60:0000(0) (the Cancel paths of the Load list and of ovl34:1434): the buttons and
         the bar again, no face."""
+        self.random_rule(kit(self.app))                             # its 0029
         self.refresh()
         self.music()
 
@@ -229,11 +249,10 @@ class Menu(ScreenHost):
             registry.open_dialog("scenario_select", self, records=self.records, current=self.index,
                                  on_close=self.choose)
         elif id == BEGIN:                                    # ovl60:060f
-            go = lambda: self.request("setup", scenario=self.directory, random_map=None)   # noqa: E731
-            if self.random:
-                self.face(ONE_MOMENT, go)
+            if self.random:                                  # ovl57:0000(1, 1, 1, 0) -> 10e8
+                self.face(ONE_MOMENT, lambda: self.request("setup", scenario=RANDOM_SCENARIO, random_map=True))
             else:
-                go()
+                self.request("setup", scenario=self.directory)
         else:
             registry.run_action(id, self)
 
@@ -242,7 +261,7 @@ class Menu(ScreenHost):
         exe, f = k.exe, k.fonts[CHANCE17]
         blit_opaque(fb, k.picture(STARTUP), (0, 0), None)
         if self.random:
-            fb.fill(PAPER, ds_words(exe, PANEL, 4))
+            random_panel.draw(fb, k, run_carry(self.app).random_map, self.index)
             title = k.text.S(*RANDOM_TITLE)
         else:
             src, dst = ds_words(exe, PIC_SRC, 4), ds_words(exe, PIC_DST, 2)
