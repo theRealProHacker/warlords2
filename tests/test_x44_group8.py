@@ -296,7 +296,7 @@ def test_hooks_of_the_pre_game_screens_begin_and_load(game, tmp_path, monkeypatc
         orig(self, sc)
         begun.append(self.app.group8.now)
     monkeypatch.setattr(Game, "start_engine", spy)
-    a = App(parse_args(["--data", game, "--headless", "--no-voice", "--seed", "3",
+    a = App(parse_args(["--data", game, "--headless", "--no-intro", "--no-voice", "--seed", "3",
                         "--user-dir", str(tmp_path / "u")]))
     try:
         g8 = a.group8

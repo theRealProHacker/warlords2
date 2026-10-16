@@ -102,9 +102,17 @@ shape of every army sheet (a4 included) is a8's key-10 mask.
 
 **[data]** The key equals the top-left pixel and the most frequent colour of every A*.PCK.
 Not in the table: `STAND.PCK` (background colour 10 **[seen]**) and the intro files
-(`STEXT.PCK`/`SPARKLE.PCK` background colour 13 **[seen]**; START.EXE builds masks for them).
+(`STEXT.PCK`/`SPARKLE.PCK` background colour 13 **[seen]**; START.EXE draws them with key 13, below).
 `tower.pck`, `vpopup.pck`, `scroll2.pck`, `screen.pck`, `startup.pck` are named in
 FILE.DAT but not shipped.
+
+START.EXE's masks for STEXT / SPARKLE are a colour key 13 **[code]**: 0bc3:00d0 (key 13)
+builds one mask plane whose bit is set where the pixel equals the key (0bc3:023a..02e0: the
+inverted OR of the planes where the key bit is 0, ANDed with the planes where it is 1). The
+masked blit 072b:0c4d hands each plane, with mask plane 0, to seg 0682: 0682:0059 when the
+destination is the screen (DS:074c, 072b:0d27..0d38, 0e4f), 0682:00f3 for a memory bitmap
+(072b:0ee6, 104b). Both compute `dst = (dst & mask) | (src & ~mask)` per word (0682:00c2..00cd,
+0140..014b), so pixels of the key colour leave the destination unchanged.
 
 ## 3. Sheet layout and contents
 
@@ -180,7 +188,9 @@ Exact sizes and frame counts of all 95 files are the `EXPECTED` table in the tes
     9   u16 BE  nvar     number of colour variants
     11  u8[n]   bitmap width of each glyph
     11+n u8[n]  second per-glyph width: equal to the first except space and some
-                swash capitals, where it is smaller -> pen advance [guess]
+                swash capitals, where it is smaller -> the pen advance [code]: START.EXE's
+                character loop 09e8:04a4 advances by it (font +0x18, 09e8:07c6) and the
+                text width 09e8:0a88 sums it (docs/research/start_exe.md §4)
     11+2n  nvar x 3 u16 BE: (ink colour, shadow colour, background colour)
 
 File size is `11 + 2n + 6*nvar` **[data]**. Characters are ASCII 32–127; code 127 is a
@@ -259,5 +269,5 @@ sheets are confirmed by shape and colour only, not by position on screen.
 - Which cell each army type, terrain code, road code and city type selects (needs the map
   drawing code and `TERRAIN0/ARMYTYPE.DAT`); the grids above are solid, the indices are not.
 - Rectangles inside the button sheets, ABITS, ATRANS2, WAR, HIDDEN, SPECBITS, HELPGFX.
-- FIN bytes 5 and 6; whether the second FIN width is the advance.
-- STAND.PCK cursor hotspots and key colour; masks START.EXE builds for STEXT/SPARKLE.
+- FIN bytes 5 and 6 (the second FIN width is the pen advance in START.EXE, §4).
+- STAND.PCK cursor hotspots and key colour.

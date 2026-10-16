@@ -113,10 +113,13 @@ def turn(app) -> int:
 
 
 def ding0(app) -> int:
-    """START.EXE's START/DING0.SND (the intro, M2c)."""
+    """START.EXE's START/DING0.SND (the intro, `states.intro`, 0579:032c -> 0c07:065d).
+    START.EXE reads no OPTIONS.SND: it plays whenever there is a digital driver (here the
+    mixer), whatever the effects setting (decision D4); a scripted or headless run
+    (`cfg.fixed_dt`) sounds nothing."""
     from . import audio
     a = audio(app)
-    if not (a.settings.effects and a.mixer.available):
+    if not a.mixer.available or getattr(app.cfg, "fixed_dt", False):
         return 0
     a.mixer.play(a.pcm(DING0))
     return 0

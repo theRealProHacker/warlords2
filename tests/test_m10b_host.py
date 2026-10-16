@@ -19,7 +19,7 @@ from warlords2.ui.dialogs import save_load as SLD  # noqa: E402
 
 pytestmark = pytest.mark.gamedata
 UP = pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=(320, 240))
-ARGS = ["--headless", "--no-voice", "--seed", "3"]
+ARGS = ["--headless", "--no-intro", "--no-voice", "--seed", "3"]
 
 
 def key(k, ch=""):

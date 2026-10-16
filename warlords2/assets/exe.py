@@ -13,19 +13,20 @@ DGROUP = 0x3125
 ENC = "cp437"
 
 
-def ds_base(exe: bytes) -> int:
-    """File offset of DS:0000."""
-    return struct.unpack_from("<H", exe, 8)[0] * 16 + DGROUP * 16
+def ds_base(exe: bytes, dgroup: int = DGROUP) -> int:
+    """File offset of DS:0000 (`dgroup`: another program's DGROUP segment, e.g. START.EXE's
+    0x109E, `states.intro`)."""
+    return struct.unpack_from("<H", exe, 8)[0] * 16 + dgroup * 16
 
 
-def ds_str(exe: bytes, off: int) -> str:
+def ds_str(exe: bytes, off: int, dgroup: int = DGROUP) -> str:
     """The NUL-terminated string at DS:off."""
-    p = ds_base(exe) + off
+    p = ds_base(exe, dgroup) + off
     return exe[p:exe.index(b"\0", p)].decode(ENC)
 
 
-def ds_words(exe: bytes, off: int, n: int, signed: bool = True) -> tuple[int, ...]:
-    return struct.unpack_from(f"<{n}{'h' if signed else 'H'}", exe, ds_base(exe) + off)
+def ds_words(exe: bytes, off: int, n: int, signed: bool = True, dgroup: int = DGROUP) -> tuple[int, ...]:
+    return struct.unpack_from(f"<{n}{'h' if signed else 'H'}", exe, ds_base(exe, dgroup) + off)
 
 
 def ds_word(exe: bytes, off: int, signed: bool = True) -> int:

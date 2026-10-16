@@ -29,7 +29,7 @@ gamedata = pytest.mark.gamedata
 
 @pytest.fixture
 def app(game, tmp_path):
-    a = App(parse_args(["--data", game, "--headless", "--no-voice", "--seed", "7",
+    a = App(parse_args(["--data", game, "--headless", "--no-intro", "--no-voice", "--seed", "7",
                         "--user-dir", str(tmp_path / "u")]))
     yield a
     a.close()
@@ -240,7 +240,7 @@ def test_rename_measures_the_text_before_the_new_character(app):
 @gamedata
 def test_begin_with_voice_opens_the_face_and_rolls_once(game, tmp_path):
     """ovl57:0e2c: ovl58:026f(1), whose rnd(1, 30, 10) (ovl58:094c) runs once per call."""
-    a = App(parse_args(["--data", game, "--headless", "--seed", "7", "--user-dir", str(tmp_path / "u")]))
+    a = App(parse_args(["--data", game, "--headless", "--no-intro", "--seed", "7", "--user-dir", str(tmp_path / "u")]))
     try:
         frames(a, 1)
         menu = a.manager.current_state()
@@ -261,7 +261,7 @@ def test_begin_with_voice_opens_the_face_and_rolls_once(game, tmp_path):
 @pytest.fixture
 def voice_app(game, tmp_path):
     """The talking advisor on (the game's OPTIONS.SND), the dummy mixer playing samples."""
-    a = App(parse_args(["--data", game, "--headless", "--seed", "7", "--user-dir", str(tmp_path / "u")]))
+    a = App(parse_args(["--data", game, "--headless", "--no-intro", "--seed", "7", "--user-dir", str(tmp_path / "u")]))
     yield a
     a.close()
 
@@ -412,7 +412,7 @@ def test_game_start_face_rolls_first_in_the_one_stream(game, tmp_path, monkeypat
     from warlords2.formats.scenario import load_scenario
     from warlords2.formats.tables import parse_armytypes
     monkeypatch.setattr(NewGameConfig, "rng", source)
-    a = App(parse_args(["--data", game, "--headless", "--seed", "7", "--user-dir", str(tmp_path / "u")]))
+    a = App(parse_args(["--data", game, "--headless", "--no-intro", "--seed", "7", "--user-dir", str(tmp_path / "u")]))
     try:
         face, (count, load) = (1, 30, 10), LOADER_TILE_ROLLS.value
         frames(a, 2)

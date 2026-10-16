@@ -1,0 +1,174 @@
+{
+ "note": "M2c START.EXE intro and credits (states/intro.py, docs/research/start_exe.md): boot -> intro at frame 1 (intro frame 0 = app frame 1). The SSG wipe under LOGO.PAL ends at 199, the BLACK wipe at 430, the START wipe under SCREEN0.PAL at 628; the lettering 694..772 (2 frames per step), the DING and the sparkles from 774, the seven credits pages from 941 every ~214 frames, the last BLACK wipe 2440..2638 (black, the music cut), the Game Start screen at 2639 under STANDARD.PAL. Asserted by tests/test_m2c_intro.py.",
+ "args": [
+  "--seed",
+  "1",
+  "--no-voice"
+ ],
+ "steps": [
+  [
+   1,
+   {
+    "assert_state": {
+     "state": "intro",
+     "dialog": null
+    }
+   }
+  ],
+  [
+   100,
+   {
+    "shot": "01_wipe_ssg_mid"
+   }
+  ],
+  [
+   199,
+   {
+    "shot": "02_ssg"
+   }
+  ],
+  [
+   331,
+   {
+    "shot": "03_wipe_black_mid"
+   }
+  ],
+  [
+   430,
+   {
+    "shot": "04_black"
+   }
+  ],
+  [
+   529,
+   {
+    "shot": "05_wipe_start_mid"
+   }
+  ],
+  [
+   628,
+   {
+    "shot": "06_start"
+   }
+  ],
+  [
+   700,
+   {
+    "shot": "07_letter_early"
+   }
+  ],
+  [
+   728,
+   {
+    "shot": "08_letter_mid"
+   }
+  ],
+  [
+   764,
+   {
+    "shot": "09_letter_drop"
+   }
+  ],
+  [
+   772,
+   {
+    "shot": "10_letter_rest"
+   }
+  ],
+  [
+   806,
+   {
+    "shot": "11_sparkles_7"
+   }
+  ],
+  [
+   832,
+   {
+    "shot": "12_sparkles_late"
+   }
+  ],
+  [
+   942,
+   {
+    "shot": "13_page_design"
+   }
+  ],
+  [
+   1141,
+   {
+    "shot": "14_gap"
+   }
+  ],
+  [
+   1156,
+   {
+    "shot": "15_page_art"
+   }
+  ],
+  [
+   1370,
+   {
+    "shot": "16_page_devel"
+   }
+  ],
+  [
+   1584,
+   {
+    "shot": "17_page_music"
+   }
+  ],
+  [
+   1799,
+   {
+    "shot": "18_page_assist"
+   }
+  ],
+  [
+   2013,
+   {
+    "shot": "19_page_testing"
+   }
+  ],
+  [
+   2227,
+   {
+    "shot": "20_page_testing2"
+   }
+  ],
+  [
+   2538,
+   {
+    "shot": "21_wipe_end_mid"
+   }
+  ],
+  [
+   2638,
+   {
+    "shot": "22_black"
+   }
+  ],
+  [
+   2638,
+   {
+    "assert_state": {
+     "state": "intro"
+    }
+   }
+  ],
+  [
+   2639,
+   {
+    "shot": "23_menu"
+   }
+  ],
+  [
+   2639,
+   {
+    "assert_state": {
+     "state": "menu",
+     "dialog": null
+    }
+   }
+  ]
+ ]
+}

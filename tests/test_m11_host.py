@@ -33,7 +33,7 @@ def until(app, pred, n=3000):
 
 
 def make_app(game, tmp_path, *more):
-    return App(parse_args(["--data", game, "--headless", "--seed", "11", "--user-dir", str(tmp_path / "u"), *more]))
+    return App(parse_args(["--data", game, "--headless", "--no-intro", "--seed", "11", "--user-dir", str(tmp_path / "u"), *more]))
 
 
 def at_menu(a):
@@ -163,7 +163,7 @@ def test_return_presses_begin_and_esc_main_menu(game, tmp_path, monkeypatch):
 
 @pytest.fixture(scope="module")
 def gen_app(game, tmp_path_factory):
-    a = App(parse_args(["--data", game, "--headless", "--no-voice", "--seed", "11",
+    a = App(parse_args(["--data", game, "--headless", "--no-intro", "--no-voice", "--seed", "11",
                         "--user-dir", str(tmp_path_factory.mktemp("u"))]))
     random_setup(a)
     yield a

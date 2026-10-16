@@ -88,7 +88,7 @@ def test_run_words_by_address():
 
 @pytest.fixture(scope="module")
 def start_app(game, tmp_path_factory):
-    a = App(parse_args(["--data", game, "--headless", "--no-voice", "--seed", "7",
+    a = App(parse_args(["--data", game, "--headless", "--no-intro", "--no-voice", "--seed", "7",
                         "--user-dir", str(tmp_path_factory.mktemp("u"))]))
     yield a
     a.close()

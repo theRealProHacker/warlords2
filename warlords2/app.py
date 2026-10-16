@@ -129,7 +129,10 @@ class App:
             if cfg.probe:
                 from .debug import probe_states
                 states.update(probe_states.states(self))
-            target, kw = boot_target(cfg, set(states))
+            available = set(states)
+            if "intro" in available and not cfg.no_intro and not states["intro"].playable():
+                available.discard("intro")                    # no START files: on to the menu
+            target, kw = boot_target(cfg, available)
             if target not in states:
                 raise SystemExit(f"unknown state {target!r}; have {sorted(states)}")
             self.manager = StateManager({"boot": Boot(self, target, kw), **states}, loading_state=NoLoading())

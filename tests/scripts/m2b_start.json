@@ -1,5 +1,5 @@
 {
- "args": ["--seed", "7"],
+ "args": ["--no-intro", "--seed", "7"],
  "steps": [
   [1, {"assert_state": {"state": "menu", "dialog": "VoiceFace"}}],
   [1, {"shot": "face_shot01"}],

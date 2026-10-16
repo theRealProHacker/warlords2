@@ -115,6 +115,9 @@ def test_manifest_mismatch_is_stale(game, tmp_path):
     bad["tracks"]["SINT12"]["source_sha256"] = "0" * 64
     bad["tracks"]["SINT14"]["midpak_ad_sha256"] = "0" * 64
     bad["tracks"]["SINT15"]["renderer_version"] = -1
+    if "SANIM" in bad["tracks"]:
+        bad["tracks"]["SANIM"]["source_sha256"] = "0" * 64          # the intro's: not checked here
+        assert R.stale(bad, gd, ["SANIM"]) == ["SANIM"]
     assert R.stale(bad, gd, stems) == ["SINT12", "SINT14", "SINT15"]
     cache = tmp_path / "c"
     cache.mkdir()
@@ -123,6 +126,35 @@ def test_manifest_mismatch_is_stale(game, tmp_path):
         (cache / f"{s}.wav").symlink_to(R.DEFAULT_OUT / f"{s}.wav")
     p = M.MusicPlayer(_stub(game, tmp_path, cache=cache), backend=Fake())
     assert p.silent and p.cache_problem == ["SINT12", "SINT14", "SINT15"]
+
+
+@pytest.mark.parametrize("anim_ok", [True, False])
+def test_stale_intro_track_mutes_only_the_intro(game, tmp_path, capsys, anim_ok):
+    """START\\SANIM.XMI changed (or gone): the game's music still plays, the intro's ANIM is
+    logged but not sounded (one stderr line)."""
+    m = R.load_manifest()
+    if m is None or "SANIM" not in m["tracks"]:
+        pytest.skip("no local music cache with ANIM (python -m warlords2.audio.music_render)")
+    bad = json.loads(json.dumps(m))
+    if not anim_ok:
+        bad["tracks"]["SANIM"]["source_sha256"] = "0" * 64
+    cache = tmp_path / "c"
+    cache.mkdir()
+    (cache / R.MANIFEST).write_text(json.dumps(bad))
+    for s in {*M.music_stems(_files(game), "opl"), "SANIM"}:
+        (cache / f"{s}.wav").symlink_to(R.DEFAULT_OUT / f"{s}.wav")
+    app = _stub(game, tmp_path, cache=cache)
+    app.cfg.fixed_dt = False
+    p = M.MusicPlayer(app, backend=Fake())
+    assert not p.silent and p.cache_problem is None and capsys.readouterr().err == ""
+    p.play_once("SANIM", "0579:002d")
+    err = capsys.readouterr().err
+    assert app.music_log.records[-1]["wav"] == "SANIM.wav"                  # logged either way
+    assert p.backend.calls == ([("play", "SANIM.wav")] if anim_ok else [])
+    assert (err == "") == anim_ok and err.count("\n") == (0 if anim_ok else 1)
+    p.stop_once("end")
+    p.events([_started(app.music_words, 1, 10, 3, 1)])
+    assert p.backend.calls[-1] == ("play", "SINT9.wav")                    # the game's music plays
 
 
 # ------------------------------------------------------------------ the player
@@ -238,7 +270,7 @@ def _app(tmp_path, *extra, options=None, cache=None):
     if options is not None:
         user.mkdir(parents=True, exist_ok=True)
         (user / AS.FILE).write_bytes(options)
-    args = ["--headless", "--no-voice", "--seed", "3", "--user-dir", str(user), *extra]
+    args = ["--headless", "--no-intro", "--no-voice", "--seed", "3", "--user-dir", str(user), *extra]
     if cache is not None:
         args += ["--music-cache", str(cache)]
     a = App(parse_args(args))
@@ -501,7 +533,7 @@ def test_app_start_ends_on_sound_init_failure(tmp_path, monkeypatch, capsys):
         raise AS.SoundInitError(["first\n", "second\n"])
     monkeypatch.setattr(AS, "sound_init", fail)
     with pytest.raises(SystemExit) as e:
-        App(parse_args(["--headless", "--seed", "1", "--user-dir", str(tmp_path / "u")]))
+        App(parse_args(["--headless", "--no-intro", "--seed", "1", "--user-dir", str(tmp_path / "u")]))
     out = capsys.readouterr().out
     assert e.value.code == 0 and out.startswith("first\nsecond\n") and len(out) > len("first\nsecond\n")
 

@@ -1,6 +1,7 @@
 {
  "note": "M11 random maps and Save / Load Map, host wiring (package G). Game Start: Random Map 102 (ovl60:05f5, DS:28c8 = 1), two slider clicks (106 at x 420 -> 2, 107 at x 480 -> 5; ovl60:0512), Begin 103 (ovl60:060f -> ovl57:0000(1, 1, 1, 0) -> 10e8): the id dice and the generator in the scroll (STRING group 136), RANDOM\\\\RANDOM.* into the user directory, ovl57:0194(0) and 232b (group 137), RMAPTEMP (ovl49:11f3), SCN 0x120 = DS:28c8 = 1 (007f): the Setup screen of the generated sides. Side 1 computer, sides 2..7 off (125..132). Alt+M on the Setup screen (ovl49:1214: 0x130 0, 0x120 1, DS:28c6 0) -> slot 0, the description, OK. Begin 141: the first game with the generator's path cache (X62); turn 1 (hero offer, production), Alt+E: side 1, turn 2. Alt+S: save slot 0 of the random game (SPC / CTY blocks, SCN 0x120). Alt+N: New Game -> the Game Start screen (DS:5da0 'random': ovl60:0029 sets DS:28c8, the panel). Alt+Z: Load Map (ovl49:128a / 12f2, group 134 then 137) -> ovl57:0000(0, 1, 0, 1): the Setup screen on the snapshot (no OPTIONS.DAT read, no second 256), the same side choices, Begin 141 -> rules.setup.begin on the loaded memory. Alt+L: the random game of slot 0 (0414, RANDOM.SPC / .CTY written back, ovl45:1de4).",
  "args": [
+  "--no-intro",
   "--seed",
   "11",
   "--no-voice"

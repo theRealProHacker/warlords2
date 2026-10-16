@@ -141,6 +141,7 @@ class MusicPlayer:
         self.dir = cache_dir(app.cfg)
         self.seen = self.words.starts            # starts already sounded (or skipped)
         self.current: Playing | None = None
+        self.once: str | None = None             # START.EXE's ANIM while it plays (`play_once`)
         self._lengths: dict[str, int] = {}
         self.silent = False
         self.cache_problem = None
@@ -266,7 +267,36 @@ class MusicPlayer:
         self._sound(cur.stem)
         self.log.add(kind="restart", frame=f, wav=f"{cur.stem}.wav", loop=cur.loop, mode=cur.mode, at=where)
 
+    def play_once(self, stem: str, site: str) -> None:
+        """START.EXE 0c07:0411(0, 0) (0579:002d): RegisterXmidi + PlaySequence(0) with flags 0,
+        and no repeat poller (0c07:02aa has no caller): the track plays once.  START.EXE
+        reads no OPTIONS.SND, so only the music driver (DS:37a3: SOUND.DAT and `--music`)
+        decides; a scripted or headless run (`cfg.fixed_dt`) logs it but sounds nothing
+        (decision D4).  The engine's words are not touched.  ANIM is not part of the
+        start-up check (`music_stems`, all or nothing for the game's music): a missing or
+        stale render of it mutes the intro only, with one stderr line."""
+        if not self.words.driver:
+            return
+        self.once = stem
+        if not getattr(self.app.cfg, "fixed_dt", False) and not self.silent:
+            if R.stale(R.load_manifest(self.dir), self.app.gd, [stem], self.dir):
+                print("music: no current render of %s in %s; run `%s` - the intro plays silently"
+                      % (stem, self.dir, R.COMMAND), file=sys.stderr)
+            else:
+                self._sound(stem)
+        self.log.add(kind="start", frame=self.app.frame, mode=None, group=None, index=None,
+                     wav=f"{stem}.wav", loop=0, site=site, via="intro")
+
+    def stop_once(self, why: str) -> None:
+        """START.EXE's cleanup 062b:0113 -> 0c07:029f: MIDPAK unloaded, the track cut."""
+        if self.once is None:
+            return
+        self.backend.stop()
+        self.log.add(kind="stop", frame=self.app.frame, wav=f"{self.once}.wav", why=why)
+        self.once = None
+
     def close(self) -> None:
+        self.stop_once("quit")
         self.stop("quit")
 
     def summary(self) -> dict:

@@ -236,8 +236,11 @@ restarts the ended sequence, no new die) except mode 2, which plays once.
 | 10 | (18, 0) | INT20 | surrender declined ovl61:1edb |
 | 11 | (19, 0) | INT22 | Begin ovl57:0e24 |
 
-ANIM = START.EXE's intro (START\?ANIM.XMI, see §3; START.EXE is not disassembled, its use is
-**[unverified]**). Correction to an earlier sound.md: INT22 is not silence — it is a 17.8 s,
+ANIM = START.EXE's intro (START\?ANIM.XMI, see §3): loaded at 0579:0019 (START\ + prefix
+by 0c07:0344, the same rule as 155e:032f) and started at 0579:002d by 0c07:0411(0, 0) —
+PlaySequence with flags 0, and the repeat poller 0c07:02aa has no caller, so it **plays once
+[V]**; START.EXE's exit (cleanup 062b:0113, MIDPAK unload) cuts it after ≈ 43.9 s, about 5 s
+before its end (docs/research/start_exe.md §3.2; `states.intro`). Correction to an earlier sound.md: INT22 is not silence — it is a 17.8 s,
 52-note single-channel piece (all three variants) **[bytes]**.
 
 | track | S seq s | S wav s | S rms dBFS | R seq s | R rms dBFS | notes S / R | use |
@@ -267,7 +270,7 @@ ANIM = START.EXE's intro (START\?ANIM.XMI, see §3; START.EXE is not disassemble
 | INT21 | 173.2 | 173.2 | -19.9 | 170.4 | -17.8 | 1668 / 1668 | mode 3 (quest completed, victory) |
 | INT22 | 17.8 | 19.3 | -35.2 | 17.8 | -39.3 | 52 / 52 | mode 11 (Begin) |
 | INT23 | 148.4 | 149.0 | -43.1 | 148.4 | -44.1 | 549 / 549 | mode 1 (turn start, load, after the medal, Settings on); mode 2 without a live human, r >= 53 |
-| ANIM | 49.0 | 53.0 | -20.6 | 48.8 | -21.7 | 376 / 376 | START.EXE intro [unverified] |
+| ANIM | 49.0 | 53.0 | -20.6 | 48.8 | -21.7 | 376 / 376 | START.EXE intro, once (0579:002d) |
 
 Rendered files: no clipped samples in any file. One-second windows below −60 dBFS rms
 inside the sequence part occur only where the score rests or plays very softly (SINT2

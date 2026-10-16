@@ -1,5 +1,5 @@
 {
- "args": ["--seed", "7", "--no-voice"],
+ "args": ["--no-intro", "--seed", "7", "--no-voice"],
  "steps": [
   [2, {"assert_state": {"state": "menu", "dialog": null}}],
   [3, {"press_button": 102}],

@@ -32,8 +32,9 @@ Evidence tags and address notation are the same as in `docs/formats/tables.md`
 - `START/DING0.SND` is played by START.EXE, not WARLORD2.EXE (string `start\ding0.snd`
   in START.EXE). START.EXE contains the identical instruction pattern
   `C7 06 xx xx F8 2A` (store 11000) twice, at file offsets 0xD23F and 0xD318
-  **[bytes]**; the file has the same headerless unsigned shape, so 11000 Hz is used for
-  it as well — **[inferred]**, START.EXE was not disassembled.
+  **[bytes]**: START.EXE's DIGPAK request 0c07:065d stores 0x2AF8 = 11000 into the request
+  at 0c07:06a8 (and 0c07:05cf) before INT 66h, so DING0.SND plays at **11000 Hz [V]**
+  (docs/research/start_exe.md §3.2 step 18).
 
 ### What the files are used for
 
@@ -140,4 +141,4 @@ meaning is **[unknown]**.
 
 - Exact occasion for dramatic/orch/war/splash and the advisor-speech selection rules
   (`ovl58:026f`, not traced).
-- DING0.SND's rate is inferred (see §1).
+- DING0.SND's rate: closed, 11000 Hz from START.EXE 0c07:06a8 (see §1).
