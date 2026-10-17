@@ -81,13 +81,16 @@ jobs:
           esac
           # windowed builds (Windows, macOS) write stdout / stderr to WL2_LOG (packaging/entry.py)
           export WL2_LOG="$RUNNER_TEMP/wl2.log"
+          # (cat of a missing log fails under the step's pipefail: collect into files first)
           "$exe" --help > out.txt 2>&1
-          cat out.txt "$WL2_LOG" 2>/dev/null | grep -q "usage:"
+          { cat out.txt; cat "$WL2_LOG" 2>/dev/null || true; } > help.txt
+          grep -q "usage:" help.txt || { cat help.txt; exit 1; }
           mkdir -p "$RUNNER_TEMP/empty"
           if "$exe" --headless --data "$RUNNER_TEMP/empty" > out.txt 2>&1; then
             cat out.txt; echo "expected a non-zero exit without game files"; exit 1
           fi
-          cat out.txt "$WL2_LOG" 2>/dev/null | tee all.txt
+          { cat out.txt; cat "$WL2_LOG" 2>/dev/null || true; } > all.txt
+          cat all.txt
           grep -q "WARLORD2.EXE not found in" all.txt
 
       - name: Archive
