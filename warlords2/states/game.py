@@ -128,6 +128,7 @@ from ..assets import cursors as CU
 from ..assets.sprites import MapColors, Sprites
 from ..assets.store import cache_load
 from ..model import commands as C
+from ..model import events as E
 from ..model.ids import Control
 from ..model.state import SCN_TERRAIN_SET
 from ..ui import registry
@@ -200,6 +201,13 @@ def dialog_pointer(dialogs) -> int | None:
     if any(not isinstance(d, VoiceFace) for d in items):
         return CU.ARROW
     return None
+
+
+ANIMATED_VIEW = (C.Move, C.MoveAll, C.Attack)       # their walk / battle sets the view (ui.anim)
+
+
+def _view_words(st) -> tuple[int, int]:
+    return st.flags.get(SCN_VIEW_CX, 0), st.flags.get(SCN_VIEW_CY, 0)
 
 
 class GameView(MapView):
@@ -543,9 +551,9 @@ class Game(BaseState):
         (`palette_drawn`).  Raises the engine's IllegalCommand."""
         from ..rules.engine import apply
         st = self.state
-        sites, draws = site_bytes(st), st.palette_draws
+        sites, draws, view = site_bytes(st), st.palette_draws, _view_words(st)
         events = self._engine(apply, st, cmd)
-        self._after(cmd, sites, draws)
+        self._after(cmd, sites, draws, view, events)
         return events
 
     def _engine(self, apply, st, cmd):
@@ -560,8 +568,15 @@ class Game(BaseState):
                 log.roll_back(mark)
             raise
 
-    def _after(self, cmd, sites, draws) -> None:
+    def _after(self, cmd, sites, draws, view=None, events=()) -> None:
+        """`view`: the view words before the command; when the engine moved them (a select's
+        ovl67:08ef -> ovl64:05b4 -> 0629) the map view shows them at once, except where the
+        presentation moves the view itself: a walk or battle (ui.anim), the sunk message
+        (centred after it, 0b62:1288, ui.dialogs.sunk)."""
         st = self.state
+        if (view is not None and _view_words(st) != view and not isinstance(cmd, ANIMATED_VIEW)
+                and not any(isinstance(e, E.Sunk) for e in events or ())):
+            self.view.follow(st)
         if site_bytes(st) != sites and self.minimap is not None:
             self.minimap.redraw_sites(st)
         if st.palette_draws != draws or _draws_palette(cmd):
@@ -573,13 +588,13 @@ class Game(BaseState):
         when the engine refused it."""
         from ..rules.engine import IllegalCommand, apply
         st = self.state
-        sites, draws = site_bytes(st), st.palette_draws
+        sites, draws, view = site_bytes(st), st.palette_draws, _view_words(st)
         try:
             events = self._engine(apply, st, cmd)
         except IllegalCommand as e:
             log.error("%s refused: %s", type(cmd).__name__, e)
             return None
-        self._after(cmd, sites, draws)                     # as `apply`
+        self._after(cmd, sites, draws, view, events)       # as `apply`
         return events
 
     def palette_drawn(self) -> None:

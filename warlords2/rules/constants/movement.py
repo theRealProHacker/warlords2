@@ -150,6 +150,8 @@ HOLE_PATTERN = Const(
      255, 1, 255, 11, 255, 11, 255, 11, 255, 1, 255, 11, 255, 11, 3, 6, 3, 2, 255, 11, 255, 11, 255,
      11, 255, 1, 255, 11, 255, 11, 255, 11, 255, 1, 4, 5, 4, 5, 4, 5, 4, 0, 4, 5, 4, 5, 8, 7, 8, 14),
     "DS:2d56 (256 bytes): fog-edge piece per neighbour mask; 0xff = none -> ovl64:1558 reveals")
+FOG_FULL = Const(0x0E, "DS:2d56[0xff] (its only 0x0e): all 8 neighbours unseen or off the map; "
+                       "asm ovl67:08e8 (cmp [bx + 0x2d56], 0xe), ovl64:00c1 / 0123")
 HOLE_DX = Const((0, 1, 1, 1, 0, -1, -1, -1), "DS:2eda, ovl64:0f6f")
 HOLE_DY = Const((-1, -1, 0, 1, 1, 1, 0, -1), "DS:2eea, ovl64:0f6f")
 HOLE_PASSES = Const(2, "decomp 087258 (ovl64:1558): two full scans, x outer, y inner")

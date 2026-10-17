@@ -466,7 +466,13 @@ DS:6852[i] palette index (count DS:30f6).
   leader = highest fight-order byte (first found on ties). Then 0c8c:0529 (hero, mode, the
   leader's goto copied to all, path search for a human side with a goto), 0b62:09ce (sort the
   moving group), ovl66:0000 -> 0d30 (palette), ovl67:0955(1) (bit 0 on all; 5e5e = the hero in
-  the lowest slot).
+  the lowest slot).  *(Addition, the view tail 08a4..08f4)* [V]: SCN 0x0d0[0x110] == 0 (human,
+  read directly, not ovl25:09ab) -> ovl64:05b4; computer: SCN 0x159 == 0 -> nothing; DS:3254 == 0
+  -> 05b4; else 05b4 unless DS:2d56[ovl64:1055(x, y, 1)] == 0x0e for DS:5e62's square (0x0e is
+  only DS:2d56[0xff]: every neighbour off the map or without road bit 7).  ovl64:05b4: DS:5e62's
+  square (SCN 0x17d / 0x17f when null) inside SCN 0x177 <= x <= 0x17b, 0x175 <= y <= 0x179 ->
+  006c only, else ovl64:0629 (centre, ends in 006c).  So Next / a stack click / every other
+  06eb caller scrolls the view to a stack outside it and leaves it otherwise.
 * Palette draw ovl66:0356 *(Addition, DS:5e00)* [V]: DS:5e62 null -> info area 05a3 (DS:30f8 = 1),
   no write. Else DS:30f8 = 0 (03a0); DS:2bda clear -> DS:5dfe = 1, DS:5e3e[0] = DS:5e62
   (03ab..03bc); at the end 070d (055c) -> 0c8c:0912(6862, 6842, 30f6) (0750): DS:5e00 = 100, then

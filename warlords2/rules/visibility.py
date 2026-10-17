@@ -63,6 +63,23 @@ def _hole_mask(state, x: int, y: int) -> int:
     return m
 
 
+def hidden_single_view(state, x: int, y: int, edge: int = 1) -> bool:
+    """DS:2d56[ovl64:1055(x, y, edge)] == 0x0e with DS:3254 set: every neighbour k of (x, y)
+    (DS:2efa / 2f0a, the same offsets as `HOLE_DX` / `HOLE_DY`) is off the map (bit k = `edge`)
+    or without road bit 7 (the one human's view, `store_view`).
+    Evidence: asm ovl64:1055..10cb (105c DS:3254 != 0: 1092 off the map -> edge << k, 10ae road
+    bit 7 clear -> 1 << k); DS:2d56 holds 0x0e only at index 0xff (`FOG_FULL`)."""
+    m = 0
+    pv = K.ROAD_PORT_VIEW.value
+    for k in range(8):
+        i, j = x + K.HOLE_DX.value[k], y + K.HOLE_DY.value[k]
+        if not (0 <= i < W and 0 <= j < H):
+            m |= edge << k
+        elif not state.world.roads[j * W + i] & pv:
+            m |= 1 << k
+    return K.HOLE_PATTERN.value[m & 0xFF] == K.FOG_FULL.value
+
+
 def fill_holes(state) -> None:
     """Explore every unexplored square whose neighbour pattern has no fog-edge piece.
     Evidence: decomp 087258 (ovl64:1558) with ovl64:0f6f and DS:2d56; two scans, in place."""

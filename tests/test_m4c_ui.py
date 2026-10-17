@@ -17,7 +17,7 @@ from warlords2.app import App  # noqa: E402
 from warlords2.assets import cursors as CU  # noqa: E402
 from warlords2.config import parse_args  # noqa: E402
 from warlords2.model import commands as C  # noqa: E402
-from warlords2.model.ids import MAP_W, ROAD_PIECE_MASK  # noqa: E402
+from warlords2.model.ids import MAP_W, ROAD_PIECE_MASK, Terrain  # noqa: E402
 from warlords2.rules.mapwords import refresh_map  # noqa: E402
 from warlords2.rules.movement import alloc_army  # noqa: E402
 from warlords2.rules.selection import redraw_palette  # noqa: E402
@@ -434,3 +434,59 @@ def test_left_click_hook(game, monkeypatch):
     monkeypatch.setitem(registry._left_click, "advisor", lambda g, sq, mode: seen.append((sq, mode)))
     game.phase._left_hook("advisor", (3, 4), None)
     assert seen == [((3, 4), None)]
+
+
+def _only_awake(g, keep):
+    """Every own army on the map done (0x40) but `keep`, so Next picks `keep`."""
+    for a in g.state.armies:
+        if a.owner == g.state.current and a.x >= 0 and a is not keep:
+            a.flags |= 0x40
+    keep.flags = (keep.flags | 1) & ~0x40
+
+
+def _far_square(g):
+    """A free square outside the current view (ovl64:05b4's rectangle)."""
+    st = g.state
+    left, top = g.view.origin
+    taken = {(a.x, a.y) for a in st.armies if a.owner != 0xFF}
+    for x in range(MAP_W):
+        for y in range(len(st.world.tiles) // MAP_W):
+            if not (left <= x < left + 9 and top <= y < top + 9) and (x, y) not in taken \
+                    and st.world.terrain_of_tile[st.world.tiles[y * MAP_W + x]] == Terrain.PLAIN:
+                if abs(x - left) > 12 or abs(y - top) > 12:
+                    return x, y
+    raise AssertionError("no far square")
+
+
+@gamedata
+def test_next_scrolls_the_map_to_an_army_off_the_view(game):
+    """ovl67:08ef -> ovl64:05b4 -> 0629: Next to an army outside the view centres the shown map
+    on it (the engine's words, followed by the view at once)."""
+    from warlords2.rules.turn import centre_view
+    from warlords2.ui.mapview import view_origin
+    g, st = game, game.state
+    h = _hero(g)
+    h.x, h.y = _far_square(g)
+    refresh_map(st)
+    _only_awake(g, h)
+    g.phase.button(PL.NEXT)
+    assert st.selection.selected == h.id
+    probe = st.copy()
+    centre_view(probe, h.x, h.y)
+    assert (st.flags[0x17D], st.flags[0x17F]) == (probe.flags[0x17D], probe.flags[0x17F])
+    assert g.view.origin == view_origin(probe.flags[0x17D], probe.flags[0x17F])
+    left, top = g.view.origin
+    assert left <= h.x < left + 9 and top <= h.y < top + 9
+
+
+@gamedata
+def test_next_to_an_army_in_the_view_keeps_the_map(game):
+    g, st = game, game.state
+    h = _hero(g)
+    _only_awake(g, h)
+    origin, words = g.view.origin, (st.flags[0x17D], st.flags[0x17F])
+    left, top = origin
+    assert left <= h.x < left + 9 and top <= h.y < top + 9
+    g.phase.button(PL.NEXT)
+    assert st.selection.selected == h.id
+    assert g.view.origin == origin and (st.flags[0x17D], st.flags[0x17F]) == words

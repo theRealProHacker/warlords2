@@ -22,7 +22,14 @@ SetFont(2, 15, 0, 3) centred at (312, 408) (ovl58:0e36..0ecc, ovl59:00d6); the E
 restores the screen under the previous line, which here is not drawing it.  SHOT 01 is
 this face during a blink: its eye area matches VOICEBIT (0, 94) (mean error 0.40;
 (0, 0) 12.7, (0, 47) 9.4).
-"""
+
+Input: only the caption wait reads any.  Each caption line waits in ovl59:015e (called at
+ovl58:0ea6), which ends on 11b5:0003 with mask 0xd4: a left or right release or a key
+(`widgets.is_dismiss`), never a press; 11b5:010a makes these events from the live button
+state against DS:353e, and 11b5:0065 drops the events outside the mask (the press) as it
+scans.  So the face goes with the button already up, and the screen under it never sees the
+click.  The sample loop (ovl58:0944..0a99: ovl59:0000 tick waits, 155e:075a / 0736) reads no
+input, so a sample is never cut short."""
 from __future__ import annotations
 
 import pygame
@@ -32,7 +39,7 @@ from ...assets.store import cache_load
 from ...audio import voice
 from .. import registry
 from ..dialog import Dialog
-from ..widgets import kit, text_centred
+from ..widgets import is_dismiss, kit, text_centred
 
 VOICE, VOICEBIT = 50, 51
 FACE_SRC, FACE_AT = (0, 0, 352, 442), (152, 15)
@@ -48,7 +55,7 @@ class VoiceFace(Dialog):
         cache_load(k, VOICE)                     # ovl58:081e 027e (X44)
 
     def update(self, events, dt) -> None:
-        if not self.speech.step(any(e.type in (pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN) for e in events)):
+        if not self.speech.step(any(is_dismiss(e) for e in events)):     # ovl59:015e mask 0xd4
             self.close(None)
         if self.speech.eye is not None:
             cache_load(self.kit, VOICEBIT)       # ovl58:09b0 / 09f1 / 0a32 / 0a70 0129 (X44)

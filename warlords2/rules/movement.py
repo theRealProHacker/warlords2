@@ -258,6 +258,22 @@ def centre_on_selection(state) -> None:
     centre_view(state, x, y)
 
 
+def view_on_selection(state) -> None:
+    """ovl64:05b4: DS:5e62's square (the view centre words SCN 0x17d / 0x17f when it is null);
+    inside the view rectangle (SCN 0x177 <= x <= 0x17b, 0x175 <= y <= 0x179) only the map draw
+    ovl64:006c, else ovl64:0629 centres the view on it (`rules.turn.centre_view`, whose end is
+    the same draw).
+    Evidence: asm ovl64:05b4..0628 (05b7 / 05d3 DS:5e62 null -> 0x17d / 0x17f, 05f5..0615 the
+    inclusive tests, 0618 call 006c, 0621 call 0629)."""
+    from .turn import centre_view                        # circular at module level
+    lead = _record(state, state.selection.selected)
+    top, left, bottom, right, cx, cy = (state.flags.get(k, 0) for k in KT.SCN_VIEW.value)
+    x, y = (lead.x, lead.y) if lead is not None else (cx, cy)
+    if not (left <= x <= right and top <= y <= bottom):
+        centre_view(state, x, y)                         # 0621 ovl64:0629
+    present("map", at="ovl64:05b4")                      # 006c (0618, or inside 0629)
+
+
 def _execute(state, members, codes: list[int], n: int, mode: int, mask: int,
              hero, group: bool) -> tuple[list, int]:
     """0a8b:04c8: move the stack n steps (every `members` record with DS:2bda `group`, else the

@@ -95,7 +95,8 @@ right-aligned at (0x188, 0x9b) / (0x188, 0xbc); then ovl44:0638(0), (1): the mar
 what they show is kept until the next one (an ovl45:0000 for the same city only refreshes the
 buttons): the dialog keeps its picture in `canvas`.
 
-Map clicks: area 6 (80, 60, 224, 312) on every poll while a button is held (0726:030e): square
+Map clicks: area 6 (80, 60, 224, 312) on every poll while a button is held (0726:030e; not
+while the left button of the click that opened the screen is still down, register X67): square
 ((px - 80) / 2, (py - 60) / 2) -> ovl45:1afa(x, y, button): a right press (no panel up) opens
 ovl46:1201(pointer, 0) + 10e1 with STRING (122, 0 / 1) in modes 0 / 1, (122, 4 / 5) in mode 2,
 (122, 6 / 7) in mode 3; a left one: modes 0 / 1 -> ovl45:0000(mode, x, y); mode 2 ->
@@ -540,7 +541,7 @@ class CityScreen(Dialog):
         self.map = MapPainter(host)
         self.canvas = pygame.Surface((640, 480), depth=8)
         self.canvas.set_palette(IDENTITY)
-        self.polled = None                 # frame of the last area-6 press
+        self.wait_up = False               # the held button of the opening click not yet seen up (X67)
 
     # -------------------------------------------------------------- shorthands
     @property
@@ -604,6 +605,8 @@ class CityScreen(Dialog):
         self.square = (c.x, c.y)
         self.mode = mode
         self.redraw()
+        if not self.up and 1 in self.host.app.input.buttons:
+            self.wait_up = True                # X67: the click that opened the screen
         self.up = True
         self.buttons()
         self.pages = True
@@ -868,8 +871,10 @@ class CityScreen(Dialog):
                     self.press(hit)
             elif e.type == pygame.KEYDOWN:
                 self.key(code_of(e, code))
+        if 1 not in inp.buttons:
+            self.wait_up = False
         if (self.stack is not None and self.stack.top is self and not pressed and 1 in inp.buttons
-                and self.row.held is None and _inside(MAP_RECT, inp.pos)):
+                and not self.wait_up and self.row.held is None and _inside(MAP_RECT, inp.pos)):
             self.map_poll(inp.pos, 1, inp.shift)                    # 0726:0009 while held
 
     def key(self, code: int | None) -> None:

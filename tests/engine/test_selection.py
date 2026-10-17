@@ -643,3 +643,98 @@ def test_set_palette_refusals(st):
         with pytest.raises(IllegalCommand):
             engine.apply(st, cmd)
     assert st.hash() == h
+
+
+# ----------------------------------------------------------------------------- the view tail
+
+
+VIEW = (0x175, 0x177, 0x179, 0x17B, 0x17D, 0x17F)           # top, left, bottom, right, cx, cy
+
+
+def _words(st):
+    return tuple(st.flags[k] for k in VIEW)
+
+
+def _viewed(st, side, control, viewed=1, single=0):
+    from warlords2.model.ids import Control
+    from warlords2.rules.turn import centre_view
+    st.players[side].control = Control(control)
+    st.flags[0x159] = viewed
+    st.ai.proc.single_view = single
+    centre_view(st, 20, 20)                                  # view 16..24 x 16..24
+
+
+def test_next_to_an_army_off_the_view_centres_it(st):
+    """ovl67:08b5 human -> 08ef ovl64:05b4 -> 0621 ovl64:0629: the six words on the army."""
+    _viewed(st, 0, 0)
+    army(st, 60, 70)
+    engine.apply(st, C.Next())
+    assert _words(st) == (66, 56, 74, 64, 60, 70)
+
+
+@pytest.mark.parametrize("x,y", [(24, 24), (16, 16), (24, 16), (20, 20)])
+def test_next_to_an_army_in_the_view_keeps_it(st, x, y):
+    """ovl64:05f5..0615: the rectangle tests are inclusive (right / bottom edge too)."""
+    _viewed(st, 0, 0)
+    army(st, x, y)
+    engine.apply(st, C.Next())
+    assert st.selection.selected >= 0 and _words(st) == (16, 16, 24, 24, 20, 20)
+
+
+@pytest.mark.parametrize("x,y", [(25, 20), (20, 25), (15, 20), (20, 15)])
+def test_one_past_each_edge_centres(st, x, y):
+    _viewed(st, 0, 0)
+    army(st, x, y)
+    engine.apply(st, C.Next())
+    assert (st.flags[0x17D], st.flags[0x17F]) == (x, y)
+
+
+def test_select_stack_click_gets_the_tail_too(st):
+    """0b62:04e0 -> ovl67:06eb: the same ovl64:05b4 (here the clamp of 0629 at the corner)."""
+    _viewed(st, 0, 0)
+    army(st, 1, 2)
+    engine.apply(st, C.SelectStack(1, 2))
+    assert _words(st) == (0, 0, 8, 8, 4, 4)
+
+
+def test_sunk_stack_returns_before_the_view(st, monkeypatch):
+    """ovl67:0736: a sunk human stack jumps to 08f7, past the view tail (the words are the
+    sink's own one-square centring, 0b62:1288)."""
+    calls = []
+    monkeypatch.setattr(S.M, "view_on_selection", lambda state: calls.append(1))
+    _viewed(st, 0, 0)
+    paint(st, 60, 70, Terrain.WATER)
+    a = army(st, 60, 70)
+    assert S.select_army_stack(st, a) and calls == []
+    b = army(st, 30, 30)
+    S.select_army_stack(st, b)
+    assert calls == [1]
+
+
+def _computer_select(st, viewed, single, seen):
+    _viewed(st, 0, 1, viewed, single)
+    a = army(st, 60, 70)
+    if seen:
+        st.world.roads[71 * MAP_W + 61] |= 0x80               # neighbour 3 (+1, +1) in the view
+    S.select_army_stack(st, a)
+    return (st.flags[0x17D], st.flags[0x17F])
+
+
+@pytest.mark.parametrize("viewed,single,seen,moved", [
+    (0, 0, True, False),         # 08c2 SCN 0x159 == 0 -> 08f4
+    (1, 0, False, True),         # 08ca DS:3254 == 0 -> 08ef
+    (1, 1, False, False),        # 08e8 2d56[1055(x, y, 1)] == 0x0e -> 08f4
+    (1, 1, True, True),          # one neighbour with road bit 7 -> 08ef
+])
+def test_computer_side_view_conditions(st, viewed, single, seen, moved):
+    assert _computer_select(st, viewed, single, seen) == ((60, 70) if moved else (20, 20))
+
+
+def test_hidden_single_view_mask_counts_the_edge(st):
+    """ovl64:1055(x, y, 1): a neighbour off the map counts as hidden, one in view does not."""
+    from warlords2.rules.visibility import hidden_single_view
+    assert hidden_single_view(st, 0, 0)
+    st.world.roads[1 * MAP_W + 1] |= 0x80
+    assert not hidden_single_view(st, 0, 0)
+    st.world.roads[1 * MAP_W + 1] = 0x20                      # bit 5 alone is not the view
+    assert hidden_single_view(st, 0, 0)

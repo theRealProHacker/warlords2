@@ -62,6 +62,7 @@ from .present import present
 from .mapwords import refresh_map
 from . import movement as M
 from . import pathfinding as P
+from . import visibility as V
 
 log = logging.getLogger(__name__)
 
@@ -271,9 +272,16 @@ def select_army_stack(state, p) -> list:
     square whose +0x11 equals p's nonzero +0x11, and p itself, gets flag 0x200 and joins the
     moving group (table index from the top); the leader is the member with the highest
     fight-order byte (first found on ties, army 0 when none is above -1); then the selection
-    step, the group sort, the palette and the wake of the whole group.
+    step, the group sort, the palette and the wake of the whole group.  Then the view: a human
+    side (SCN 0x0d0[0x110] == 0, read directly, not through ovl25:09ab) gets ovl64:05b4 (the
+    view centred on the leader when it is outside the view rectangle, `M.view_on_selection`);
+    a computer side only with SCN 0x159, and then when DS:3254 is clear or the leader's
+    square is not hidden in the one human's view (DS:2d56[ovl64:1055(x, y, 1)] != 0x0e,
+    `V.hidden_single_view`).  A sunk stack returns before all of this (0736 -> 08f7).
     Evidence: asm ovl67:06eb..08f7 (0715..0736 sink, 077b..0866 members, 087f 5e62, 0888 0c8c:0529,
-    088d 0b62:09ce, 0892 ovl66:0000 -> 0d30, 08a0 ovl67:0955(1))."""
+    088d 0b62:09ce, 0892 ovl66:0000 -> 0d30, 08a0 ovl67:0955(1); 08a4..08bb 0x0d0[p] == 0 -> 08ef,
+    08c2 0x159 == 0 -> 08f4, 08ca DS:3254 == 0 -> 08ef, 08d1..08ed 1055(x, y, 1) and 2d56 == 0x0e
+    -> 08f4, 08ef lcall ovl64:05b4)."""
     sel = state.selection
     if state.players[state.current].control != Control.COMPUTER:
         sunk = M.sink(state, p.x, p.y)
@@ -298,6 +306,12 @@ def select_army_stack(state, p) -> list:
         sel.moving = [a.id for a in group]
     build_palette(state)
     _wake(state, True)
+    if state.players[state.current].control == Control.HUMAN:      # 08b5
+        M.view_on_selection(state)                                  # 08ef ovl64:05b4
+    elif state.flags.get(KT.SCN_VIEWED.value, 0):                    # 08c2
+        lead = state.armies[sel.selected]                          # 08d3 DS:5e62
+        if not state.ai.proc.single_view or not V.hidden_single_view(state, lead.x, lead.y):
+            M.view_on_selection(state)                              # 08ca / 08e8 -> 08ef
     return []
 
 
