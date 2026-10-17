@@ -268,6 +268,7 @@ Before the first frame the loop joins once after `manager.start("boot")`.
 | Flag | Meaning |
 |---|---|
 | `--data DIR` | Game directory (default `original/game/Warlrd2`, env `WL2_DATA`), read-only; aborts if `WARLORD2.EXE` is missing, reports a hash mismatch. |
+| `--fetch-data DIR` | Download the original game from the Internet Archive (`msdos_Warlords_II_1993`, the ZIP pinned by size and SHA-256 in `warlords2/fetch.py`) into DIR, then exit. The Windows installer (`packaging/warlords2.iss`, default `%LOCALAPPDATA%\Programs\Warlords II`, no admin) runs it into `{app}\Warlrd2`; a bundle's first start without game files offers it (into the user directory) before the folder picker (user decision 2026-10-17). |
 | `--user-dir DIR` | Options, sound settings, shortcuts, saves, map slots (default `out/user/`). |
 | `--scenario NAME` | Skip menus: `TUTORIA DRAGON SORCERY ERYTHEA HADESHA ISLADIA RANDOM`; with `--controls HHCC....`, `--levels`, `--options WORDS`. |
 | `--seed N` | Engine seed (int). Default: a random int, printed and written to the evidence manifest. |

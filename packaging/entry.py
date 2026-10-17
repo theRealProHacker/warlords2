@@ -3,7 +3,8 @@
 A windowed build has no console: sys.stdout / sys.stderr are None there, so both go to a log
 file (WL2_LOG, else warlords2.log in the per-user directory).  When the program ends with an
 error (a non-zero exit or an uncaught exception) its last lines are also shown in a message
-box on Windows, except in headless runs (`--headless`, or CI set), where nobody could close it."""
+box on Windows, except in headless runs (`--headless`, or CI set), where nobody could close it,
+and for `--fetch-data`, whose caller (the installer) reports the failure."""
 import os
 import sys
 from pathlib import Path
@@ -23,7 +24,9 @@ def _log_streams() -> Path:
 
 
 def _message_box(log: Path) -> None:
-    if sys.platform != "win32" or "--headless" in sys.argv or os.environ.get("CI"):
+    # --fetch-data: the installer runs it hidden and reports a failure itself
+    if (sys.platform != "win32" or os.environ.get("CI")
+            or any(a in sys.argv for a in ("--headless", "--fetch-data"))):
         return
     sys.stderr.flush()
     try:

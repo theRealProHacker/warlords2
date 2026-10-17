@@ -10,7 +10,8 @@ or $XDG_DATA_HOME/warlords2 (default ~/.local/share/warlords2).
 A frozen build (PyInstaller, packaging/) is never a checkout, so it writes only to that
 per-user directory.  Without --data or WL2_DATA it looks for the game (`frozen_data`) in the
 path saved in the user directory, then a Warlrd2/ folder next to the program (or the .app),
-then, run interactively, asks for the folder once and saves it.
+then, run interactively, offers to download the game from the Internet Archive into the user
+directory (warlords2.fetch) or asks for the folder, once, and saves the result.
 """
 from __future__ import annotations
 
@@ -73,8 +74,8 @@ def program_dirs() -> list[Path]:
 
 def frozen_data(user_dir: Path, interactive: bool) -> Path | None:
     """The game directory of a frozen build without --data / WL2_DATA: the saved path, a
-    Warlrd2/ folder next to the program, else (`interactive`) a folder picker, whose valid
-    choice is saved.  None when there is none (or no tkinter)."""
+    Warlrd2/ folder next to the program, else (`interactive`) the download or folder dialog
+    (`pick_data`), whose result is saved.  None when there is none (or no tkinter)."""
     try:
         saved = Path((Path(user_dir) / SAVED_DATA).read_text(encoding="utf-8").strip())
         if is_game_dir(saved):
@@ -91,15 +92,16 @@ def frozen_data(user_dir: Path, interactive: bool) -> Path | None:
                 return d / n
     if not interactive:
         return None
-    picked = pick_data()
+    picked = pick_data(Path(user_dir))
     if picked is not None:
         Path(user_dir).mkdir(parents=True, exist_ok=True)
         (Path(user_dir) / SAVED_DATA).write_text(str(picked), encoding="utf-8")
     return picked
 
 
-def pick_data() -> Path | None:
-    """Ask for the Warlords II folder (tkinter) until it holds WARLORD2.EXE or is cancelled."""
+def pick_data(user_dir: Path) -> Path | None:
+    """Offer to download the game into user_dir/Warlrd2 (warlords2.fetch); declined or failed,
+    ask for the Warlords II folder (tkinter) until it holds WARLORD2.EXE or is cancelled."""
     try:
         import tkinter
         from tkinter import filedialog, messagebox
@@ -111,6 +113,17 @@ def pick_data() -> Path | None:
         return None
     root.withdraw()
     try:
+        from .fetch import FetchError, fetch
+        if messagebox.askyesno(
+                "Warlords II",
+                "Warlords II needs the original DOS game files.\n\n"
+                "Download them now from the Internet Archive (2.6 MB)?\n\n"
+                "No: choose your own Warlords II folder.", parent=root):
+            try:
+                return fetch(user_dir / "Warlrd2")
+            except FetchError as e:
+                messagebox.showerror("Warlords II", f"{e}\n\nChoose your own Warlords II folder.",
+                                     parent=root)
         while True:
             hint = f"Your Warlords II (DOS) folder, with {EXE_NAME}"
             # macOS's open panel ignores the title and shows the message

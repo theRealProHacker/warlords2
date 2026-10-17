@@ -39,7 +39,7 @@ SKIP_DIRS = {"__pycache__", "vendor"}
 MIN_TEXT = 12                                  # entries this long or shorter are not checked
 MIN_SUBSTRING = 20                             # entries this long must not occur inside a literal
 FILE_NAME = re.compile(r"^[\w.~:/\\-]+\.[A-Za-z0-9]{1,3}$")
-TEXT_SUFFIXES = {".py", ".md", ".json", ".txt", ".toml", ".sh", ".gitignore", ".yml", ".spec"}
+TEXT_SUFFIXES = {".py", ".md", ".json", ".txt", ".toml", ".sh", ".gitignore", ".yml", ".spec", ".iss"}
 # The first exception to "no assets in the repo": the game's music rendered to Ogg Vorbis (and its
 # manifest), shipped as package data.  User decision 2026-10-17, after being told the copyright
 # risk; the renderer's inputs (XMI, MIDPAK.AD, the sound font) and the .mid files stay out.

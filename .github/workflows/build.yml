@@ -109,6 +109,39 @@ jobs:
           if-no-files-found: error
           retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && 90 || 14 }}
 
+      # Windows installer (packaging/warlords2.iss): pick a folder, the game is fetched
+      - name: Installer
+        if: runner.os == 'Windows'
+        run: |
+          iscc="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
+          [ -f "$iscc" ] || choco install innosetup --no-progress -y
+          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          "$iscc" "/DAppVersion=$version" packaging/warlords2.iss
+          test -f dist/warlords2-windows-x64-setup.exe
+      - name: Installer test (silent install, game fetched, uninstall)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $dir = Join-Path $env:RUNNER_TEMP "Warlords II"
+          $p = Start-Process dist\warlords2-windows-x64-setup.exe -Wait -PassThru -ArgumentList `
+               '/VERYSILENT', '/SUPPRESSMSGBOXES', '/CURRENTUSER', "/DIR=`"$dir`"", '/LOG=setup.log'
+          if ($p.ExitCode -ne 0) { Get-Content setup.log; exit 1 }
+          if (-not (Test-Path "$dir\warlords2.exe")) { Get-Content setup.log; exit 1 }
+          if (-not (Test-Path "$dir\Warlrd2\WARLORD2.EXE")) {
+            Get-Content setup.log; Get-Content "$env:APPDATA\warlords2\warlords2.log" -ErrorAction SilentlyContinue
+            Write-Error "the game files were not fetched"; exit 1
+          }
+          $p = Start-Process "$dir\unins000.exe" -Wait -PassThru -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES'
+          Start-Sleep -Seconds 5            # the uninstaller finishes in a copy of itself
+          if (Test-Path "$dir\Warlrd2") { Write-Error "uninstall left the game files"; exit 1 }
+      - uses: actions/upload-artifact@v7
+        if: runner.os == 'Windows'
+        with:
+          path: dist/warlords2-windows-x64-setup.exe
+          archive: false
+          if-no-files-found: error
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && 90 || 14 }}
+
   release:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: bundle
@@ -127,12 +160,14 @@ jobs:
           draft: true
           files: archives/*
           body: |
-            Warlords II (DOS v1.02) reimplemented. **You need your own copy of the original
-            DOS game files**: put its folder (the one with WARLORD2.EXE) next to the program
-            as `Warlrd2`, pick it when asked on the first start, or pass `--data DIR`.
+            Warlords II (DOS v1.02) reimplemented. It needs the original DOS game files: the
+            first start offers to download them from the Internet Archive, or to choose your
+            own folder (the one with WARLORD2.EXE).
 
-            - Windows: unzip and run `warlords2\warlords2.exe`; SmartScreen may warn about an
-              unknown publisher (More info, Run anyway).
+            - Windows: run `warlords2-windows-x64-setup.exe` and pick the install folder; setup
+              downloads the game files. Or unzip `warlords2-windows-x64.zip` and run
+              `warlords2\warlords2.exe`. SmartScreen may warn about an unknown publisher
+              (More info, Run anyway).
             - macOS 14 or newer: unzip and move `Warlords II.app` to Applications. The app is
               not signed: start it once, then System Settings, Privacy & Security, Open Anyway,
               or run `xattr -dr com.apple.quarantine "/Applications/Warlords II.app"`.

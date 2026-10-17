@@ -33,6 +33,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--data", type=Path, default=None,
                    help="game directory, read-only (env WL2_DATA; default original/game/Warlrd2 "
                         "in a checkout, required when installed)")
+    p.add_argument("--fetch-data", type=Path, metavar="DIR",
+                   help="download the original game from the Internet Archive into DIR, then exit "
+                        "(the Windows installer runs this)")
     p.add_argument("--user-dir", type=Path, default=default_user_dir(),
                    help="options, sound settings, shortcuts, saves, map slots (default %(default)s)")
     p.add_argument("--scenario", choices=SCENARIOS, help="skip the menus and start this scenario")
@@ -87,6 +90,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     cfg = p.parse_args(argv)
     for dest in sorted(given_flags(argv) & set(NOT_IMPLEMENTED)):
         print(f"{NOT_IMPLEMENTED[dest]}: accepted but not implemented yet; ignored", file=sys.stderr)
+    if cfg.fetch_data is not None:                    # a one-off job, not a game start
+        from .fetch import main as fetch_main
+        raise SystemExit(fetch_main(cfg.fetch_data))
     cfg.data = cfg.data or default_data()
     if cfg.data is None and frozen():                 # the bundle (packaging/): never in a checkout
         cfg.data = frozen_data(cfg.user_dir, interactive=not (cfg.headless or cfg.script))

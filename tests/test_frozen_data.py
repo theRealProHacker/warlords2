@@ -51,7 +51,7 @@ def test_sibling_of_a_macos_app(bundle, monkeypatch):
 def test_nothing_found_headless_is_the_usual_error(bundle, monkeypatch, capsys):
     monkeypatch.delenv("WL2_DATA", raising=False)
     monkeypatch.setattr(sys, "executable", str(bundle / "dist" / "warlords2"))
-    monkeypatch.setattr(paths, "pick_data", lambda: pytest.fail("no picker when headless"))
+    monkeypatch.setattr(paths, "pick_data", lambda user_dir: pytest.fail("no picker when headless"))
     with pytest.raises(SystemExit):
         config.parse_args(["--headless", "--user-dir", str(bundle / "user")])
     assert "WARLORD2.EXE" in capsys.readouterr().err
@@ -62,7 +62,7 @@ def test_picked_folder_is_saved(bundle, monkeypatch):
     game = fake_game(bundle / "picked")
     monkeypatch.delenv("WL2_DATA", raising=False)
     monkeypatch.setattr(sys, "executable", str(bundle / "dist" / "warlords2"))
-    monkeypatch.setattr(paths, "pick_data", lambda: game)
+    monkeypatch.setattr(paths, "pick_data", lambda user_dir: game)
     cfg = config.parse_args(["--user-dir", str(bundle / "user"), "--seed", "1"])
     assert cfg.data == game
     assert (bundle / "user" / paths.SAVED_DATA).read_text(encoding="utf-8") == str(game)

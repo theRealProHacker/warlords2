@@ -8,10 +8,18 @@ reads its files (the directory with `WARLORD2.EXE`) at run time and never writes
 ## Downloads
 
 Ready-to-run builds for Windows, macOS and Linux (no Python needed): the
-[Releases](https://github.com/<user>/warlords2/releases) page, or the artifacts of a run on the
-repository's Actions tab. Unpack and start `warlords2` (macOS: `Warlords II.app`). It finds
-your game in a `Warlrd2` folder next to the program (or the .app), else asks for the folder
-once and remembers it; `--data DIR` and `WL2_DATA` work too.
+[Releases](https://github.com/theRealProHacker/warlords2/releases) page, or the artifacts of a run on the
+repository's Actions tab.
+
+- Windows: run `warlords2-windows-x64-setup.exe`, pick the install folder, and setup downloads
+  the original game from the [Internet Archive](https://archive.org/details/msdos_Warlords_II_1993).
+  The portable `warlords2-windows-x64.zip` works too.
+- Elsewhere: unpack and start `warlords2` (macOS: `Warlords II.app`).
+
+Without game files next to it (a `Warlrd2` folder beside the program or the .app), the first
+start offers to download them from the Internet Archive or to choose your own folder, and
+remembers the answer; `--data DIR` and `WL2_DATA` work too, and `--fetch-data DIR` downloads
+into DIR.
 
 - macOS (14 or newer): the app is not signed. Start it once, then System Settings, Privacy &
   Security, Open Anyway, or run `xattr -dr com.apple.quarantine "Warlords II.app"`.
@@ -21,10 +29,10 @@ once and remembers it; `--data DIR` and `WL2_DATA` work too.
 
 Python 3.12 or newer:
 
-    pip install git+https://github.com/<user>/warlords2
+    pip install git+https://github.com/theRealProHacker/warlords2
 
 Extras: `[music]` to render the music yourself (`python -m warlords2.audio.music_render`),
-`[record]` for `--record FILE.mp4`, e.g. `pip install "warlords2[music] @ git+https://github.com/<user>/warlords2"`.
+`[record]` for `--record FILE.mp4`, e.g. `pip install "warlords2[music] @ git+https://github.com/theRealProHacker/warlords2"`.
 
 ## Run
 
