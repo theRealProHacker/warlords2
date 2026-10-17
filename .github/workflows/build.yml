@@ -100,12 +100,12 @@ jobs:
             macOS)   ditto -c -k --sequesterRsrc --keepParent "dist/Warlords II.app" "${{ matrix.name }}.zip" ;;
             *)       tar -C dist -czf "${{ matrix.name }}.tar.gz" warlords2 ;;
           esac
+      # archive: false uploads the one file as is (no zip around it); the artifact is
+      # then named after the file
       - uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.name }}
-          path: |
-            ${{ matrix.name }}.zip
-            ${{ matrix.name }}.tar.gz
+          path: ${{ matrix.name }}.${{ runner.os == 'Linux' && 'tar.gz' || 'zip' }}
+          archive: false
           if-no-files-found: error
           retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && 90 || 14 }}
 
@@ -120,6 +120,8 @@ jobs:
         with:
           path: archives
           merge-multiple: true
+          # the artifacts are the bundle archives themselves; keep the .zip files whole
+          skip-decompress: true
       - uses: softprops/action-gh-release@v3
         with:
           draft: true
