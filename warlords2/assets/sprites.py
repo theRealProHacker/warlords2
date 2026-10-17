@@ -336,3 +336,83 @@ class Sprites:
     def city_mark(self, owner: int, shift: int) -> Rect:
         sx, sy, w, h = self.city_marks[owner_row(owner)]
         return sx, sy + shift * h, w, h
+
+
+ICON_SHEET = "START/STEXT.PCK"           # the title lettering (outside the picture table)
+ICON_PALETTE = "START/SCREEN0.PAL"
+ICON_KEY = 13                            # START.EXE's mask key for the lettering
+ICON_BLANK = (140, 82)                   # sheet x >= 140, y >= 82: the "a" touching the W
+ICON_CROP = (0, 40, 168, 135)            # the "W": x, y, w, h
+ICON_SIZE = 32
+
+
+def has_icon_files(store) -> bool:
+    """Both files the icon is built from exist (a copy without START/ has no icon)."""
+    return all(store.gd.path(rel).is_file() for rel in (ICON_SHEET, ICON_PALETTE))
+
+
+def _largest_component(mask: np.ndarray) -> np.ndarray:
+    """The largest 8-connected component of `mask` (rows, columns), as a mask."""
+    h, w = mask.shape
+    lab = np.zeros(mask.shape, np.int32)
+    sizes = [0]
+    for y0, x0 in zip(*np.nonzero(mask)):
+        if lab[y0, x0]:
+            continue
+        n = len(sizes)
+        lab[y0, x0] = n
+        todo, count = [(y0, x0)], 0
+        while todo:
+            y, x = todo.pop()
+            count += 1
+            for yy in (y - 1, y, y + 1):
+                for xx in (x - 1, x, x + 1):
+                    if 0 <= yy < h and 0 <= xx < w and mask[yy, xx] and not lab[yy, xx]:
+                        lab[yy, xx] = n
+                        todo.append((yy, xx))
+        sizes.append(count)
+    return lab == int(np.argmax(sizes))
+
+
+def window_icon(store, size: int = ICON_SIZE) -> pygame.Surface:
+    """The window icon: the "W" of the title lettering (START/STEXT.PCK under SCREEN0.PAL,
+    key 13).  The "a" touching it is blanked on the sheet, the W cropped, kept as its largest
+    8-connected run of opaque pixels (dropping a stray fragment of the "a") and trimmed, then
+    scaled nearest-neighbour with its aspect kept (by an integer factor when that fills at
+    least 3/4 of the side) and centred on a transparent `size` x `size` RGBA surface.  Built
+    from the user's game files at run time."""
+    idx = pygame.surfarray.array2d(store.surface(ICON_SHEET, ICON_KEY)).T   # rows, columns
+    bx, by = ICON_BLANK
+    idx[by:, bx:] = ICON_KEY
+    x, y, w, h = ICON_CROP
+    idx = idx[y:y + h, x:x + w]
+    opaque = _largest_component(idx != ICON_KEY)
+    ys, xs = np.nonzero(opaque)
+    idx = idx[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    opaque = opaque[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    pal = np.array(store.palette(ICON_PALETTE), np.uint8)
+    img = np.dstack([pal[np.minimum(idx, len(pal) - 1)], np.where(opaque, 255, 0).astype(np.uint8)])
+    h, w = img.shape[:2]
+    m = max(w, h)
+    s = size / m
+    if s >= 1 and size // m * m >= 0.75 * size:
+        s = size // m
+    nw, nh = max(1, round(w * s)), max(1, round(h * s))
+    rows = np.minimum(((np.arange(nh) + 0.5) / s).astype(int), h - 1)
+    cols = np.minimum(((np.arange(nw) + 0.5) / s).astype(int), w - 1)
+    img = img[rows][:, cols]
+    out = np.zeros((size, size, 4), np.uint8)
+    oy, ox = (size - nh) // 2, (size - nw) // 2
+    out[oy:oy + nh, ox:ox + nw] = img
+    return pygame.image.frombytes(out.tobytes(), (size, size), "RGBA")
+
+
+def set_window_icon(store) -> None:
+    """`pygame.display.set_icon(window_icon(store))`, called before the first `set_mode`.
+    Skipped under the dummy video driver and when its files are missing; never fatal."""
+    try:
+        if pygame.display.get_driver() == "dummy" or not has_icon_files(store):
+            return
+        pygame.display.set_icon(window_icon(store))
+    except Exception:
+        pass

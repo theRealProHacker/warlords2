@@ -1,0 +1,5 @@
+# The bundle (packaging/warlords2.spec), on top of `pip install .`:
+#   pip install . -r requirements-build.txt
+#   pyinstaller packaging/warlords2.spec
+# Not requirements-music.txt: the GPL renderer (pyopl) stays out of the bundle.
+pyinstaller>=6.10,<7

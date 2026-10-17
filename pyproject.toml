@@ -6,13 +6,31 @@ build-backend = "setuptools.build_meta"
 name = "warlords2"
 version = "0.0.1"
 description = "Reimplementation of Warlords II (1993, DOS v1.02) in pygame; reads the user's own game files at run time"
+readme = "README.md"
 requires-python = ">=3.12"
-# The engine (formats, model, rules, ai) is standard library only.  Presentation and
-# tool dependencies are installed from requirements.txt.
-dependencies = []
+# The engine (formats, model, rules, ai) is standard library only; the presentation needs these.
+dependencies = [
+    "pygame>=2.6",
+    "numpy",
+    "pgsm==0.0.2",
+]
+
+[project.optional-dependencies]
+# --record FILE.mp4 (warlords2.debug.recorder)
+record = ["opencv-python", "pygame-screen-record==0.1.2"]
+# rendering the music cache: python -m warlords2.audio.music_render (requirements-music.txt).
+# pyopl is GPL-3.0-only; tinysoundfont (--variant gm) is left out, see requirements-music.txt.
+music = ["pyopl==2.0"]
+
+[project.scripts]
+warlords2 = "warlords2.app:main"
 
 [tool.setuptools.packages.find]
 include = ["warlords2*"]
+
+# the game's music, rendered (user decision 2026-10-17); audio.music plays it without a cache
+[tool.setuptools.package-data]
+warlords2 = ["data/music/*.ogg", "data/music/manifest.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

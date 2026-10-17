@@ -1,6 +1,7 @@
 """Shared test set-up: the `gamedata` marker and the `game` fixture.
 
-Tests that read the user's game copy carry `@pytest.mark.gamedata`.  They fail when the
+Tests that read the user's game copy carry `@pytest.mark.gamedata` (those taking the `game`
+fixture get it automatically, so `-m "not gamedata"` runs without the copy).  They fail when the
 data directory is missing, so a broken checkout cannot pass by skipping; set
 `WL2_NO_DATA=1` to skip them instead (docs/plan.md section 6.1).  The directory is
 `WL2_DATA`, else `original/game/Warlrd2` below the repository root.
@@ -21,6 +22,15 @@ def game_root() -> Path:
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "gamedata: needs the original game files (see tests/conftest.py)")
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_collection_modifyitems(config, items):
+    """A test that takes the `game` fixture (directly or through another fixture) reads the
+    game copy, so it is `gamedata` even unmarked; before `-m` deselects (tryfirst)."""
+    for item in items:
+        if "game" in getattr(item, "fixturenames", ()):
+            item.add_marker(pytest.mark.gamedata)
 
 
 @pytest.hookimpl(tryfirst=True)

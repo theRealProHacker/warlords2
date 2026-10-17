@@ -1,0 +1,134 @@
+# Tests without game data, then the one-dir bundles (packaging/warlords2.spec) for Windows,
+# macOS and Linux; a v* tag also drafts a GitHub Release with the archives.
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    env:
+      WL2_NO_DATA: "1"                  # no game files on CI: the gamedata tests are deselected
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: pip install -r requirements.txt
+      - run: python -m pytest -m "not gamedata" -q
+
+  bundle:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: warlords2-windows-x64
+          # macos-15 (arm64); macos-14 is retired (runner-images #13518, unsupported from 2026-11-02)
+          - os: macos-15
+            name: warlords2-macos-arm64
+          - os: macos-15-intel
+            name: warlords2-macos-x64
+          - os: ubuntu-22.04
+            name: warlords2-linux-x64
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            requirements-build.txt
+      # not requirements-music.txt: the GPL renderer is not part of the bundle
+      - run: pip install . -r requirements-build.txt
+      - run: pyinstaller --noconfirm packaging/warlords2.spec
+
+      - name: Nothing excluded got in
+        run: |
+          test -f build/warlords2/PYZ-00.toc
+          bad=$(find dist -iname '*pyopl*' -o -iname '*tinysoundfont*' -o -iname 'cv2' \
+                -o -iname 'PIL' -o -iname '*pygame_screen_record*' -o -iname '*readline*')
+          bad+=$(grep -oE "\('(pyopl|tinysoundfont|cv2|PIL|pygame_screen_record)[A-Za-z0-9_.]*'" \
+                 build/warlords2/PYZ-00.toc | sort -u || true)
+          if [ -n "$bad" ]; then echo "excluded modules in the bundle: $bad"; exit 1; fi
+          n=$(find dist/warlords2/_internal/warlords2/data/music -name '*.ogg' | wc -l)
+          echo "bundled music: $n OGGs"
+          [ "$n" -gt 0 ] && [ "$n" -eq "$(find warlords2/data/music -name '*.ogg' | wc -l)" ]
+
+      - name: Smoke test
+        run: |
+          case "$RUNNER_OS" in
+            Windows) exe=dist/warlords2/warlords2.exe ;;
+            macOS)   exe="dist/Warlords II.app/Contents/MacOS/warlords2" ;;
+            *)       exe=dist/warlords2/warlords2 ;;
+          esac
+          # windowed builds (Windows, macOS) write stdout / stderr to WL2_LOG (packaging/entry.py)
+          export WL2_LOG="$RUNNER_TEMP/wl2.log"
+          "$exe" --help > out.txt 2>&1
+          cat out.txt "$WL2_LOG" 2>/dev/null | grep -q "usage:"
+          mkdir -p "$RUNNER_TEMP/empty"
+          if "$exe" --headless --data "$RUNNER_TEMP/empty" > out.txt 2>&1; then
+            cat out.txt; echo "expected a non-zero exit without game files"; exit 1
+          fi
+          cat out.txt "$WL2_LOG" 2>/dev/null | tee all.txt
+          grep -q "WARLORD2.EXE not found in" all.txt
+
+      - name: Archive
+        run: |
+          case "$RUNNER_OS" in
+            Windows) 7z a "${{ matrix.name }}.zip" ./dist/warlords2 ;;
+            macOS)   ditto -c -k --sequesterRsrc --keepParent "dist/Warlords II.app" "${{ matrix.name }}.zip" ;;
+            *)       tar -C dist -czf "${{ matrix.name }}.tar.gz" warlords2 ;;
+          esac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: |
+            ${{ matrix.name }}.zip
+            ${{ matrix.name }}.tar.gz
+          if-no-files-found: error
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && 90 || 14 }}
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: bundle
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: archives
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: archives/*
+          body: |
+            Warlords II (DOS v1.02) reimplemented. **You need your own copy of the original
+            DOS game files**: put its folder (the one with WARLORD2.EXE) next to the program
+            as `Warlrd2`, pick it when asked on the first start, or pass `--data DIR`.
+
+            - Windows: unzip and run `warlords2\warlords2.exe`; SmartScreen may warn about an
+              unknown publisher (More info, Run anyway).
+            - macOS 14 or newer: unzip and move `Warlords II.app` to Applications. The app is
+              not signed: start it once, then System Settings, Privacy & Security, Open Anyway,
+              or run `xattr -dr com.apple.quarantine "/Applications/Warlords II.app"`.
+            - Linux: `tar xzf` and run `warlords2/warlords2`.

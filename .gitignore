@@ -7,3 +7,5 @@ recordings/
 out/
 *.egg-info/
 tools/vendor/
+build/
+dist/

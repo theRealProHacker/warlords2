@@ -3,9 +3,11 @@
 Buttons come from MOUSEBUTTONDOWN/UP, modifiers from KEYDOWN/KEYUP of the modifier keys,
 text from KEYDOWN.unicode without control characters.  Never `event.buttons`, `event.mod`, `pygame.key.get_mods()` or
 `pygame.mouse.get_pressed()`: scripted events posted into the queue carry no such state.
-Window pixels become logical 640x480 pixels by integer division by the window scale; a
-motion's `rel` is the change of the logical position (`event.rel` is never read: scripted
-motions may lack it, and window deltas divided by the scale are not logical deltas).
+Window pixels become logical 640x480 pixels through the view, the window rectangle the
+frame is scaled into (`ui.screen.view_rect`; in a window it is the whole window, so this is
+integer division by the window scale; full screen clamps the black borders to the frame
+edge); a motion's `rel` is the change of the logical position (`event.rel` is never read:
+scripted motions may lack it, and window deltas divided by the scale are not logical deltas).
 Losing the window focus releases every held button, key and modifier, since their UP
 events go to another window.
 """
@@ -15,6 +17,8 @@ import unicodedata
 
 import pygame
 
+from .screen import H, W
+
 MODIFIERS = {
     pygame.K_LALT: "alt", pygame.K_RALT: "alt",
     pygame.K_LSHIFT: "shift", pygame.K_RSHIFT: "shift",
@@ -23,9 +27,26 @@ MODIFIERS = {
 MOUSE_EVENTS = (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION)
 
 
+def to_logical(pos: tuple[int, int], view: pygame.Rect, clamp: bool = False) -> tuple[int, int]:
+    """Window px -> logical px of the frame shown in `view`; `clamp` pulls positions on the
+    borders around the view onto the frame's edge."""
+    x, y = (pos[0] - view.x) * W // view.w, (pos[1] - view.y) * H // view.h
+    if clamp:
+        x, y = min(max(x, 0), W - 1), min(max(y, 0), H - 1)
+    return x, y
+
+
+def to_window(pos: tuple[int, int], view: pygame.Rect) -> tuple[int, int]:
+    """Logical px -> the first window px that `to_logical` maps back to it (with a view
+    smaller than the frame, the window px of the nearest shown logical px)."""
+    return view.x + -(-pos[0] * view.w // W), view.y + -(-pos[1] * view.h // H)
+
+
 class Input:
     def __init__(self, scale: int):
         self.scale = scale
+        self.view = pygame.Rect(0, 0, W * scale, H * scale)   # the frame's place in the window
+        self.clamp = False                 # full screen: positions on the borders clamp to the frame
         self.pos = (0, 0)                  # logical px
         self.buttons: set[int] = set()     # held mouse buttons (1 left, 2 middle, 3 right)
         self.keys: set[int] = set()        # held keys
@@ -53,7 +74,10 @@ class Input:
         return self.drag_start is not None and self.pos != self.drag_start
 
     def logical(self, pos: tuple[int, int]) -> tuple[int, int]:
-        return pos[0] // self.scale, pos[1] // self.scale
+        return to_logical(pos, self.view, self.clamp)
+
+    def window(self, pos: tuple[int, int]) -> tuple[int, int]:
+        return to_window(pos, self.view)
 
     def feed(self, events: list[pygame.event.Event]) -> list[pygame.event.Event]:
         """Update the state from this frame's events; returns them with mouse positions

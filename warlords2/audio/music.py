@@ -27,10 +27,17 @@ Timing is the logical frame clock (`App.frame`, --tick-hz): a scripted run is re
 track's length is its sequence's End-Of-Track tick from the game's own XMI file
 (`formats.xmi.sequence_ticks`), so it does not depend on the cache.
 
-No cache, or a stale one (`audio.music_render.stale`: no manifest entry, no WAV, another
-renderer version or other XMI / MIDPAK.AD bytes): the music driver stays present for the rules
-(user decision: the same dice as with the cache), playback is silent, and one line on stderr
-names the command that renders it.  The log (`MusicLog`) is the same either way.
+The bundled set (user decision 2026-10-17): warlords2/data/music/ ships the cache's renders
+as Ogg Vorbis (S* and R*, the same sample count as the WAV) with a manifest of the same form
+(its "wav" entries name the .ogg files), so the music plays without the optional render extra.
+A current `--music-cache` (all of the variant's stems) is played first; else the bundled set,
+checked the same way (`audio.music_render.stale`): it is valid only for the XMI / MIDPAK.AD bytes
+it was rendered from, so another game version does not play it.
+
+Neither current (no manifest entry, no file, another renderer version or other XMI / MIDPAK.AD
+bytes): the music driver stays present for the rules (user decision: the same dice as with the
+cache), playback is silent, and one line on stderr names the command that renders it.  The log
+(`MusicLog`, whose "wav" fields name the cache stem's WAV) is the same either way.
 """
 from __future__ import annotations
 
@@ -46,6 +53,7 @@ from . import music_render as R
 
 MUSIC_GROUPS = range(8, 20)          # FILE.DAT groups of the music modes (rules.constants.music)
 DIR_ENTRY = (7, 0)                   # FILE.DAT (7, 0) = SOUND\ (ovl58:0050)
+BUNDLED = Path(__file__).resolve().parent.parent / "data" / "music"   # the shipped OGGs (package data)
 
 
 def variant(cfg) -> str:
@@ -139,6 +147,7 @@ class MusicPlayer:
         self.variant = variant(app.cfg)
         self.prefix = R.VARIANT_PREFIX[self.variant]
         self.dir = cache_dir(app.cfg)
+        self.manifest = None
         self.seen = self.words.starts            # starts already sounded (or skipped)
         self.current: Playing | None = None
         self.once: str | None = None             # START.EXE's ANIM while it plays (`play_once`)
@@ -146,7 +155,13 @@ class MusicPlayer:
         self.silent = False
         self.cache_problem = None
         if self.words.driver:
-            stale = R.stale(R.load_manifest(self.dir), app.gd, music_stems(self.files, self.variant), self.dir)
+            stems = music_stems(self.files, self.variant)
+            self.manifest = R.load_manifest(self.dir)
+            stale = R.stale(self.manifest, app.gd, stems, self.dir)
+            if stale:                            # the bundled set, when it is current for this copy
+                bundled = R.load_manifest(BUNDLED)
+                if not R.stale(bundled, app.gd, stems, BUNDLED):
+                    self.dir, self.manifest, stale = BUNDLED, bundled, []
             if stale:
                 self.silent = True
                 self.cache_problem = stale
@@ -169,9 +184,16 @@ class MusicPlayer:
             n = self._lengths[stem] = max(1, -(-ticks * hz // QUANT_RATE))
         return n
 
-    def _sound(self, stem: str) -> None:
+    def _file(self, stem: str, d: Path | None = None, manifest: dict | None = None) -> Path:
+        """The file of `stem` in `d` (the player's directory): its manifest's "wav" entry (a WAV
+        in the cache, an OGG in the bundled set)."""
+        d = self.dir if d is None else d
+        e = ((manifest if manifest is not None else self.manifest) or {}).get("tracks", {}).get(stem) or {}
+        return d / e.get("wav", f"{stem}.wav")
+
+    def _sound(self, stem: str, path: Path | None = None) -> None:
         if not self.silent:
-            self.backend.play(self.dir / f"{stem}.wav")
+            self.backend.play(path or self._file(stem))
 
     # ------------------------------------------------------------------ actions
 
@@ -279,11 +301,14 @@ class MusicPlayer:
             return
         self.once = stem
         if not getattr(self.app.cfg, "fixed_dt", False) and not self.silent:
-            if R.stale(R.load_manifest(self.dir), self.app.gd, [stem], self.dir):
+            for d in dict.fromkeys((self.dir, BUNDLED)):          # the player's directory, then the bundled set
+                m = R.load_manifest(d)
+                if not R.stale(m, self.app.gd, [stem], d):
+                    self._sound(stem, self._file(stem, d, m))
+                    break
+            else:
                 print("music: no current render of %s in %s; run `%s` - the intro plays silently"
                       % (stem, self.dir, R.COMMAND), file=sys.stderr)
-            else:
-                self._sound(stem)
         self.log.add(kind="start", frame=self.app.frame, mode=None, group=None, index=None,
                      wav=f"{stem}.wav", loop=0, site=site, via="intro")
 

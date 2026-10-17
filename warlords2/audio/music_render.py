@@ -38,7 +38,8 @@ import urllib.request
 import wave
 from pathlib import Path
 
-from ..formats.gamedir import REPO_ROOT, GameDir, default_root
+from ..formats.gamedir import REPO_ROOT, GameDir  # noqa: F401  (REPO_ROOT: tests)
+from ..paths import default_data, default_music_cache
 from ..formats.xmi import (CC_FOR_LOOP, CC_NEXT_LOOP, QUANT_RATE, AdBank, XmiEvent,
                            XmiSequence, parse_ad, parse_xmi)
 
@@ -767,7 +768,7 @@ def render_gm(seq: XmiSequence, sf2_path, rate=DEFAULT_RATE, max_tail_s=4.0,
 TRACK_NAMES = ["STARTUP"] + ["INT%d" % i for i in range(24)] + ["ANIM"]
 VARIANTS = ("opl", "gm")
 VARIANT_PREFIX = {"opl": "S", "gm": "R"}     # 155e:032f's s / r prefix (music.md §3)
-DEFAULT_OUT = REPO_ROOT / "out" / "music"
+DEFAULT_OUT = default_music_cache()
 MANIFEST = "manifest.json"
 AD_FILE = "MIDPAK.AD"
 COMMAND = "python -m warlords2.audio.music_render"
@@ -955,7 +956,7 @@ def render(gd: GameDir, out_dir=DEFAULT_OUT, variants=VARIANTS, tracks=TRACK_NAM
                 "driver_model": "AIL 2 Yamaha XMIDI driver, YM3812, mono",
                 "timbres": AD_FILE}
         else:
-            sf2 = soundfont or ensure_soundfont(os.path.join(REPO_ROOT, "out", "cache",
+            sf2 = soundfont or ensure_soundfont(os.path.join(default_music_cache().parent, "cache",
                                                              "soundfonts"))
             with open(sf2, "rb") as f:
                 sf2_sha = sha256(f.read())
@@ -1013,7 +1014,10 @@ def main(argv=None) -> int:
             ap.error("unknown track %r" % t)
         if u not in names:
             names.append(u)
-    gd = GameDir(Path(a.game_dir) if a.game_dir else default_root())
+    data = Path(a.game_dir) if a.game_dir else default_data()
+    if data is None:
+        ap.error("no game directory: pass GAME_DIR or set WL2_DATA")
+    gd = GameDir(data)
     if not gd.root.is_dir():
         ap.error("game directory not found: %s" % gd.root)
     variants = VARIANTS if a.variant in (None, "all") else (a.variant,)

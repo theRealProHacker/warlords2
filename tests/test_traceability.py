@@ -11,6 +11,9 @@
   `+` chains of them and the constant parts of f-strings, dict keys and subscripts included
   (two identifier-shaped game texts are longer than MIN_TEXT); .md and .txt files under
   tests/ and tools/ count line by line.  File names are allowed.
+* no tracked (or untracked, not ignored) file is a sound, picture or other binary: every file
+  has one of TEXT_SUFFIXES, apart from the bundled music in warlords2/data/music/ (BUNDLED_MUSIC)
+  and the bundle's file icons in packaging/ (BUNDLED_ICON).
 
 Each check is a function over a list of files, so the tests below can also show that it
 fires on a planted file.
@@ -36,6 +39,14 @@ SKIP_DIRS = {"__pycache__", "vendor"}
 MIN_TEXT = 12                                  # entries this long or shorter are not checked
 MIN_SUBSTRING = 20                             # entries this long must not occur inside a literal
 FILE_NAME = re.compile(r"^[\w.~:/\\-]+\.[A-Za-z0-9]{1,3}$")
+TEXT_SUFFIXES = {".py", ".md", ".json", ".txt", ".toml", ".sh", ".gitignore", ".yml", ".spec"}
+# The first exception to "no assets in the repo": the game's music rendered to Ogg Vorbis (and its
+# manifest), shipped as package data.  User decision 2026-10-17, after being told the copyright
+# risk; the renderer's inputs (XMI, MIDPAK.AD, the sound font) and the .mid files stay out.
+BUNDLED_MUSIC = re.compile(r"^warlords2/data/music/(?:[SR](?:STARTUP|INT\d{1,2}|ANIM)\.ogg|manifest\.json)$")
+# The second: the bundle's file icons (the title "W", built by tools/make_icons.py from the user's
+# START/STEXT.PCK), needed at build time where CI has no game files.  User decision 2026-10-17.
+BUNDLED_ICON = re.compile(r"^packaging/icon\.(?:png|ico|icns)$")
 def files(tree, suffixes=(".py",)):
     base = ROOT / tree
     if not base.is_dir():
@@ -237,6 +248,24 @@ def source_paths():
             + [p for t in DOC_TREES for p in files(t, (".md", ".txt"))])
 
 
+def asset_files(names):
+    """Repository-relative names (posix) of files that are not text: a suffix outside
+    TEXT_SUFFIXES (a name without one counts by its name, e.g. .gitignore), BUNDLED_MUSIC and
+    BUNDLED_ICON excepted."""
+    return [n for n in names if (Path(n).suffix or Path(n).name) not in TEXT_SUFFIXES
+            and not BUNDLED_MUSIC.match(n) and not BUNDLED_ICON.match(n)]
+
+
+def repo_files():
+    import subprocess
+    try:
+        out = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+                             cwd=ROOT, capture_output=True, check=True).stdout
+    except (OSError, subprocess.CalledProcessError):
+        pytest.skip("not a git checkout")
+    return [n for n in out.decode().split("\0") if n and (ROOT / n).is_file()]
+
+
 # --------------------------------------------------------------------------- the tree
 
 
@@ -253,7 +282,23 @@ def test_no_game_text_in_source(game_texts):
     assert game_text_literals(source_paths(), game_texts) == []
 
 
+def test_no_assets_in_the_repo():
+    assert asset_files(repo_files()) == []
+
+
 # --------------------------------------------------------------------------- the checks fire
+
+
+def test_asset_check_fires():
+    names = ["warlords2/x.py", "README.md", ".gitignore", "warlords2/data/music/SINT12.ogg",
+             "warlords2/data/music/RANIM.ogg", "warlords2/data/music/manifest.json",
+             "packaging/icon.png", "packaging/icon.ico", "packaging/icon.icns",
+             ".github/workflows/build.yml", "packaging/warlords2.spec",
+             "warlords2/data/music/SINT12.mid", "warlords2/data/music/SINT12.wav", "warlords2/data/music/x.ogg",
+             "warlords2/data/music/sub/SINT0.ogg", "tests/SINT0.ogg", "warlords2/data/SINT0.ogg",
+             "warlords2/assets/icon.png", "original/game/Warlrd2/SOUND/SINT0.XMI",
+             "packaging/x.png", "packaging/icon.bmp", "packaging/sub/icon.png"]
+    assert asset_files(names) == names[11:]
 
 
 def test_register_rows_parsed():

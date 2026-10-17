@@ -49,7 +49,9 @@ def write_script(tmp_path, steps, args=()):
 
 
 def fake_app(scale):
-    return types.SimpleNamespace(input=types.SimpleNamespace(scale=scale))
+    # Input.window in a window is a plain multiply by the scale (tests/test_display.py)
+    return types.SimpleNamespace(input=types.SimpleNamespace(
+        scale=scale, window=lambda pos: (pos[0] * scale, pos[1] * scale)))
 
 
 def posted(src, frames):
@@ -289,7 +291,7 @@ def test_nearest_frames_flags_a_swapped_frame(display):
 def test_press_button_clicks_the_centre_of_its_rectangle(display, tmp_path, game):
     from warlords2.assets.store import AssetStore
     from warlords2.formats.gamedir import GameDir
-    app = types.SimpleNamespace(input=types.SimpleNamespace(scale=2), assets=AssetStore(GameDir(game)))
+    app = types.SimpleNamespace(input=fake_app(2).input, assets=AssetStore(GameDir(game)))
     src = script_mod.load(write_script(tmp_path, [[1, {"press_button": 190}]]), app, Capture(tmp_path))
     assert posted(src, 3) == {1: [                         # BUTTON.DAT 190: (176, 260, 64, 23)
         (pygame.MOUSEMOTION, {"pos": (416, 542), "rel": (416, 542), "buttons": (0, 0, 0)}),

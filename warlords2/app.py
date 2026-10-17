@@ -37,6 +37,7 @@ STATES = {
 MOUSE_FILE = "STAND.PCK"
 MENUBUTT = 43                             # MENUBUTT.PCK, cache group 8
 SETTLE_TIMEOUT = 10.0                     # seconds a pgsm hook thread may take
+LINUX_AUDIO = "alsa,pulseaudio"           # SDL audio drivers tried in order on Linux
 BANNER_FMT, BANNER_VERSION = 0x27C9, 0x27F8   # res_0a4c:02f3 / 02f7: printf(DS:27c9, DS:27f8)
 FATAL_FMT = 0x1656                        # ovl52:0038: printf(DS:1656, message)
 
@@ -67,6 +68,10 @@ class App:
         if cfg.headless:
             os.environ["SDL_VIDEODRIVER"] = "dummy"
             os.environ["SDL_AUDIODRIVER"] = "dummy"
+        elif sys.platform.startswith("linux"):
+            # SDL's pulseaudio backend stalls and hangs at exit under PipeWire (user decision
+            # 2026-10-17: ALSA first); a user's own SDL_AUDIODRIVER wins
+            os.environ.setdefault("SDL_AUDIODRIVER", LINUX_AUDIO)
         self.gd = GameDir(cfg.data)
         problems = self.gd.verify()
         if not self.gd.path(EXE_NAME).is_file():
@@ -101,6 +106,9 @@ class App:
         self.run_carry = RunCarry()                   # the run's memory across games (EL §10.4)
 
         # everything is read here, synchronously, before pgsm exists
+        from . import desktop
+        if not cfg.headless:
+            desktop.set_wm_class()                            # before the window (SDL hint)
         pygame.display.init()
         self.assets = AssetStore(self.gd, app=self)
         from .assets.store import CacheGroup8
@@ -114,9 +122,18 @@ class App:
         if cfg.scenario and not self.gd.path(cfg.scenario).is_dir():
             print(self.assets.error(ERR_SCENARIO, cfg.scenario), file=sys.stderr)
             raise SystemExit(1)
-        self.screen = Screen(cfg.scale, self.assets.palette("STANDARD.PAL"))
+        from .assets.sprites import set_window_icon
+        set_window_icon(self.assets)                          # before the first set_mode (SDL)
+        if not cfg.headless:
+            desktop.install(self.assets)                      # Linux: the launcher entry and icon
+        pygame.display.set_caption("Warlords II")
+        self.screen = Screen(cfg.scale, self.assets.palette("STANDARD.PAL"),
+                             fullscreen=getattr(cfg, "fullscreen", False),
+                             frameless=getattr(cfg, "frameless", False))
         pygame.key.start_text_input()                         # once, never stopped
         self.input = Input(cfg.scale)
+        self._sync_view()
+        self._swallowed_up: set[int] = set()                  # keys whose DOWN toggled full screen
         music_triggers.player(self)                           # the mixer, the cache check (one stderr line)
 
         self._hook_errors: list[BaseException] = []
@@ -177,7 +194,7 @@ class App:
             events = pygame.event.get()
         if any(e.type == pygame.QUIT for e in events):
             self.running = False
-        events = self.input.feed(events)
+        events = self.input.feed([e for e in events if not self._display_key(e)])
         measured = 0 if self.cfg.headless else self.clock.tick(self.cfg.tick_hz)
         dt = 1000 / self.cfg.tick_hz if self.cfg.fixed_dt else measured
         self.manager.update(events, dt)
@@ -185,6 +202,23 @@ class App:
         self.manager.draw(self.screen.fb)
         self.screen.present()
         self.frame += 1
+
+    def _sync_view(self) -> None:
+        self.input.view, self.input.clamp = self.screen.view, self.screen.letterboxed
+
+    def _display_key(self, e: pygame.event.Event) -> bool:
+        """Alt+Enter toggles full screen; that KEYDOWN and its KEYUP never reach the game.
+        Only a real keyboard event carries `mod` (scripted ones do not, so they never toggle).
+        The game reads no Alt+Enter (Borland getch 0x11C); without this it would be Enter."""
+        if e.type == pygame.KEYUP and e.key in self._swallowed_up:
+            self._swallowed_up.discard(e.key)
+            return True
+        if not (e.type == pygame.KEYDOWN and e.key == pygame.K_RETURN and getattr(e, "mod", 0) & pygame.KMOD_ALT):
+            return False
+        self.screen.set_fullscreen(not self.screen.fullscreen)
+        self._sync_view()
+        self._swallowed_up.add(e.key)
+        return True
 
     def run(self, frames: int | None = None) -> None:
         """Until QUIT, `frames` frames, or the end of --script; --shot-at and --record

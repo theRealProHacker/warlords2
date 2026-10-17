@@ -30,6 +30,14 @@ from warlords2.ui import registry  # noqa: E402
 pytestmark = pytest.mark.gamedata
 UP = pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=(320, 240))
 SCRIPT = Path(__file__).resolve().parent / "scripts" / "m10c_music.json"
+REAL_BUNDLED = M.BUNDLED
+
+
+@pytest.fixture(autouse=True)
+def no_bundle(tmp_path, monkeypatch):
+    """The tests below see no bundled set unless they put it back (`bundled`): "no cache" means
+    no music anywhere, as before the set was shipped."""
+    monkeypatch.setattr(M, "BUNDLED", tmp_path / "nobundle")
 
 
 class Fake:
@@ -155,6 +163,70 @@ def test_stale_intro_track_mutes_only_the_intro(game, tmp_path, capsys, anim_ok)
     p.stop_once("end")
     p.events([_started(app.music_words, 1, 10, 3, 1)])
     assert p.backend.calls[-1] == ("play", "SINT9.wav")                    # the game's music plays
+
+
+# ------------------------------------------------------------------ the bundled set
+
+
+@pytest.fixture
+def bundled(monkeypatch):
+    monkeypatch.setattr(M, "BUNDLED", REAL_BUNDLED)
+    return REAL_BUNDLED
+
+
+def test_bundled_set_is_current_for_this_copy(game, bundled):
+    """warlords2/data/music/: every stem of both variants (ANIM too) as an OGG whose manifest
+    entry matches the user's XMI / MIDPAK.AD bytes."""
+    m = R.load_manifest(bundled)
+    gd = GameDir(game)
+    for v in R.VARIANTS:
+        stems = [*M.music_stems(_files(game), v), R.stem("ANIM", v)]
+        assert R.stale(m, gd, stems, bundled) == []
+        assert all(m["tracks"][s]["wav"] == f"{s}.ogg" for s in stems)
+    assert sorted(p.name for p in bundled.iterdir()) == sorted([R.MANIFEST, *(e["wav"] for e in m["tracks"].values())])
+
+
+@pytest.mark.parametrize("variant", ["opl", "gm"])
+def test_no_cache_plays_the_bundled_set(game, tmp_path, capsys, bundled, variant):
+    """No --music-cache render: the bundled OGGs play, no stderr line; the log still names the
+    stem's WAV (the same log as with the cache)."""
+    app = _stub(game, tmp_path, variant=variant)
+    app.cfg.fixed_dt = False
+    p = M.MusicPlayer(app, backend=Fake())
+    pre = R.VARIANT_PREFIX[variant]
+    assert not p.silent and p.cache_problem is None and p.dir == bundled and capsys.readouterr().err == ""
+    p.play_once(pre + "ANIM", "0579:002d")
+    p.stop_once("end")
+    p.events([_started(app.music_words, 1, 10, 3, 1)])
+    assert p.backend.calls == [("play", pre + "ANIM.ogg"), ("stop",), ("play", pre + "INT9.ogg")]
+    assert [r.get("wav") for r in app.music_log.records] == [pre + "ANIM.wav", pre + "ANIM.wav", pre + "INT9.wav"]
+    assert (bundled / f"{pre}INT9.ogg").is_file()
+
+
+def test_bundled_set_of_another_game_version_is_silent(game, tmp_path, capsys, monkeypatch):
+    """The bundled set is checked like the cache: one XMI of this copy differs from the one it
+    was rendered from, so it is not played (silent, one stderr line), as without it."""
+    m = R.load_manifest(REAL_BUNDLED)
+    m["tracks"]["SINT12"]["source_sha256"] = "0" * 64
+    other = tmp_path / "bundle"
+    other.mkdir()
+    (other / R.MANIFEST).write_text(json.dumps(m))
+    for e in m["tracks"].values():
+        (other / e["wav"]).symlink_to(REAL_BUNDLED / e["wav"])
+    assert R.stale(m, GameDir(game), M.music_stems(_files(game), "opl"), other) == ["SINT12"]
+    monkeypatch.setattr(M, "BUNDLED", other)
+    p = M.MusicPlayer(_stub(game, tmp_path), backend=Fake())
+    err = capsys.readouterr().err
+    assert p.silent and p.dir == tmp_path / "nocache" and err.count("\n") == 1 and R.COMMAND in err
+
+
+def test_current_cache_is_played_before_the_bundled_set(game, tmp_path, bundled):
+    m = R.load_manifest()
+    if m is None:
+        pytest.skip("no local music cache (python -m warlords2.audio.music_render)")
+    p = M.MusicPlayer(_stub(game, tmp_path, cache=R.DEFAULT_OUT), backend=Fake())
+    p.events([_started(p.words, 1, 10, 3, 1)])
+    assert not p.silent and p.dir == R.DEFAULT_OUT and p.backend.calls == [("play", "SINT9.wav")]
 
 
 # ------------------------------------------------------------------ the player
