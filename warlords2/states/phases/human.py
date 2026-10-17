@@ -20,7 +20,9 @@ leader's own square the gotos are cleared -> `CancelPath`); 3 (city, ovl45:0000(
 city, else 0)), 7 (site, ovl45:0000(0 when a city holds the square, else 4)) and 9 (advisor,
 ovl36:1f19) go to `registry.left_click` (M6b / M7b / M5b).  So holding the button on a move
 square walks there, then (the cursor now on the stack) selects it and the path drag follows;
-holding it on a path cursor searches the path again every poll.  The right button (ovl46:0000
+holding it on a path cursor searches the path again every poll.  Stand-in X67: here the walk
+takes a few frames, shorter than a click, so after a move or attack the held polls wait until
+one finds the button up (`wait_up`), as the city screen does.  The right button (ovl46:0000
 with button 2): nothing when the square fails ovl64:15ff; an army shown (army bit and View
 Enemies SCN 0x12a, or own, or fortified) -> Tower panel for a fortified other side's square,
 else the stack panel; else City (type 10) -> M6b's city info; site (11) -> city info when a
@@ -215,6 +217,7 @@ class Human(Phase):
         self.stack_drag = None                 # DS:1172 set: DS:1178
         self.map_drag = None                   # DS:1176: (start centre, start pos)
         self.dispatched = None                 # poll of the last left dispatch (the press)
+        self.wait_up = False                   # X67: a move / attack ran, the press still held
         self.drag_last = None                  # DS:2ad8 / 2ada (-1, -1)
         self.ants_tick = ticks_at(g.app, 0)    # DS:1248
         self.ants_ticks = 0                    # DS:125a
@@ -490,8 +493,11 @@ class Human(Phase):
         opened during the press took the release (a tutorial page, ovl61:10fb waits for mask
         0xd4 and so closes on that release), the drag state does not outlive it (M8a)."""
         if 1 not in inp.buttons:
+            self.wait_up = False
             if self.held_mode():
                 self.left_release(inp.pos)
+            return
+        if self.wait_up:                                     # X67: until a poll finds it up
             return
         if self.dispatched == self.poll:                     # the press was this poll
             return
@@ -566,12 +572,14 @@ class Human(Phase):
         st = g.state
         if c in (CU.SHIP, CU.BOOT):
             self.move_to(sq)
+            self.wait_up = True                              # X67
         elif c == CU.HAND:
             self.map_drag = ((g.view.cx, g.view.cy), pos)
         elif c == CU.TARGET:
             self.select(sq)
         elif c in (CU.SWORD, CU.HEART):
             self.apply(C.Attack(group_of(st), *sq))
+            self.wait_up = True                              # X67
         elif c == CU.PATH:
             self.set_path(sq)
         elif c == CU.TOWER:                                  # ovl46:011c

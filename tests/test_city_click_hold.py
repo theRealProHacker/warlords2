@@ -63,3 +63,38 @@ def test_held_click_on_city_keeps_that_city(started, held):
     a.step([pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=w)])
     a.step([])
     assert g.dialogs.top is scr and scr.ci == origin, st.cities[scr.ci].name
+
+
+@pytest.mark.parametrize("held", [2, 30, 90])
+def test_held_click_on_a_move_square_moves_once(started, held):
+    """X67 for the map: the walk ends while the click is still held; the held polls then wait for
+    the release, so no select / stack drag / second move follows from the same click."""
+    from warlords2.model import commands as C
+    from warlords2.states.phases.human import CU, leader
+    a, g = started
+    ph, st = g.phase, g.state
+    if leader(st) is None:
+        ph.select(next((s.x, s.y) for s in st.armies if s.owner == st.current and s.x >= 0))
+        ph.stack_drag = None
+    lead = leader(st)
+    left, top = g.view.origin
+    pos = sq = None
+    for dx, dy in ((2, 0), (-2, 0), (0, 2), (0, -2), (1, 1), (-1, -1), (1, 0), (0, 1)):
+        p = (AREA[0] + (lead.x + dx - left) * TILE + 20, AREA[1] + (lead.y + dy - top) * TILE + 20)
+        if g.view.square_at(p) is not None and ph.cursor(p) in (CU.BOOT, CU.SHIP):
+            pos, sq = p, g.view.square_at(p)
+            break
+    assert pos is not None
+    done = []
+    real = ph.apply
+    ph.apply = lambda cmd, *r, **k: (done.append(type(cmd).__name__), real(cmd, *r, **k))[1]
+    w = a.input.window(pos)
+    a.step([pygame.event.Event(pygame.MOUSEMOTION, pos=w, rel=(0, 0), buttons=(0, 0, 0)),
+            pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=w)])
+    for _ in range(held - 1):
+        a.step([pygame.event.Event(pygame.MOUSEMOTION, pos=w, rel=(0, 0), buttons=(1, 0, 0))])
+    a.step([pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=w)])
+    for _ in range(60):
+        a.step([])
+    assert done == [C.Move.__name__], done
+    assert ph.stack_drag is None and not ph.wait_up
