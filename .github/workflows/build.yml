@@ -112,12 +112,14 @@ jobs:
       # Windows installer (packaging/warlords2.iss): pick a folder, the game is fetched
       - name: Installer
         if: runner.os == 'Windows'
+        shell: pwsh                       # Git Bash would turn /DAppVersion=... into a path
         run: |
-          iscc="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
-          [ -f "$iscc" ] || choco install innosetup --no-progress -y
-          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
-          "$iscc" "/DAppVersion=$version" packaging/warlords2.iss
-          test -f dist/warlords2-windows-x64-setup.exe
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup --no-progress -y }
+          $version = python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])"
+          & $iscc "/DAppVersion=$version" packaging\warlords2.iss
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          if (-not (Test-Path dist\warlords2-windows-x64-setup.exe)) { exit 1 }
       - name: Installer test (silent install, game fetched, uninstall)
         if: runner.os == 'Windows'
         shell: pwsh

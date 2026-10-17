@@ -1,5 +1,5 @@
 ; Windows installer (Inno Setup 6), built by .github/workflows/build.yml from PyInstaller's
-; dist\warlords2:  iscc /DAppVersion=0.0.1 packaging\warlords2.iss  ->  dist\warlords2-windows-x64-setup.exe
+; dist\warlords2:  iscc /DAppVersion=0.1.0 packaging\warlords2.iss  ->  dist\warlords2-windows-x64-setup.exe
 ;
 ; Installs per user by default (%LOCALAPPDATA%\Programs\Warlords II, no admin; the first page
 ; offers all users / Program Files).  After copying the program it runs
@@ -9,7 +9,7 @@
 ; first start.  Saves and options live in %APPDATA%\warlords2 and stay on uninstall.
 
 #ifndef AppVersion
-  #define AppVersion "0.0.1"
+  #define AppVersion "0.1.0"
 #endif
 
 [Setup]
