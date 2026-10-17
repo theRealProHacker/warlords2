@@ -51,7 +51,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="PNG of the presented frame at these logical frames")
     p.add_argument("--record", type=Path, metavar="FILE.mp4", help="record frames to MP4")
     p.add_argument("--record-fps", type=_positive, help="recording rate (default --tick-hz)")
-    p.add_argument("--scale", type=_positive, default=2, help="window scale (default 2)")
+    p.add_argument("--scale", type=_positive, default=None,
+                   help="window scale (default: the largest that fits the desktop; 2 headless)")
     p.add_argument("--fullscreen", action="store_true",
                    help="full screen at the desktop resolution, the largest integer scale that fits, "
                         "black borders (Alt+Enter toggles at run time)")

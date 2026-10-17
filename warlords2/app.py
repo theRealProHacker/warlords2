@@ -107,9 +107,14 @@ class App:
 
         # everything is read here, synchronously, before pgsm exists
         from . import desktop
+        from .ui import fit
         if not cfg.headless:
             desktop.set_wm_class()                            # before the window (SDL hint)
+            fit.dpi_aware()                                   # Windows: real pixels, no blow-up
         pygame.display.init()
+        if cfg.scale is None:                                 # the largest that fits (ui.fit)
+            sizes = [] if cfg.headless else pygame.display.get_desktop_sizes()
+            cfg.scale = fit.place(sizes[0]) if sizes else fit.HEADLESS_SCALE
         self.assets = AssetStore(self.gd, app=self)
         from .assets.store import CacheGroup8
         self.group8 = CacheGroup8(self.assets.pictures)   # the loaded group-8 picture (register X44)

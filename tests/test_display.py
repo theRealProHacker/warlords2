@@ -12,7 +12,7 @@ from warlords2.ui.screen import view_rect
 
 def test_flags_default_off_and_parse():
     cfg = parse_args(["--seed", "1"])
-    assert not cfg.fullscreen and not cfg.frameless and cfg.scale == 2
+    assert not cfg.fullscreen and not cfg.frameless and cfg.scale is None
     cfg = parse_args(["--seed", "1", "--fullscreen", "--frameless", "--scale", "3"])
     assert cfg.fullscreen and cfg.frameless and cfg.scale == 3
 
@@ -74,3 +74,49 @@ def test_linux_audio_defaults_to_alsa_first(monkeypatch):
     src = Path(A.__file__).read_text()
     assert A.LINUX_AUDIO == "alsa,pulseaudio"
     assert 'os.environ.setdefault("SDL_AUDIODRIVER", LINUX_AUDIO)' in src
+
+
+# ------------------------------------------------------------------ the default window size (ui.fit)
+
+from warlords2.ui import fit  # noqa: E402
+
+
+@pytest.mark.parametrize("avail, scale", [
+    ((1880, 960), 2), ((1880, 959), 1), ((1326, 648), 1), ((2520, 1440), 3), ((3800, 2040), 4),
+    ((300, 200), 1),
+])
+def test_fit_scale(avail, scale):
+    assert fit.fit_scale(avail) == scale
+
+
+@pytest.mark.parametrize("desktop, scale", [
+    ((1920, 1080), 2), ((1366, 768), 1), ((2560, 1440), 2), ((3840, 2160), 4),
+])
+def test_place_without_a_work_area(desktop, scale, monkeypatch):
+    monkeypatch.setattr(fit, "_windows_work_area", lambda: None)
+    monkeypatch.setattr(fit.sys, "platform", "win32")
+    assert fit.place(desktop) == scale
+
+
+def test_place_in_the_windows_work_area(monkeypatch):
+    """1920x1080 at 150 %, DPI aware: a 72 px taskbar, a 45 px title bar."""
+    monkeypatch.setattr(fit.sys, "platform", "win32")
+    monkeypatch.delenv("SDL_VIDEO_WINDOW_POS", raising=False)
+    monkeypatch.setattr(fit, "_windows_work_area", lambda: (0, 0, 1920, 1008, 45))
+    assert fit.place((1920, 1080)) == 2                     # 1280x960 + title bar fits 1008
+    x, y = map(int, fit.os.environ["SDL_VIDEO_WINDOW_POS"].split(","))
+    assert x == 320 and 45 <= y and y + 960 <= 1008
+    monkeypatch.setattr(fit, "_windows_work_area", lambda: (0, 0, 1366, 728, 31))
+    monkeypatch.setenv("SDL_VIDEO_WINDOW_POS", "5,5")       # the user's own wins
+    assert fit.place((1366, 768)) == 1 and fit.os.environ["SDL_VIDEO_WINDOW_POS"] == "5,5"
+
+
+
+def test_headless_default_scale_is_2(tmp_path):
+    from warlords2.app import App
+    from warlords2.config import parse_args
+    game = Path(__file__).resolve().parents[1] / "original" / "game" / "Warlrd2"
+    if not game.is_dir():
+        pytest.skip("no game files")
+    app = App(parse_args(["--headless", "--seed", "1", "--data", str(game), "--user-dir", str(tmp_path)]))
+    assert app.cfg.scale == 2 and app.screen.window.get_size() == (1280, 960)

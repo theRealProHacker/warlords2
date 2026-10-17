@@ -201,7 +201,7 @@ def test_cli_declares_every_flag():
                       "--music-cache", "m", "--allow-unverified", "--state-hash-at", "9"])
     assert cfg.shot_at == [1, 5] and cfg.state_hash_at == [9] and cfg.record_fps == 30 and cfg.fixed_dt
     d = parse_args([])
-    assert d.scale == 2 and d.tick_hz == 60 and d.music == "on" and d.music_variant == "opl"
+    assert d.scale is None and d.tick_hz == 60 and d.music == "on" and d.music_variant == "opl"
     assert d.user_dir == REPO_ROOT / "out" / "user" and not d.fixed_dt and isinstance(d.seed, int)
 
 
