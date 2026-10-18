@@ -20,12 +20,17 @@ nothing moves and the list is left as it was (0a8b:0c8f..0cb7).  An attack's Mov
 "attack", rules.combat._prelude) is no walk: ovl36:0522 puts the stack on the target without
 one, so `walk` returns None for it.  The scene is the state before
 the command with the moved group's goto already set to the destination (the human phase sets
-it on its copy, as 0a8b:0c4f writes +0x12 / +0x14 before the search).
+it on its copy, as 0a8b:0c4f writes +0x12 / +0x14 before the search).  Its selection is
+replaced by the one the move ran with (info["selection"], `rules.movement.move`): Move All
+selects each further stack (ovl67:06eb, palette 0c8c:04fb) before its 0c8c:01fd, so the stack
+palette, the path words, the moving army and the ghost then are that stack's, not the first's.
 
 A computer side's walk is not played from events: the engine stops at every step (present point
 "step", 0a8b:05f2) and `states.phases.computer` draws it from the state then.
 """
 from __future__ import annotations
+
+import copy
 
 from ...model import events as E
 from ...model.ids import Control
@@ -56,6 +61,8 @@ def walk(host, ev):
         return None
     if st.players[st.current].control != Control.HUMAN:
         return None                                                # states.phases.computer
+    if ev.info.get("selection") is not None:
+        scene.selection = copy.deepcopy(ev.info["selection"])      # Move All's later stacks
     members = [scene.armies[i] for i in ev.info["armies"]]
     src = tuple(ev.info["from"])
     lead = members[0]

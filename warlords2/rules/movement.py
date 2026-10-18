@@ -20,6 +20,7 @@ Events (info keys):
 """
 from __future__ import annotations
 
+import copy
 import importlib
 import logging
 from typing import NamedTuple
@@ -369,6 +370,10 @@ def move(state, cmd) -> list:
     tail's tutorial pages (TurnCue events of `rules.selection.tutorial_after_move`, 0c8c:02c4..
     0415; status 1 for no path).  A computer side moves through 0a8b:0001 -> 0a8b:0c4f(x, y, 1)
     (`execute_move`, `walk_selection`), which has its own tail.
+    The Moved event's info["selection"] is a copy of the selection the walk ran with (DS:5e62,
+    5e3e and the stored words): Move All selects each further stack inside the one command
+    (ovl67:06eb, 0c8c:04f3), so the presentation, which draws from the state before the command,
+    takes the moving stack's palette, path words and ghost from it (`ui.anim.move.walk`).
     Evidence: decomp 01cde9 (0c8c:0529), 01b0a9 + asm 0a8b:07f9..0a79, decomp 01ad78
     (0a8b:04c8), 0555:000a / 18be, 0a8b:0c4f; R11 answered by 0a8b:0911..09c8."""
     members = _select(state, cmd.group)
@@ -378,6 +383,7 @@ def move(state, cmd) -> list:
         a.goto = dest
     lead = members[0]
     sel = state.selection
+    walked_with = copy.deepcopy(sel)                     # for the presentation (see above)
     group = bool(sel.group)                              # the stored words, asm 0a8b:0820..0847
     walkers = members if group else [lead]
     budget = sel.moves if group else _s8(lead.moves_left)
@@ -387,11 +393,12 @@ def move(state, cmd) -> list:
     if codes is None:                                    # asm 0a8b:0c8f..0cb7
         events = [E.Moved({"armies": tuple(a.id for a in walkers), "from": src, "to": src,
                            "path": [], "cost": 0, "status": K.STOP_NONE.value, "ahead": None,
-                           "no_path": True})]
+                           "no_path": True, "selection": walked_with})]
         return events + _tail_01fd(state, lead, None)
     hero = lead if lead.type_id == HERO_TYPE else _hero_of(members)
     status, _, events = _walk(state, lead, walkers, members, src, codes, sel.mode, sel.mask,
                               group, sel.count if group else 1, budget, hero)
+    events[0].info["selection"] = walked_with            # _walk puts the Moved first
     return events + _tail_01fd(state, lead, status)
 
 
