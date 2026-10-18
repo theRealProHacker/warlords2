@@ -12,7 +12,7 @@ Target: a faithful reimplementation of the original game (not Deluxe). Planning 
 | Game text | `warlords2/`, `tests/`, `tools/` contain no game text: source refers to text as `(group, index)` into `STRING.DAT` or by HLP id; tests assert SHA-256 digests, lengths and counts. `docs/` may quote short strings (existing quotes stay). |
 | Nothing silently defaulted | Unverified values are `Unverified(name, row)` objects in the owning module's constants file (`rules/constants/<module>.py`); they raise on use unless `--allow-unverified` is given. `tests/test_traceability.py` asserts each one names a row of section 5. |
 | Game directory is read-only | The original writes `DATA/OPTIONS.DAT`, `DATA/OPTIONS.SND`, `DATA/SAVEINFO.DAT`, `DATA/MAPINFO.DAT` and `SAVE/` (`UDB/UDB.CUR` is referenced in ovl14, `tables.md` §7; whether it is written is not traced). Nothing is written under `--data`; options, sound settings, shortcut assignment, saves and map slots go to `--user-dir` (default `out/user/`). |
-| Presentation | 640x480, 16 colours, integer-scaled to the window. |
+| Presentation | 640x480, 16 colours, scaled to the window with sharp (nearest-neighbour) pixels. |
 | Libraries | `pgsm` (`StateManager`) and `pygame-screen-record` are the user's published packages and are never modified. Their bugs are worked around in `warlords2/` and listed with file:line in section 3.4. |
 
 Inputs and their state on 2026-10-14:
@@ -275,9 +275,9 @@ Before the first frame the loop joins once after `manager.start("boot")`.
 | `--script FILE` | Frame-indexed input script (3.3); implies fixed `dt`. |
 | `--shot-at F[,F...]` | PNG of `present_surface` at those logical frames to `out/shots/<run>/frame_<F>.png`. |
 | `--record FILE.mp4` | Record every frame (or every `tick_hz/record_fps`-th) to MP4. `--record-fps` default = `--tick-hz`. |
-| `--scale N`, `--headless`, `--tick-hz N` | Window scale (default 2); dummy SDL video/audio, no vsync; logical tick rate (default 60; X05). |
+| `--scale N`, `--integer-scale`, `--headless`, `--tick-hz N` | Window scale, > 0 and may be fractional (default: the largest that fits the free desktop area, rounded to whole pixels; 2 headless); whole scales only, for the default window and full screen; dummy SDL video/audio, no vsync; logical tick rate (default 60; X05). |
 | `--no-intro` | Skip the intro (our counterpart of the `n` switch). |
-| `--fullscreen`, `--frameless` | Full screen at the desktop size, the frame scaled by the largest whole factor that fits, centred on black (Alt+Enter toggles); a window without title bar. |
+| `--fullscreen`, `--frameless` | Full screen at the desktop size, the frame scaled by the largest uniform factor that fits (whole with `--integer-scale`), nearest neighbour, centred on black (1920x1080: 1440x1080; Alt+Enter toggles); a window without title bar. |
 | `--alt-names` | `ARMYTYP2.DAT` names (the `s` switch, `tables.md` §1). |
 | `--no-voice` | No talking advisor (the `v` switch, `tables.md` §9 `DS:26c8`). |
 | `--music on\|off`, `--music-variant opl\|gm`, `--music-cache DIR` | Music (default on, `opl`, `out/music/`). A cache without a current render of the variant falls back to the bundled OGGs `warlords2/data/music/` (same manifest check: the XMI / `MIDPAK.AD` SHA-256 of the user's copy), else silent. |

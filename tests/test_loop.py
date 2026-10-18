@@ -196,12 +196,14 @@ def test_script_without_m1b2_module_exits_with_message(tmp_path, monkeypatch, ga
 def test_cli_declares_every_flag():
     cfg = parse_args(["--data", "d", "--user-dir", "u", "--scenario", "ERYTHEA", "--controls", "HHCCCCCC",
                       "--levels", "x", "--options", "w", "--seed", "7", "--script", "s.json",
-                      "--shot-at", "1,5", "--record", "r.mp4", "--scale", "3", "--headless", "--tick-hz", "30",
-                      "--no-intro", "--alt-names", "--no-voice", "--music", "off", "--music-variant", "gm",
+                      "--shot-at", "1,5", "--record", "r.mp4", "--scale", "1.5", "--integer-scale",
+                      "--headless", "--tick-hz", "30", "--no-intro", "--alt-names", "--no-voice", "--music", "off", "--music-variant", "gm",
                       "--music-cache", "m", "--allow-unverified", "--state-hash-at", "9"])
     assert cfg.shot_at == [1, 5] and cfg.state_hash_at == [9] and cfg.record_fps == 30 and cfg.fixed_dt
+    assert cfg.scale == 1.5 and cfg.integer_scale
     d = parse_args([])
-    assert d.scale is None and d.tick_hz == 60 and d.music == "on" and d.music_variant == "opl"
+    assert d.scale is None and not d.integer_scale and d.tick_hz == 60
+    assert d.music == "on" and d.music_variant == "opl"
     assert d.user_dir == REPO_ROOT / "out" / "user" and not d.fixed_dt and isinstance(d.seed, int)
 
 

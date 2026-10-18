@@ -4,10 +4,12 @@ Buttons come from MOUSEBUTTONDOWN/UP, modifiers from KEYDOWN/KEYUP of the modifi
 text from KEYDOWN.unicode without control characters.  Never `event.buttons`, `event.mod`, `pygame.key.get_mods()` or
 `pygame.mouse.get_pressed()`: scripted events posted into the queue carry no such state.
 Window pixels become logical 640x480 pixels through the view, the window rectangle the
-frame is scaled into (`ui.screen.view_rect`; in a window it is the whole window, so this is
-integer division by the window scale; full screen clamps the black borders to the frame
-edge); a motion's `rel` is the change of the logical position (`event.rel` is never read:
-scripted motions may lack it, and window deltas divided by the scale are not logical deltas).
+frame is scaled into (`ui.screen.view_rect`; in a window it is the whole window; full screen
+clamps the black bars to the frame edge): window px p is logical px floor(p * 640 / view.w),
+the pixel nearest-neighbour scaling shows there, at whole and fractional scales alike, and
+`to_window` inverts it for every logical px while the view is at least 640x480; a motion's
+`rel` is the change of the logical position (`event.rel` is never read: scripted motions
+may lack it, and window deltas divided by the scale are not logical deltas).
 Losing the window focus releases every held button, key and modifier, since their UP
 events go to another window.
 """
@@ -17,7 +19,7 @@ import unicodedata
 
 import pygame
 
-from .screen import H, W
+from .screen import H, W, window_size
 
 MODIFIERS = {
     pygame.K_LALT: "alt", pygame.K_RALT: "alt",
@@ -43,9 +45,9 @@ def to_window(pos: tuple[int, int], view: pygame.Rect) -> tuple[int, int]:
 
 
 class Input:
-    def __init__(self, scale: int):
+    def __init__(self, scale: float):
         self.scale = scale
-        self.view = pygame.Rect(0, 0, W * scale, H * scale)   # the frame's place in the window
+        self.view = pygame.Rect((0, 0), window_size(scale))   # the frame's place in the window
         self.clamp = False                 # full screen: positions on the borders clamp to the frame
         self.pos = (0, 0)                  # logical px
         self.buttons: set[int] = set()     # held mouse buttons (1 left, 2 middle, 3 right)

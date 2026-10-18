@@ -43,12 +43,12 @@ or set `WL2_DATA=/path/to/Warlrd2` and run `warlords2`.
 Main options:
 
 - `--data DIR`: your Warlords II directory (or `WL2_DATA`)
-- `--scale N`: window scale, default 2
+- `--scale N`: window scale, fractional allowed (e.g. `1.5`); default: the largest that fits the screen
 - `--no-intro`: skip the intro
 - `--user-dir DIR`: where options, saves and maps go (default: `~/.local/share/warlords2`,
   `%APPDATA%\warlords2` or `~/Library/Application Support/warlords2`)
 
-`--fullscreen` (Alt+Enter toggles) and `--frameless` (no title bar). `warlords2 --help` lists every option.
+`--fullscreen` (Alt+Enter toggles), `--frameless` (no title bar) and `--integer-scale` (whole scales only). `warlords2 --help` lists every option.
 
 The music plays out of the box (the bundled renders, for DOS v1.02's music files; with
 other ones it is silent). Rendering it yourself is optional:

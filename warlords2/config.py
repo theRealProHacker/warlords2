@@ -15,6 +15,14 @@ def _frames(s: str) -> list[int]:
     return [int(f) for f in s.split(",") if f]
 
 
+def _scale(s: str) -> float:
+    """> 0; a whole number stays an int (window px = logical px times it)."""
+    f = float(s)
+    if not 0 < f < float("inf"):
+        raise argparse.ArgumentTypeError(f"must be > 0, got {s}")
+    return int(f) if f.is_integer() else f
+
+
 def _positive(s: str) -> int:
     n = int(s)
     if n < 1:
@@ -51,11 +59,14 @@ def build_parser() -> argparse.ArgumentParser:
                    help="PNG of the presented frame at these logical frames")
     p.add_argument("--record", type=Path, metavar="FILE.mp4", help="record frames to MP4")
     p.add_argument("--record-fps", type=_positive, help="recording rate (default --tick-hz)")
-    p.add_argument("--scale", type=_positive, default=None,
-                   help="window scale (default: the largest that fits the desktop; 2 headless)")
+    p.add_argument("--scale", type=_scale, default=None,
+                   help="window scale, may be fractional, e.g. 1.5 (default: the largest that fits "
+                        "the desktop; 2 headless)")
+    p.add_argument("--integer-scale", action="store_true",
+                   help="whole scales only: the default window and full screen")
     p.add_argument("--fullscreen", action="store_true",
-                   help="full screen at the desktop resolution, the largest integer scale that fits, "
-                        "black borders (Alt+Enter toggles at run time)")
+                   help="full screen at the desktop resolution, the largest scale that fits, "
+                        "black bars (Alt+Enter toggles at run time)")
     p.add_argument("--frameless", action="store_true", help="window without a title bar, at --scale")
     p.add_argument("--headless", action="store_true", help="dummy SDL video/audio, fixed dt")
     p.add_argument("--tick-hz", type=_positive, default=60, help="logical tick rate (default 60)")

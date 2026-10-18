@@ -112,9 +112,10 @@ class App:
             desktop.set_wm_class()                            # before the window (SDL hint)
             fit.dpi_aware()                                   # Windows: real pixels, no blow-up
         pygame.display.init()
+        integer = getattr(cfg, "integer_scale", False)
         if cfg.scale is None:                                 # the largest that fits (ui.fit)
             sizes = [] if cfg.headless else pygame.display.get_desktop_sizes()
-            cfg.scale = fit.place(sizes[0]) if sizes else fit.HEADLESS_SCALE
+            cfg.scale = fit.place(sizes[0], integer) if sizes else fit.HEADLESS_SCALE
         self.assets = AssetStore(self.gd, app=self)
         from .assets.store import CacheGroup8
         self.group8 = CacheGroup8(self.assets.pictures)   # the loaded group-8 picture (register X44)
@@ -134,7 +135,7 @@ class App:
         pygame.display.set_caption("Warlords II")
         self.screen = Screen(cfg.scale, self.assets.palette("STANDARD.PAL"),
                              fullscreen=getattr(cfg, "fullscreen", False),
-                             frameless=getattr(cfg, "frameless", False))
+                             frameless=getattr(cfg, "frameless", False), integer=integer)
         pygame.key.start_text_input()                         # once, never stopped
         self.input = Input(cfg.scale)
         self._sync_view()

@@ -19,8 +19,8 @@ A step is `[frame, {op: value, option: value, ...}]` in logical frames and logic
 | `state_hash` | a label | `want` (hex digest) | records the engine state hash (`GameState.hash`) of the presented frame in the results; with `want` it must equal it |
 
 Input steps are posted into pygame's queue by `before_frame(frame)`, before that frame's
-`pygame.event.get()`; positions become window px (`Input.window`: times the window scale,
-or into the full-screen view) because `Input.feed` turns window px back into logical px.  Check steps look at the frame after it has been
+`pygame.event.get()`; positions become window px (`Input.window`: through the window's view,
+scaled and, in full screen, offset) because `Input.feed` turns window px back into logical px.  Check steps look at the frame after it has been
 presented (`after_frame(frame)`); `before_frame(frame + 1)` runs them if nobody else
 did, so a plain `python -m warlords2 --script` run checks them too, and `last_frame` is
 one past the last step (a `wait_dialog` counts up to its deadline).  Absolute frames of
@@ -37,6 +37,7 @@ import pygame
 
 from . import golden
 from .capture import Capture
+from ..ui.screen import H, W
 
 if TYPE_CHECKING:
     from ..app import App
@@ -236,13 +237,13 @@ class Script:
     def before_frame(self, frame: int) -> None:
         if frame > 0:
             self.after_frame(frame - 1)
-        s = self.app.input.scale
+        v = self.app.input.view
         for kind, d in self.events.get(frame, ()):
             d = dict(d)
             if "pos" in d:
                 d["pos"] = self.app.input.window(d["pos"])
             if "rel" in d:
-                d["rel"] = (d["rel"][0] * s, d["rel"][1] * s)
+                d["rel"] = (d["rel"][0] * v.w // W, d["rel"][1] * v.h // H)   # unread by Input.feed
             pygame.event.post(pygame.event.Event(kind, d))
 
     def after_frame(self, frame: int) -> None:

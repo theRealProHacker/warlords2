@@ -49,9 +49,9 @@ def write_script(tmp_path, steps, args=()):
 
 
 def fake_app(scale):
-    # Input.window in a window is a plain multiply by the scale (tests/test_display.py)
-    return types.SimpleNamespace(input=types.SimpleNamespace(
-        scale=scale, window=lambda pos: (pos[0] * scale, pos[1] * scale)))
+    # Input.window at a whole scale is a plain multiply by it (tests/test_display.py)
+    from warlords2.ui.input import Input
+    return types.SimpleNamespace(input=Input(scale))
 
 
 def posted(src, frames):
@@ -108,6 +108,17 @@ def test_steps_post_events_at_their_frame_in_window_px(display, tmp_path):
             (pygame.MOUSEBUTTONUP, {"pos": (15, 18), "button": 3})],
         9: [(pygame.MOUSEMOTION, {"pos": (21, 27), "rel": (6, 9), "buttons": (0, 0, 0)})],
     }
+
+
+def test_steps_at_a_fractional_scale_post_to_window_px_that_map_back(display, tmp_path):
+    """--scale 1.5: positions go out at Input.window (the first window px of the logical px)."""
+    app = fake_app(1.5)
+    src = script_mod.load(write_script(tmp_path, [[0, {"click": [3, 5]}], [1, {"move": [639, 479]}]]),
+                          app, Capture(tmp_path / "shots"))
+    got = posted(src, 2)
+    assert [e[1]["pos"] for e in got[0]] == [(5, 8)] * 3 and got[1][0][1]["pos"] == (959, 719)
+    assert {app.input.logical(e[1]["pos"]) for f in got for e in got[f]} == {(3, 5), (639, 479)}
+    assert all(isinstance(v, int) for f in got for e in got[f] for v in e[1].get("rel", ()))
 
 
 @pytest.mark.parametrize("step, match", [
