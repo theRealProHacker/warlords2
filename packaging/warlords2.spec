@@ -47,7 +47,7 @@ if sys.platform == "darwin":
         name="Warlords II.app",
         icon=str(ROOT / "packaging" / "icon.icns"),
         bundle_identifier=BUNDLE_ID,
-        version="0.1.0",
+        version="0.1.1",
         # numpy's macOS wheels on the macos-15 runners are macosx_14_0 builds
         info_plist={"CFBundleDisplayName": "Warlords II", "NSHighResolutionCapable": True,
                     "LSMinimumSystemVersion": "14.0"},
