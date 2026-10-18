@@ -22,7 +22,10 @@ ovl36:1f19) go to `registry.left_click` (M6b / M7b / M5b).  So holding the butto
 square walks there, then (the cursor now on the stack) selects it and the path drag follows;
 holding it on a path cursor searches the path again every poll.  Stand-in X67: here the walk
 takes a few frames, shorter than a click, so after a move or attack the held polls wait until
-one finds the button up (`wait_up`), as the city screen does.  The right button (ovl46:0000
+one finds the button up (`wait_up`), as the city screen does.  Stand-in X68: a square the
+selected stack cannot enter (TERRAIN_COST 0, e.g. Mountains for a walking stack) is the hand
+in the EXE (08a9:0a8c..0a99, before the army tests), so an own stack there cannot be selected;
+here Ctrl (without Shift or Alt) over it gives cursor 5 and the click selects it.  The right button (ovl46:0000
 with button 2): nothing when the square fails ovl64:15ff; an army shown (army bit and View
 Enemies SCN 0x12a, or own, or fortified) -> Tower panel for a fortified other side's square,
 else the stack panel; else City (type 10) -> M6b's city info; site (11) -> city info when a
@@ -394,9 +397,13 @@ class Human(Phase):
         cost = TERRAIN_COST.value[t] if sel and mode != FLY else 1
         if w.roads[i] & ROAD_PIECE_MASK:
             cost = 1
-        if not visible(st, self.game.sprites, self.game.view.origin, x, y) or cost <= 0:
+        if not visible(st, self.game.sprites, self.game.view.origin, x, y):
             return CU.HAND
         cur = st.current
+        if cost <= 0:
+            if sel and dist >= 1 and army and owner == cur and inp.ctrl and not (inp.shift or inp.alt):
+                return CU.TARGET                             # X68: Ctrl selects it anyway
+            return CU.HAND
         city, site = t == Terrain.CITY, t == Terrain.SITE
         if inp.shift:
             if sel and dist <= 1 and owner != cur and (city or army) and st.options.military_advisor:
