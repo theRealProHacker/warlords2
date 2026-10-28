@@ -1,0 +1,22 @@
+{
+ "SOUND.DAT": {
+  "digital_driver": "SBLASTER.COM",
+  "music_driver": "SBFM.ADV",
+  "number": 1
+ },
+ "SWAP.DAT": {
+  "digital_driver": "NO_SOUND",
+  "music_driver": "NO_SOUND",
+  "number": 0
+ },
+ "VER102.DAT": {
+  "digital_driver": "NO_SOUND",
+  "music_driver": "NO_SOUND",
+  "number": 0
+ },
+ "WAR2.INI": {
+  "digital_driver": "NO_SOUND",
+  "music_driver": "NO_SOUND",
+  "number": 0
+ }
+}

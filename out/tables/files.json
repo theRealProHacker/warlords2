@@ -1,0 +1,1427 @@
+[
+ {
+  "group": 0,
+  "strings": [
+   {
+    "index": 0,
+    "text": "DATA\\\\SCENARIO.DAT"
+   }
+  ]
+ },
+ {
+  "group": 1,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\"
+   },
+   {
+    "index": 1,
+    "text": "STARTUP.XMI"
+   }
+  ]
+ },
+ {
+  "group": 2,
+  "strings": [
+   {
+    "index": 0,
+    "text": "DATA\\\\QUOTES.DAT"
+   }
+  ]
+ },
+ {
+  "group": 3,
+  "strings": [
+   {
+    "index": 0,
+    "text": "startup.pck"
+   },
+   {
+    "index": 1,
+    "text": "startbu.pck"
+   },
+   {
+    "index": 2,
+    "text": "scenario.pck"
+   },
+   {
+    "index": 3,
+    "text": "screen.pck"
+   },
+   {
+    "index": 4,
+    "text": "button.pck"
+   },
+   {
+    "index": 5,
+    "text": "shields.pck"
+   },
+   {
+    "index": 6,
+    "text": "specbits.pck"
+   },
+   {
+    "index": 7,
+    "text": "strat.pck"
+   },
+   {
+    "index": 8,
+    "text": "abits.pck"
+   },
+   {
+    "index": 9,
+    "text": "atrans2.pck"
+   },
+   {
+    "index": 10,
+    "text": "curs.pck"
+   },
+   {
+    "index": 11,
+    "text": "war.pck"
+   },
+   {
+    "index": 12,
+    "text": "resign.pck"
+   },
+   {
+    "index": 13,
+    "text": "resignye.pck"
+   },
+   {
+    "index": 14,
+    "text": "resignno.pck"
+   },
+   {
+    "index": 15,
+    "text": "hidden.pck"
+   },
+   {
+    "index": 16,
+    "text": "a0.pck"
+   },
+   {
+    "index": 17,
+    "text": "a1.pck"
+   },
+   {
+    "index": 18,
+    "text": "a2.pck"
+   },
+   {
+    "index": 19,
+    "text": "a3.pck"
+   },
+   {
+    "index": 20,
+    "text": "a4.pck"
+   },
+   {
+    "index": 21,
+    "text": "a5.pck"
+   },
+   {
+    "index": 22,
+    "text": "a6.pck"
+   },
+   {
+    "index": 23,
+    "text": "a7.pck"
+   },
+   {
+    "index": 24,
+    "text": "a8.pck"
+   },
+   {
+    "index": 25,
+    "text": "marble.pck"
+   },
+   {
+    "index": 26,
+    "text": "scenery0.pck"
+   },
+   {
+    "index": 27,
+    "text": "scenery1.pck"
+   },
+   {
+    "index": 28,
+    "text": "city.pck"
+   },
+   {
+    "index": 29,
+    "text": "popup.pck"
+   },
+   {
+    "index": 30,
+    "text": "bigarmy.pck"
+   },
+   {
+    "index": 31,
+    "text": "setupbu.pck"
+   },
+   {
+    "index": 32,
+    "text": "victory.pck"
+   },
+   {
+    "index": 33,
+    "text": "mhero.pck"
+   },
+   {
+    "index": 34,
+    "text": "fhero.pck"
+   },
+   {
+    "index": 35,
+    "text": "search.pck"
+   },
+   {
+    "index": 36,
+    "text": "popup2.pck"
+   },
+   {
+    "index": 37,
+    "text": "tower.pck"
+   },
+   {
+    "index": 38,
+    "text": "bshield.pck"
+   },
+   {
+    "index": 39,
+    "text": "marble.pck"
+   },
+   {
+    "index": 40,
+    "text": "popup3.pck"
+   },
+   {
+    "index": 41,
+    "text": "road.pck"
+   },
+   {
+    "index": 42,
+    "text": "ashadow.pck"
+   },
+   {
+    "index": 43,
+    "text": "menubutt.pck"
+   },
+   {
+    "index": 44,
+    "text": "temple.pck"
+   },
+   {
+    "index": 45,
+    "text": "scroll.pck"
+   },
+   {
+    "index": 46,
+    "text": "stack.pck"
+   },
+   {
+    "index": 47,
+    "text": "diplom.pck"
+   },
+   {
+    "index": 48,
+    "text": "advisor.pck"
+   },
+   {
+    "index": 49,
+    "text": "forder.pck"
+   },
+   {
+    "index": 50,
+    "text": "voice.pck"
+   },
+   {
+    "index": 51,
+    "text": "voicebit.pck"
+   },
+   {
+    "index": 52,
+    "text": "ssg.pck"
+   },
+   {
+    "index": 53,
+    "text": "vpopup.pck"
+   },
+   {
+    "index": 54,
+    "text": "rmapbar.pck"
+   },
+   {
+    "index": 55,
+    "text": "cityback.pck"
+   },
+   {
+    "index": 56,
+    "text": "level2.pck"
+   },
+   {
+    "index": 57,
+    "text": "level3.pck"
+   },
+   {
+    "index": 58,
+    "text": "level4.pck"
+   },
+   {
+    "index": 59,
+    "text": "newscen.pck"
+   },
+   {
+    "index": 60,
+    "text": "newscnbu.pck"
+   },
+   {
+    "index": 61,
+    "text": "dbutton.pck"
+   },
+   {
+    "index": 62,
+    "text": "helpgfx.pck"
+   },
+   {
+    "index": 63,
+    "text": "citybu.pck"
+   },
+   {
+    "index": 64,
+    "text": "medal0.pck"
+   },
+   {
+    "index": 65,
+    "text": "medal1.pck"
+   },
+   {
+    "index": 66,
+    "text": "medal2.pck"
+   },
+   {
+    "index": 67,
+    "text": "medal3.pck"
+   },
+   {
+    "index": 68,
+    "text": "resignbu.pck"
+   },
+   {
+    "index": 69,
+    "text": "scroll2.pck"
+   },
+   {
+    "index": 70,
+    "text": "bscroll.pck"
+   },
+   {
+    "index": 71,
+    "text": "movebar0.pck"
+   },
+   {
+    "index": 72,
+    "text": "movebar1.pck"
+   },
+   {
+    "index": 73,
+    "text": "movebar2.pck"
+   },
+   {
+    "index": 74,
+    "text": "movebar3.pck"
+   },
+   {
+    "index": 75,
+    "text": "movebar4.pck"
+   },
+   {
+    "index": 76,
+    "text": "movebar5.pck"
+   },
+   {
+    "index": 77,
+    "text": "movebar6.pck"
+   },
+   {
+    "index": 78,
+    "text": "movebar7.pck"
+   }
+  ]
+ },
+ {
+  "group": 4,
+  "strings": [
+   {
+    "index": 0,
+    "text": "DATA\\\\SAVEINFO.DAT"
+   }
+  ]
+ },
+ {
+  "group": 5,
+  "strings": [
+   {
+    "index": 0,
+    "text": "DATA\\\\MAPINFO.DAT"
+   }
+  ]
+ },
+ {
+  "group": 6,
+  "strings": [
+   {
+    "index": 0,
+    "text": "CURRENT.HST"
+   }
+  ]
+ },
+ {
+  "group": 7,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\"
+   }
+  ]
+ },
+ {
+  "group": 8,
+  "strings": [
+   {
+    "index": 0,
+    "text": "STARTUP.XMI"
+   }
+  ]
+ },
+ {
+  "group": 9,
+  "strings": [
+   {
+    "index": 0,
+    "text": "INT12.XMI"
+   },
+   {
+    "index": 1,
+    "text": "INT21.XMI"
+   },
+   {
+    "index": 2,
+    "text": "INT12.XMI"
+   }
+  ]
+ },
+ {
+  "group": 10,
+  "strings": [
+   {
+    "index": 0,
+    "text": "INT0.XMI"
+   },
+   {
+    "index": 1,
+    "text": "INT4.XMI"
+   },
+   {
+    "index": 2,
+    "text": "INT6.XMI"
+   },
+   {
+    "index": 3,
+    "text": "INT9.XMI"
+   },
+   {
+    "index": 4,
+    "text": "INT10.XMI"
+   },
+   {
+    "index": 5,
+    "text": "INT16.XMI"
+   },
+   {
+    "index": 6,
+    "text": "INT17.XMI"
+   },
+   {
+    "index": 7,
+    "text": "INT23.XMI"
+   }
+  ]
+ },
+ {
+  "group": 11,
+  "strings": [
+   {
+    "index": 0,
+    "text": "INT2.XMI"
+   },
+   {
+    "index": 1,
+    "text": "INT3.XMI"
+   },
+   {
+    "index": 2,
+    "text": "INT5.XMI"
+   },
+   {
+    "index": 3,
+    "text": "INT7.XMI"
+   },
+   {
+    "index": 4,
+    "text": "INT13.XMI"
+   }
+  ]
+ },
+ {
+  "group": 12,
+  "strings": [
+   {
+    "index": 0,
+    "text": "INT11.XMI"
+   }
+  ]
+ },
+ {
+  "group": 13,
+  "strings": [
+   {
+    "index": 0,
+    "text": "INT1.XMI"
+   },
+   {
+    "index": 1,
+    "text": "INT8.XMI"
+   }
+  ]
+ },
+ {
+  "group": 14,
+  "strings": [
+   {
+    "index": 0,
+    "text": "INT14.XMI"
+   }
+  ]
+ },
+ {
+  "group": 15,
+  "strings": [
+   {
+    "index": 0,
+    "text": "INT15.XMI"
+   }
+  ]
+ },
+ {
+  "group": 16,
+  "strings": [
+   {
+    "index": 0,
+    "text": "INT18.XMI"
+   }
+  ]
+ },
+ {
+  "group": 17,
+  "strings": [
+   {
+    "index": 0,
+    "text": "INT19.XMI"
+   }
+  ]
+ },
+ {
+  "group": 18,
+  "strings": [
+   {
+    "index": 0,
+    "text": "INT20.XMI"
+   }
+  ]
+ },
+ {
+  "group": 19,
+  "strings": [
+   {
+    "index": 0,
+    "text": "INT22.XMI"
+   }
+  ]
+ },
+ {
+  "group": 20,
+  "strings": [
+   {
+    "index": 0,
+    "text": "TERRAIN%d\\\\HERONAM0.DAT"
+   },
+   {
+    "index": 1,
+    "text": "TERRAIN%d\\\\HERONAM1.DAT"
+   },
+   {
+    "index": 2,
+    "text": "TERRAIN%d\\\\HERONAM2.DAT"
+   },
+   {
+    "index": 3,
+    "text": "TERRAIN%d\\\\HERONAM3.DAT"
+   },
+   {
+    "index": 4,
+    "text": "TERRAIN%d\\\\HERONAM4.DAT"
+   },
+   {
+    "index": 5,
+    "text": "TERRAIN%d\\\\HERONAM5.DAT"
+   },
+   {
+    "index": 6,
+    "text": "TERRAIN%d\\\\HERONAM6.DAT"
+   },
+   {
+    "index": 7,
+    "text": "TERRAIN%d\\\\HERONAM7.DAT"
+   }
+  ]
+ },
+ {
+  "group": 21,
+  "strings": [
+   {
+    "index": 0,
+    "text": "TERRAIN%d\\\\ARMYTYPE.DAT"
+   },
+   {
+    "index": 1,
+    "text": "TERRAIN%d\\\\ARMYTYP2.DAT"
+   }
+  ]
+ },
+ {
+  "group": 22,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%s\\\\%s.CTY"
+   },
+   {
+    "index": 1,
+    "text": "%s\\\\%s.SPC"
+   }
+  ]
+ },
+ {
+  "group": 23,
+  "strings": [
+   {
+    "index": 0,
+    "text": "TERRAIN%d\\\\MAPCOLOR.DAT"
+   }
+  ]
+ },
+ {
+  "group": 24,
+  "strings": [
+   {
+    "index": 0,
+    "text": "STAND.PCK"
+   }
+  ]
+ },
+ {
+  "group": 25,
+  "strings": [
+   {
+    "index": 0,
+    "text": "TUTORIA\\\\THERO.GFX"
+   },
+   {
+    "index": 1,
+    "text": "TUTORIA\\\\TPROD.GFX"
+   },
+   {
+    "index": 2,
+    "text": "TUTORIA\\\\TSELECT.GFX"
+   },
+   {
+    "index": 3,
+    "text": "TUTORIA\\\\TMOVE.GFX"
+   },
+   {
+    "index": 4,
+    "text": "TUTORIA\\\\TFIGHT.GFX"
+   },
+   {
+    "index": 5,
+    "text": "TUTORIA\\\\TSEARCH.GFX"
+   },
+   {
+    "index": 6,
+    "text": "TUTORIA\\\\TPROD2.GFX"
+   },
+   {
+    "index": 7,
+    "text": "TUTORIA\\\\TTURN2.GFX"
+   },
+   {
+    "index": 8,
+    "text": "TUTORIA\\\\TWARLORD.GFX"
+   },
+   {
+    "index": 9,
+    "text": "TUTORIA\\\\TENDTURN.GFX"
+   },
+   {
+    "index": 10,
+    "text": "TUTORIA\\\\TFRESULT.GFX"
+   }
+  ]
+ },
+ {
+  "group": 26,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SAVE\\\\RMAP0.DAT"
+   },
+   {
+    "index": 1,
+    "text": "SAVE\\\\RMAP1.DAT"
+   },
+   {
+    "index": 2,
+    "text": "SAVE\\\\RMAP2.DAT"
+   },
+   {
+    "index": 3,
+    "text": "SAVE\\\\RMAP3.DAT"
+   },
+   {
+    "index": 4,
+    "text": "SAVE\\\\RMAP4.DAT"
+   },
+   {
+    "index": 5,
+    "text": "SAVE\\\\RMAP5.DAT"
+   },
+   {
+    "index": 6,
+    "text": "SAVE\\\\RMAP6.DAT"
+   },
+   {
+    "index": 7,
+    "text": "SAVE\\\\RMAP7.DAT"
+   },
+   {
+    "index": 8,
+    "text": "SAVE\\\\RMAP8.DAT"
+   },
+   {
+    "index": 9,
+    "text": "SAVE\\\\RMAP9.DAT"
+   }
+  ]
+ },
+ {
+  "group": 27,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SAVE\\\\RMAPTEMP.DAT"
+   }
+  ]
+ },
+ {
+  "group": 28,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SAVE\\\\SAVE0.DAT"
+   },
+   {
+    "index": 1,
+    "text": "SAVE\\\\SAVE1.DAT"
+   },
+   {
+    "index": 2,
+    "text": "SAVE\\\\SAVE2.DAT"
+   },
+   {
+    "index": 3,
+    "text": "SAVE\\\\SAVE3.DAT"
+   },
+   {
+    "index": 4,
+    "text": "SAVE\\\\SAVE4.DAT"
+   },
+   {
+    "index": 5,
+    "text": "SAVE\\\\SAVE5.DAT"
+   },
+   {
+    "index": 6,
+    "text": "SAVE\\\\SAVE6.DAT"
+   },
+   {
+    "index": 7,
+    "text": "SAVE\\\\SAVE7.DAT"
+   },
+   {
+    "index": 8,
+    "text": "SAVE\\\\SAVE8.DAT"
+   },
+   {
+    "index": 9,
+    "text": "SAVE\\\\SAVE9.DAT"
+   }
+  ]
+ },
+ {
+  "group": 29,
+  "strings": [
+   {
+    "index": 0,
+    "text": "CURRENT.SGN"
+   }
+  ]
+ },
+ {
+  "group": 30,
+  "strings": [
+   {
+    "index": 0,
+    "text": "RANDOM\\\\RANDOM.MAP"
+   }
+  ]
+ },
+ {
+  "group": 31,
+  "strings": [
+   {
+    "index": 0,
+    "text": "RANDOM\\\\RANDOM.RD"
+   }
+  ]
+ },
+ {
+  "group": 32,
+  "strings": [
+   {
+    "index": 0,
+    "text": "RANDOM\\\\RANDOM.SCN"
+   }
+  ]
+ },
+ {
+  "group": 33,
+  "strings": [
+   {
+    "index": 0,
+    "text": "RANDOM\\\\RANDOM.SGN"
+   }
+  ]
+ },
+ {
+  "group": 34,
+  "strings": [
+   {
+    "index": 0,
+    "text": "RANDOM\\\\RANDOM.SPC"
+   }
+  ]
+ },
+ {
+  "group": 35,
+  "strings": [
+   {
+    "index": 0,
+    "text": "RANDOM\\\\RANDOM.CTY"
+   }
+  ]
+ },
+ {
+  "group": 36,
+  "strings": [
+   {
+    "index": 0,
+    "text": "DATA\\\\TERRAIN.DAT"
+   }
+  ]
+ },
+ {
+  "group": 37,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\dramatic.8SN"
+   },
+   {
+    "index": 1,
+    "text": "SOUND\\\\orch.8SN"
+   }
+  ]
+ },
+ {
+  "group": 38,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\war.8SN"
+   }
+  ]
+ },
+ {
+  "group": 39,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\splash.8SN"
+   }
+  ]
+ },
+ {
+  "group": 40,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vlose05.8SN"
+   }
+  ]
+ },
+ {
+  "group": 41,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vlose10.8SN"
+   }
+  ]
+ },
+ {
+  "group": 42,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vlose15.8SN"
+   }
+  ]
+ },
+ {
+  "group": 43,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vlose20.8SN"
+   }
+  ]
+ },
+ {
+  "group": 44,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vlose25.8SN"
+   }
+  ]
+ },
+ {
+  "group": 45,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vlose25.8SN"
+   }
+  ]
+ },
+ {
+  "group": 46,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vlose35.8SN"
+   }
+  ]
+ },
+ {
+  "group": 47,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vwin05.8SN"
+   },
+   {
+    "index": 1,
+    "text": "SOUND\\\\vwin05a.8SN"
+   }
+  ]
+ },
+ {
+  "group": 48,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vwin10.8SN"
+   }
+  ]
+ },
+ {
+  "group": 49,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vwin15.8SN"
+   }
+  ]
+ },
+ {
+  "group": 50,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vwin20.8SN"
+   }
+  ]
+ },
+ {
+  "group": 51,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vwin25.8SN"
+   }
+  ]
+ },
+ {
+  "group": 52,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vwin30.8SN"
+   }
+  ]
+ },
+ {
+  "group": 53,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vwin35.8SN"
+   }
+  ]
+ },
+ {
+  "group": 54,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vgold00.8SN"
+   }
+  ]
+ },
+ {
+  "group": 55,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vgold01.8SN"
+   },
+   {
+    "index": 1,
+    "text": "SOUND\\\\vgold01a.8SN"
+   }
+  ]
+ },
+ {
+  "group": 56,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vhero00.8SN"
+   }
+  ]
+ },
+ {
+  "group": 57,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vhero01.8SN"
+   }
+  ]
+ },
+ {
+  "group": 58,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vmess00.8SN"
+   },
+   {
+    "index": 1,
+    "text": "SOUND\\\\vmess01.8SN"
+   },
+   {
+    "index": 2,
+    "text": "SOUND\\\\vmess02.8SN"
+   },
+   {
+    "index": 3,
+    "text": "SOUND\\\\vmess03.8SN"
+   }
+  ]
+ },
+ {
+  "group": 59,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vgreet0.8SN"
+   },
+   {
+    "index": 1,
+    "text": "SOUND\\\\vgreet0.TXT"
+   }
+  ]
+ },
+ {
+  "group": 60,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vmoment.8SN"
+   },
+   {
+    "index": 1,
+    "text": "SOUND\\\\vmoment.TXT"
+   }
+  ]
+ },
+ {
+  "group": 61,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vbegin.8SN"
+   },
+   {
+    "index": 1,
+    "text": "SOUND\\\\vbegin.TXT"
+   }
+  ]
+ },
+ {
+  "group": 62,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vquit.8SN"
+   },
+   {
+    "index": 1,
+    "text": "SOUND\\\\vquit.TXT"
+   }
+  ]
+ },
+ {
+  "group": 63,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\turn.8SN"
+   }
+  ]
+ },
+ {
+  "group": 64,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\army.8SN"
+   },
+   {
+    "index": 1,
+    "text": "SOUND\\\\ding.8SN"
+   },
+   {
+    "index": 2,
+    "text": "SOUND\\\\chord.8SN"
+   },
+   {
+    "index": 3,
+    "text": "Not_used"
+   },
+   {
+    "index": 4,
+    "text": "Not_used"
+   },
+   {
+    "index": 5,
+    "text": "SOUND\\\\army2.8SN"
+   }
+  ]
+ },
+ {
+  "group": 65,
+  "strings": [
+   {
+    "index": 0,
+    "text": "PICS\\\\SCREEN0.PCK"
+   },
+   {
+    "index": 1,
+    "text": "PICS\\\\SCREEN1.PCK"
+   },
+   {
+    "index": 2,
+    "text": "PICS\\\\SCREEN2.PCK"
+   },
+   {
+    "index": 3,
+    "text": "PICS\\\\SCREEN3.PCK"
+   }
+  ]
+ },
+ {
+  "group": 66,
+  "strings": [
+   {
+    "index": 0,
+    "text": "PICS\\\\STARTUP0.PCK"
+   },
+   {
+    "index": 1,
+    "text": "PICS\\\\STARTUP1.PCK"
+   },
+   {
+    "index": 2,
+    "text": "PICS\\\\STARTUP2.PCK"
+   },
+   {
+    "index": 3,
+    "text": "PICS\\\\STARTUP3.PCK"
+   }
+  ]
+ },
+ {
+  "group": 67,
+  "strings": [
+   {
+    "index": 0,
+    "text": "DATA\\\\OPTIONS.DAT"
+   }
+  ]
+ },
+ {
+  "group": 68,
+  "strings": [
+   {
+    "index": 0,
+    "text": "DATA\\\\OPTIONS.SND"
+   }
+  ]
+ },
+ {
+  "group": 69,
+  "strings": [
+   {
+    "index": 0,
+    "text": "HELP\\\\HITEM.GFX"
+   }
+  ]
+ },
+ {
+  "group": 70,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vlose05.TXT"
+   }
+  ]
+ },
+ {
+  "group": 71,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vlose10.TXT"
+   }
+  ]
+ },
+ {
+  "group": 72,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vlose15.TXT"
+   }
+  ]
+ },
+ {
+  "group": 73,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vlose20.TXT"
+   }
+  ]
+ },
+ {
+  "group": 74,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vlose25.TXT"
+   }
+  ]
+ },
+ {
+  "group": 75,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vlose25.TXT"
+   }
+  ]
+ },
+ {
+  "group": 76,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vlose35.TXT"
+   }
+  ]
+ },
+ {
+  "group": 77,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vwin05.TXT"
+   },
+   {
+    "index": 1,
+    "text": "SOUND\\\\vwin05a.TXT"
+   }
+  ]
+ },
+ {
+  "group": 78,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vwin10.TXT"
+   }
+  ]
+ },
+ {
+  "group": 79,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vwin15.TXT"
+   }
+  ]
+ },
+ {
+  "group": 80,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vwin20.TXT"
+   }
+  ]
+ },
+ {
+  "group": 81,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vwin25.TXT"
+   }
+  ]
+ },
+ {
+  "group": 82,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vwin30.TXT"
+   }
+  ]
+ },
+ {
+  "group": 83,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vwin35.TXT"
+   }
+  ]
+ },
+ {
+  "group": 84,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vgold00.TXT"
+   }
+  ]
+ },
+ {
+  "group": 85,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vgold01.TXT"
+   },
+   {
+    "index": 1,
+    "text": "SOUND\\\\vgold01a.TXT"
+   }
+  ]
+ },
+ {
+  "group": 86,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vhero00.TXT"
+   }
+  ]
+ },
+ {
+  "group": 87,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vhero1.TXT"
+   }
+  ]
+ },
+ {
+  "group": 88,
+  "strings": [
+   {
+    "index": 0,
+    "text": "SOUND\\\\vmess00.TXT"
+   },
+   {
+    "index": 1,
+    "text": "SOUND\\\\vmess01.TXT"
+   },
+   {
+    "index": 2,
+    "text": "SOUND\\\\vmess02.TXT"
+   },
+   {
+    "index": 3,
+    "text": "SOUND\\\\vmess03.TXT"
+   }
+  ]
+ }
+]

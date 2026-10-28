@@ -1,0 +1,80 @@
+[
+ {
+  "name": "Tutorial",
+  "dir": "Tutoria",
+  "description": "A Brief Warlords II Tutorial",
+  "name60": "Tutoria",
+  "name68": "Tutoria",
+  "words": [
+   6,
+   6,
+   2,
+   0
+  ]
+ },
+ {
+  "name": "Dragon Realms",
+  "dir": "Dragon",
+  "description": "Battle the Five Dragonlords",
+  "name60": "Dragon",
+  "name68": "Dragon",
+  "words": [
+   40,
+   24,
+   5,
+   0
+  ]
+ },
+ {
+  "name": "Isles of Sorcery",
+  "dir": "Sorcery",
+  "description": "The four Colleges of Magic",
+  "name60": "Sorcery",
+  "name68": "Sorcery",
+  "words": [
+   20,
+   16,
+   4,
+   0
+  ]
+ },
+ {
+  "name": "Erythea Campaign",
+  "dir": "Erythea",
+  "description": "The Island-Kingdom of Erythea",
+  "name60": "Erythea",
+  "name68": "Erythea",
+  "words": [
+   80,
+   40,
+   8,
+   0
+  ]
+ },
+ {
+  "name": "Hadesha Campaign",
+  "dir": "Hadesha",
+  "description": "Hadesha, Land of Nightmares",
+  "name60": "Hadesha",
+  "name68": "Hadesha",
+  "words": [
+   80,
+   40,
+   8,
+   0
+  ]
+ },
+ {
+  "name": "Isladia Campaign",
+  "dir": "Isladia",
+  "description": "Battle the Lords of Isladia",
+  "name60": "Isladia",
+  "name68": "Isladia",
+  "words": [
+   80,
+   40,
+   8,
+   0
+  ]
+ }
+]

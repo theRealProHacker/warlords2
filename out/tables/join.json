@@ -1,0 +1,182 @@
+[
+ {
+  "screen": 0,
+  "button_group": 0,
+  "area_group": 2
+ },
+ {
+  "screen": 1,
+  "button_group": 1,
+  "area_group": 1
+ },
+ {
+  "screen": 2,
+  "button_group": 2,
+  "area_group": 0
+ },
+ {
+  "screen": 3,
+  "button_group": 3,
+  "area_group": 1
+ },
+ {
+  "screen": 4,
+  "button_group": 4,
+  "area_group": 0
+ },
+ {
+  "screen": 5,
+  "button_group": 5,
+  "area_group": 0
+ },
+ {
+  "screen": 6,
+  "button_group": 6,
+  "area_group": 3
+ },
+ {
+  "screen": 7,
+  "button_group": 7,
+  "area_group": 0
+ },
+ {
+  "screen": 8,
+  "button_group": 8,
+  "area_group": 4
+ },
+ {
+  "screen": 9,
+  "button_group": 11,
+  "area_group": 0
+ },
+ {
+  "screen": 10,
+  "button_group": 12,
+  "area_group": 6
+ },
+ {
+  "screen": 11,
+  "button_group": 13,
+  "area_group": 0
+ },
+ {
+  "screen": 12,
+  "button_group": 9,
+  "area_group": 0
+ },
+ {
+  "screen": 13,
+  "button_group": 10,
+  "area_group": 0
+ },
+ {
+  "screen": 14,
+  "button_group": 14,
+  "area_group": 0
+ },
+ {
+  "screen": 15,
+  "button_group": 15,
+  "area_group": 0
+ },
+ {
+  "screen": 16,
+  "button_group": 16,
+  "area_group": 0
+ },
+ {
+  "screen": 17,
+  "button_group": 17,
+  "area_group": 0
+ },
+ {
+  "screen": 18,
+  "button_group": 18,
+  "area_group": 0
+ },
+ {
+  "screen": 20,
+  "button_group": 19,
+  "area_group": 0
+ },
+ {
+  "screen": 19,
+  "button_group": 20,
+  "area_group": 5
+ },
+ {
+  "screen": 21,
+  "button_group": 21,
+  "area_group": 0
+ },
+ {
+  "screen": 22,
+  "button_group": 22,
+  "area_group": 0
+ },
+ {
+  "screen": 23,
+  "button_group": 23,
+  "area_group": 0
+ },
+ {
+  "screen": 24,
+  "button_group": 24,
+  "area_group": 0
+ },
+ {
+  "screen": 25,
+  "button_group": 25,
+  "area_group": 0
+ },
+ {
+  "screen": 26,
+  "button_group": 26,
+  "area_group": 0
+ },
+ {
+  "screen": 27,
+  "button_group": 27,
+  "area_group": 0
+ },
+ {
+  "screen": 28,
+  "button_group": 28,
+  "area_group": 0
+ },
+ {
+  "screen": 29,
+  "button_group": 29,
+  "area_group": 0
+ },
+ {
+  "screen": 30,
+  "button_group": 30,
+  "area_group": 0
+ },
+ {
+  "screen": 31,
+  "button_group": 31,
+  "area_group": 0
+ },
+ {
+  "screen": 32,
+  "button_group": 32,
+  "area_group": 0
+ },
+ {
+  "screen": 33,
+  "button_group": 33,
+  "area_group": 0
+ },
+ {
+  "screen": 34,
+  "button_group": 34,
+  "area_group": 0
+ },
+ {
+  "screen": 35,
+  "button_group": 35,
+  "area_group": 0
+ }
+]

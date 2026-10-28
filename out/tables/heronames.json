@@ -1,0 +1,3222 @@
+{
+ "0": [
+  {
+   "flag": 0,
+   "name": "Sir Nick"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Roger"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Ian"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Gregor"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Steven"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Abellius"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Ablamor"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Accolon"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Aglovale"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Agravaine"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Alisander"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Allardin"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Balin"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Barant"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Bedivere"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Belleus"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Berel"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Blamor"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Bleoberis"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Bohort"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Bors"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Brandiles"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Breunor"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Brian"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Bruin"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Cador"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Caradoc"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Carados"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Chestelaine"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Clairemonde"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Clegis"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Dagonet"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Darras"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Dinadan"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Dodinas"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Ebel"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Ector"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Edward"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Elias"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Epinogris"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Ewaine"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Feldenak"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Felot"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Florence"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Floridas"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Gahalatine"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Gaheris"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Gainus"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Galahad"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Galagers"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Gawain"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Gareth"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Gaunter"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Gilbert"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Gilmere"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Gouvernail"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Griflet"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Hector"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Helior"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Herlen"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Hervis"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Ider"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Kay"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Kehydius"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Lanceor"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Lavaine"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Launcelot"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Lamerok"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Lionel"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Lucan"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Mador"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Managgen"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Marhaus"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Melias"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Meliot"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Miles"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Mordred"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Naram"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Ontzlake"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Palomides"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Patrice"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Pelleas"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Pelles"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Percard"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Percivale"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Perimones"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Persante"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Persides"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Priamus"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Sadok"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Safere"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Sagramour"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Segwarides"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Sorlons"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Trantrist"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Tristram"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Ulfius"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Uriens"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Uwaine"
+  },
+  {
+   "flag": 0,
+   "name": "Sir Wisshard"
+  }
+ ],
+ "1": [
+  {
+   "flag": 0,
+   "name": "Steve the Giant"
+  },
+  {
+   "flag": 0,
+   "name": "Ian the Ogre"
+  },
+  {
+   "flag": 0,
+   "name": "Roger the Giant"
+  },
+  {
+   "flag": 0,
+   "name": "Gregor the Ogre"
+  },
+  {
+   "flag": 0,
+   "name": "Nick the Fierce"
+  },
+  {
+   "flag": 1,
+   "name": "Naraga"
+  },
+  {
+   "flag": 0,
+   "name": "Rock-biter"
+  },
+  {
+   "flag": 0,
+   "name": "Stone-kicker"
+  },
+  {
+   "flag": 0,
+   "name": "Slate-eater"
+  },
+  {
+   "flag": 0,
+   "name": "Granite-head"
+  },
+  {
+   "flag": 0,
+   "name": "Gravel-brain"
+  },
+  {
+   "flag": 1,
+   "name": "Gutraga"
+  },
+  {
+   "flag": 0,
+   "name": "Quartz-face"
+  },
+  {
+   "flag": 0,
+   "name": "Shale-spitter"
+  },
+  {
+   "flag": 1,
+   "name": "Volcana"
+  },
+  {
+   "flag": 0,
+   "name": "Yellow-fang"
+  },
+  {
+   "flag": 0,
+   "name": "Yellow-eyes"
+  },
+  {
+   "flag": 1,
+   "name": "Moggarra"
+  },
+  {
+   "flag": 0,
+   "name": "Volcano-mouth"
+  },
+  {
+   "flag": 0,
+   "name": "Acid-lips"
+  },
+  {
+   "flag": 0,
+   "name": "Hammer-hand"
+  },
+  {
+   "flag": 0,
+   "name": "Wart-face"
+  },
+  {
+   "flag": 1,
+   "name": "Borrata"
+  },
+  {
+   "flag": 0,
+   "name": "Sulfur-breath"
+  },
+  {
+   "flag": 0,
+   "name": "Storm-beater"
+  },
+  {
+   "flag": 0,
+   "name": "Thunder-arms"
+  },
+  {
+   "flag": 0,
+   "name": "Nog"
+  },
+  {
+   "flag": 0,
+   "name": "Grog"
+  },
+  {
+   "flag": 0,
+   "name": "Thug"
+  },
+  {
+   "flag": 0,
+   "name": "Slug-foot"
+  },
+  {
+   "flag": 1,
+   "name": "Hunarra"
+  },
+  {
+   "flag": 1,
+   "name": "Jugarra"
+  },
+  {
+   "flag": 0,
+   "name": "Pig-fang"
+  },
+  {
+   "flag": 1,
+   "name": "Thugorra"
+  },
+  {
+   "flag": 1,
+   "name": "Pigrata"
+  },
+  {
+   "flag": 0,
+   "name": "Slop-eater"
+  },
+  {
+   "flag": 0,
+   "name": "Hill-kicker"
+  },
+  {
+   "flag": 0,
+   "name": "Boulder-brain"
+  },
+  {
+   "flag": 0,
+   "name": "Stone-skin"
+  },
+  {
+   "flag": 0,
+   "name": "Tree-thrower"
+  },
+  {
+   "flag": 1,
+   "name": "Noglitta"
+  },
+  {
+   "flag": 1,
+   "name": "Nughethra"
+  },
+  {
+   "flag": 1,
+   "name": "Perkolla"
+  },
+  {
+   "flag": 1,
+   "name": "Vastilla"
+  },
+  {
+   "flag": 0,
+   "name": "Dragon-skinner"
+  },
+  {
+   "flag": 0,
+   "name": "Devil-muncher"
+  },
+  {
+   "flag": 0,
+   "name": "Demon-biter"
+  },
+  {
+   "flag": 0,
+   "name": "Bone-cruncher"
+  },
+  {
+   "flag": 0,
+   "name": "Long-fang"
+  },
+  {
+   "flag": 0,
+   "name": "Snout-face"
+  },
+  {
+   "flag": 0,
+   "name": "Dog-ears"
+  },
+  {
+   "flag": 0,
+   "name": "Wyrm-biter"
+  },
+  {
+   "flag": 0,
+   "name": "Ghost-kicker"
+  },
+  {
+   "flag": 0,
+   "name": "Wizard-eater"
+  },
+  {
+   "flag": 0,
+   "name": "Yellow-nose"
+  },
+  {
+   "flag": 0,
+   "name": "Tunnel-mouth"
+  },
+  {
+   "flag": 0,
+   "name": "Rock-jumper"
+  },
+  {
+   "flag": 1,
+   "name": "Gomorra"
+  },
+  {
+   "flag": 1,
+   "name": "Kemesna"
+  },
+  {
+   "flag": 1,
+   "name": "Farigga"
+  },
+  {
+   "flag": 1,
+   "name": "Haggilyn"
+  },
+  {
+   "flag": 1,
+   "name": "Martikka"
+  },
+  {
+   "flag": 1,
+   "name": "Salikka"
+  },
+  {
+   "flag": 0,
+   "name": "Elf-chaser"
+  },
+  {
+   "flag": 0,
+   "name": "Dwarf-burner"
+  },
+  {
+   "flag": 0,
+   "name": "Orc-stomper"
+  },
+  {
+   "flag": 0,
+   "name": "Fire-eater"
+  },
+  {
+   "flag": 0,
+   "name": "Lightning-hair"
+  },
+  {
+   "flag": 1,
+   "name": "Oromora"
+  },
+  {
+   "flag": 0,
+   "name": "Hig"
+  },
+  {
+   "flag": 0,
+   "name": "Thog"
+  },
+  {
+   "flag": 0,
+   "name": "Dug"
+  },
+  {
+   "flag": 0,
+   "name": "Man-eater"
+  },
+  {
+   "flag": 0,
+   "name": "Wyvern-ears"
+  },
+  {
+   "flag": 0,
+   "name": "Vok the Fierce"
+  },
+  {
+   "flag": 0,
+   "name": "Hrog the Big"
+  },
+  {
+   "flag": 0,
+   "name": "Frug the Old"
+  },
+  {
+   "flag": 1,
+   "name": "Cheritta"
+  },
+  {
+   "flag": 0,
+   "name": "Axe-ears"
+  },
+  {
+   "flag": 0,
+   "name": "Hammer-nose"
+  },
+  {
+   "flag": 0,
+   "name": "Rough-head"
+  },
+  {
+   "flag": 0,
+   "name": "King-basher"
+  },
+  {
+   "flag": 0,
+   "name": "Lord-smasher"
+  },
+  {
+   "flag": 0,
+   "name": "War-maker"
+  },
+  {
+   "flag": 0,
+   "name": "Knight-kicker"
+  },
+  {
+   "flag": 0,
+   "name": "Face-slitter"
+  },
+  {
+   "flag": 0,
+   "name": "Sand-thrower"
+  },
+  {
+   "flag": 0,
+   "name": "Gravel-voice"
+  },
+  {
+   "flag": 0,
+   "name": "Gag the Ruinous"
+  },
+  {
+   "flag": 0,
+   "name": "Sword-chewer"
+  },
+  {
+   "flag": 0,
+   "name": "Hole-digger"
+  },
+  {
+   "flag": 0,
+   "name": "Castle-wrecker"
+  },
+  {
+   "flag": 0,
+   "name": "Town-burner"
+  },
+  {
+   "flag": 0,
+   "name": "Boulder-tooth"
+  },
+  {
+   "flag": 1,
+   "name": "Figirra"
+  },
+  {
+   "flag": 0,
+   "name": "Leg-chewer"
+  },
+  {
+   "flag": 0,
+   "name": "Skin-flayer"
+  },
+  {
+   "flag": 0,
+   "name": "Big-foot"
+  },
+  {
+   "flag": 0,
+   "name": "Dull-brain"
+  },
+  {
+   "flag": 0,
+   "name": "Hairy-nose"
+  }
+ ],
+ "2": [
+  {
+   "flag": 0,
+   "name": "Ian Longbeard"
+  },
+  {
+   "flag": 0,
+   "name": "Gregor Ironfist"
+  },
+  {
+   "flag": 0,
+   "name": "Roger Redaxe"
+  },
+  {
+   "flag": 0,
+   "name": "Steve the Dwarf"
+  },
+  {
+   "flag": 0,
+   "name": "Nick the Nasty"
+  },
+  {
+   "flag": 0,
+   "name": "Bolin"
+  },
+  {
+   "flag": 0,
+   "name": "Yarin"
+  },
+  {
+   "flag": 0,
+   "name": "Khazan"
+  },
+  {
+   "flag": 0,
+   "name": "Armon Hammer"
+  },
+  {
+   "flag": 0,
+   "name": "Longbeard"
+  },
+  {
+   "flag": 0,
+   "name": "Hammerfist"
+  },
+  {
+   "flag": 0,
+   "name": "Farthrower"
+  },
+  {
+   "flag": 0,
+   "name": "Khan the Great"
+  },
+  {
+   "flag": 0,
+   "name": "Neron"
+  },
+  {
+   "flag": 0,
+   "name": "Dalin"
+  },
+  {
+   "flag": 0,
+   "name": "Forin"
+  },
+  {
+   "flag": 0,
+   "name": "Korin"
+  },
+  {
+   "flag": 1,
+   "name": "Korikka"
+  },
+  {
+   "flag": 0,
+   "name": "Doin Peaknose"
+  },
+  {
+   "flag": 0,
+   "name": "Daen the Axe"
+  },
+  {
+   "flag": 0,
+   "name": "Nalin"
+  },
+  {
+   "flag": 0,
+   "name": "Throin"
+  },
+  {
+   "flag": 1,
+   "name": "Alisyn"
+  },
+  {
+   "flag": 1,
+   "name": "Darina"
+  },
+  {
+   "flag": 1,
+   "name": "Khazala"
+  },
+  {
+   "flag": 1,
+   "name": "Khuzula"
+  },
+  {
+   "flag": 0,
+   "name": "Khuzin"
+  },
+  {
+   "flag": 0,
+   "name": "Wargin"
+  },
+  {
+   "flag": 0,
+   "name": "Khasiak"
+  },
+  {
+   "flag": 0,
+   "name": "Thidrin"
+  },
+  {
+   "flag": 0,
+   "name": "Angorin"
+  },
+  {
+   "flag": 0,
+   "name": "Askhan"
+  },
+  {
+   "flag": 1,
+   "name": "Leli"
+  },
+  {
+   "flag": 1,
+   "name": "Kharuna"
+  },
+  {
+   "flag": 1,
+   "name": "Haritha"
+  },
+  {
+   "flag": 0,
+   "name": "Jalevin"
+  },
+  {
+   "flag": 0,
+   "name": "Ghorin"
+  },
+  {
+   "flag": 0,
+   "name": "Threston"
+  },
+  {
+   "flag": 0,
+   "name": "Findakin"
+  },
+  {
+   "flag": 0,
+   "name": "Morinakin"
+  },
+  {
+   "flag": 0,
+   "name": "Tholin"
+  },
+  {
+   "flag": 0,
+   "name": "Skorik"
+  },
+  {
+   "flag": 0,
+   "name": "Thwain"
+  },
+  {
+   "flag": 0,
+   "name": "Thwalin"
+  },
+  {
+   "flag": 0,
+   "name": "Khalin"
+  },
+  {
+   "flag": 1,
+   "name": "Morainne"
+  },
+  {
+   "flag": 1,
+   "name": "Khazaine"
+  },
+  {
+   "flag": 1,
+   "name": "Lehzarne"
+  },
+  {
+   "flag": 1,
+   "name": "Khorine"
+  },
+  {
+   "flag": 1,
+   "name": "Dharune"
+  },
+  {
+   "flag": 0,
+   "name": "Lehzann"
+  },
+  {
+   "flag": 0,
+   "name": "Jolpin"
+  },
+  {
+   "flag": 0,
+   "name": "Parkin"
+  },
+  {
+   "flag": 0,
+   "name": "Jorin the Great"
+  },
+  {
+   "flag": 0,
+   "name": "Krulin Bigfoot"
+  },
+  {
+   "flag": 0,
+   "name": "Larkin"
+  },
+  {
+   "flag": 0,
+   "name": "Jhenin"
+  },
+  {
+   "flag": 0,
+   "name": "Tarin the Miner"
+  },
+  {
+   "flag": 0,
+   "name": "Alin Hammerhand"
+  },
+  {
+   "flag": 0,
+   "name": "Dorin Rockface"
+  },
+  {
+   "flag": 0,
+   "name": "Dron the Mighty"
+  },
+  {
+   "flag": 0,
+   "name": "Thagin"
+  },
+  {
+   "flag": 1,
+   "name": "Jhaneene"
+  },
+  {
+   "flag": 1,
+   "name": "Khazraime"
+  },
+  {
+   "flag": 1,
+   "name": "Sigroine"
+  },
+  {
+   "flag": 0,
+   "name": "Oromar"
+  },
+  {
+   "flag": 0,
+   "name": "Lhestin"
+  },
+  {
+   "flag": 0,
+   "name": "Jawin the Thin"
+  },
+  {
+   "flag": 0,
+   "name": "Horin Longbeard"
+  },
+  {
+   "flag": 0,
+   "name": "Harit the Hairy"
+  },
+  {
+   "flag": 0,
+   "name": "Yor the Hammer"
+  },
+  {
+   "flag": 0,
+   "name": "Milnor"
+  },
+  {
+   "flag": 1,
+   "name": "Jenny the Great"
+  },
+  {
+   "flag": 0,
+   "name": "Gary MacGary"
+  },
+  {
+   "flag": 0,
+   "name": "Fredlin"
+  },
+  {
+   "flag": 0,
+   "name": "Khazan"
+  },
+  {
+   "flag": 0,
+   "name": "Armon Hammer"
+  },
+  {
+   "flag": 0,
+   "name": "Longbeard"
+  },
+  {
+   "flag": 0,
+   "name": "Hammerfist"
+  },
+  {
+   "flag": 0,
+   "name": "Farthrower"
+  },
+  {
+   "flag": 0,
+   "name": "Khan the Great"
+  },
+  {
+   "flag": 0,
+   "name": "Neron"
+  },
+  {
+   "flag": 0,
+   "name": "Dalin"
+  },
+  {
+   "flag": 0,
+   "name": "Forin"
+  },
+  {
+   "flag": 0,
+   "name": "Korin"
+  },
+  {
+   "flag": 1,
+   "name": "Korikka"
+  },
+  {
+   "flag": 0,
+   "name": "Doin Peaknose"
+  },
+  {
+   "flag": 0,
+   "name": "Daen the Axe"
+  },
+  {
+   "flag": 0,
+   "name": "Nalin"
+  },
+  {
+   "flag": 0,
+   "name": "Throin"
+  },
+  {
+   "flag": 1,
+   "name": "Alisyn"
+  },
+  {
+   "flag": 1,
+   "name": "Darina"
+  },
+  {
+   "flag": 1,
+   "name": "Khazala"
+  },
+  {
+   "flag": 1,
+   "name": "Khuzula"
+  },
+  {
+   "flag": 0,
+   "name": "Khuzin"
+  },
+  {
+   "flag": 0,
+   "name": "Wargin"
+  },
+  {
+   "flag": 0,
+   "name": "Khasiak"
+  },
+  {
+   "flag": 0,
+   "name": "Thidrin"
+  },
+  {
+   "flag": 0,
+   "name": "Angorin"
+  },
+  {
+   "flag": 0,
+   "name": "Askhan"
+  }
+ ],
+ "3": [
+  {
+   "flag": 0,
+   "name": "Steve the Orc"
+  },
+  {
+   "flag": 0,
+   "name": "Roger the Ogre"
+  },
+  {
+   "flag": 0,
+   "name": "Ian the Goblin"
+  },
+  {
+   "flag": 0,
+   "name": "Gregor the Orc"
+  },
+  {
+   "flag": 0,
+   "name": "Nick the Troll"
+  },
+  {
+   "flag": 0,
+   "name": "Gr'mok the Red"
+  },
+  {
+   "flag": 0,
+   "name": "Gr'zzt"
+  },
+  {
+   "flag": 0,
+   "name": "Th'rak"
+  },
+  {
+   "flag": 0,
+   "name": "B'throng"
+  },
+  {
+   "flag": 1,
+   "name": "Kobolla"
+  },
+  {
+   "flag": 1,
+   "name": "Sanguil"
+  },
+  {
+   "flag": 1,
+   "name": "Gr'sala"
+  },
+  {
+   "flag": 0,
+   "name": "Lugesh"
+  },
+  {
+   "flag": 0,
+   "name": "Lamok"
+  },
+  {
+   "flag": 0,
+   "name": "Charrik"
+  },
+  {
+   "flag": 0,
+   "name": "K'thon"
+  },
+  {
+   "flag": 0,
+   "name": "Ng'hanh"
+  },
+  {
+   "flag": 0,
+   "name": "J'rik"
+  },
+  {
+   "flag": 0,
+   "name": "Br'mor"
+  },
+  {
+   "flag": 0,
+   "name": "Br'lan"
+  },
+  {
+   "flag": 0,
+   "name": "Dh'ghang"
+  },
+  {
+   "flag": 0,
+   "name": "Redeye"
+  },
+  {
+   "flag": 1,
+   "name": "Gerlina"
+  },
+  {
+   "flag": 1,
+   "name": "Gr'linga"
+  },
+  {
+   "flag": 1,
+   "name": "Kh'garra"
+  },
+  {
+   "flag": 0,
+   "name": "L'rag"
+  },
+  {
+   "flag": 0,
+   "name": "Kh'zan"
+  },
+  {
+   "flag": 0,
+   "name": "Gh'rig"
+  },
+  {
+   "flag": 0,
+   "name": "Lh'rik"
+  },
+  {
+   "flag": 0,
+   "name": "Gh'jahn"
+  },
+  {
+   "flag": 0,
+   "name": "Gulesh"
+  },
+  {
+   "flag": 0,
+   "name": "Muruch"
+  },
+  {
+   "flag": 0,
+   "name": "Muursh"
+  },
+  {
+   "flag": 0,
+   "name": "Thuurtz"
+  },
+  {
+   "flag": 0,
+   "name": "Gr'huunin"
+  },
+  {
+   "flag": 0,
+   "name": "Huunin"
+  },
+  {
+   "flag": 0,
+   "name": "Hr'argh"
+  },
+  {
+   "flag": 0,
+   "name": "G'shtuul"
+  },
+  {
+   "flag": 0,
+   "name": "Narag"
+  },
+  {
+   "flag": 1,
+   "name": "Lithush"
+  },
+  {
+   "flag": 1,
+   "name": "Udunna"
+  },
+  {
+   "flag": 1,
+   "name": "Ogleesh"
+  },
+  {
+   "flag": 1,
+   "name": "Gathlyka"
+  },
+  {
+   "flag": 0,
+   "name": "N'gumuush"
+  },
+  {
+   "flag": 0,
+   "name": "Kr'Gargh"
+  },
+  {
+   "flag": 0,
+   "name": "Varak"
+  },
+  {
+   "flag": 0,
+   "name": "Maglub"
+  },
+  {
+   "flag": 0,
+   "name": "Gammut"
+  },
+  {
+   "flag": 0,
+   "name": "Yaresh"
+  },
+  {
+   "flag": 0,
+   "name": "Yuurth"
+  },
+  {
+   "flag": 1,
+   "name": "Kragha"
+  },
+  {
+   "flag": 1,
+   "name": "Bayet"
+  },
+  {
+   "flag": 1,
+   "name": "Phagarra"
+  },
+  {
+   "flag": 0,
+   "name": "Padrak"
+  },
+  {
+   "flag": 0,
+   "name": "Kadrash"
+  },
+  {
+   "flag": 0,
+   "name": "Kurdush"
+  },
+  {
+   "flag": 0,
+   "name": "Lugrub"
+  },
+  {
+   "flag": 1,
+   "name": "Gr'ingla"
+  },
+  {
+   "flag": 1,
+   "name": "Th'chara"
+  },
+  {
+   "flag": 1,
+   "name": "Kh'rana"
+  },
+  {
+   "flag": 0,
+   "name": "Ruumsh"
+  },
+  {
+   "flag": 0,
+   "name": "Shevit"
+  },
+  {
+   "flag": 0,
+   "name": "Davgor"
+  },
+  {
+   "flag": 0,
+   "name": "Naruch"
+  },
+  {
+   "flag": 0,
+   "name": "Gn'arich"
+  },
+  {
+   "flag": 0,
+   "name": "Yethik"
+  },
+  {
+   "flag": 0,
+   "name": "Hr'makin"
+  },
+  {
+   "flag": 1,
+   "name": "Gn'ala"
+  },
+  {
+   "flag": 1,
+   "name": "Hr'amula"
+  },
+  {
+   "flag": 0,
+   "name": "Thiis'tor"
+  },
+  {
+   "flag": 0,
+   "name": "Gn'uursh"
+  },
+  {
+   "flag": 0,
+   "name": "Gruumich"
+  },
+  {
+   "flag": 0,
+   "name": "Luunic"
+  },
+  {
+   "flag": 1,
+   "name": "G'ruuna"
+  },
+  {
+   "flag": 1,
+   "name": "Mystichla"
+  },
+  {
+   "flag": 0,
+   "name": "G'rubesh"
+  },
+  {
+   "flag": 0,
+   "name": "Ru'besh"
+  },
+  {
+   "flag": 0,
+   "name": "Yloch"
+  },
+  {
+   "flag": 0,
+   "name": "Scimitik"
+  },
+  {
+   "flag": 0,
+   "name": "G'ron the Blade"
+  },
+  {
+   "flag": 0,
+   "name": "G'gir the Red"
+  },
+  {
+   "flag": 0,
+   "name": "H'ruuk"
+  },
+  {
+   "flag": 0,
+   "name": "F'grumch"
+  },
+  {
+   "flag": 1,
+   "name": "Julusha"
+  },
+  {
+   "flag": 1,
+   "name": "Lulucha"
+  },
+  {
+   "flag": 1,
+   "name": "Molosha"
+  },
+  {
+   "flag": 0,
+   "name": "Krunch"
+  },
+  {
+   "flag": 0,
+   "name": "G'varik"
+  },
+  {
+   "flag": 0,
+   "name": "Yor the Red"
+  },
+  {
+   "flag": 0,
+   "name": "G'regor"
+  },
+  {
+   "flag": 0,
+   "name": "K'thilg"
+  },
+  {
+   "flag": 0,
+   "name": "Gh'asic"
+  },
+  {
+   "flag": 0,
+   "name": "Hr'igok"
+  },
+  {
+   "flag": 1,
+   "name": "Agyella"
+  },
+  {
+   "flag": 0,
+   "name": "G'rignik"
+  },
+  {
+   "flag": 0,
+   "name": "G'rag the Fool"
+  },
+  {
+   "flag": 0,
+   "name": "G'sth the Hero"
+  },
+  {
+   "flag": 0,
+   "name": "Hr'uulg"
+  },
+  {
+   "flag": 0,
+   "name": "G'wulter"
+  },
+  {
+   "flag": 0,
+   "name": "Z'karg"
+  }
+ ],
+ "4": [
+  {
+   "flag": 0,
+   "name": "Lord Steven"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Roger"
+  },
+  {
+   "flag": 0,
+   "name": "Prince Ian"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Gregor"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Nick"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Alevera"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Mystylla"
+  },
+  {
+   "flag": 1,
+   "name": "Queen Myrlani"
+  },
+  {
+   "flag": 1,
+   "name": "Princess Pamme"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Aramanth"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Ayell"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Celethra"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Alaron"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Xenon"
+  },
+  {
+   "flag": 0,
+   "name": "Prince Myrrhed"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Mythred"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Eldrik"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Eldros"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Elias"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Ithil"
+  },
+  {
+   "flag": 0,
+   "name": "Prince Yarith"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Aloris"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Moranin"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Celbarn"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Tintagel"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Orion"
+  },
+  {
+   "flag": 0,
+   "name": "Prince Oberon"
+  },
+  {
+   "flag": 0,
+   "name": "Prince Adonis"
+  },
+  {
+   "flag": 0,
+   "name": "Prince Myrkyn"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Galtin"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Tharris"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Mystul"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Argona"
+  },
+  {
+   "flag": 1,
+   "name": "Princess Alana"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Elina"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Melyodas"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Fingol"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Tinagol"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Duris"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Thirius"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Myella"
+  },
+  {
+   "flag": 1,
+   "name": "Princess Jhelit"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Gemmula"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Celyth"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Feeruthe"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Iniriki"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Imanon"
+  },
+  {
+   "flag": 0,
+   "name": "Prince Galadh"
+  },
+  {
+   "flag": 0,
+   "name": "Price Harathos"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Gyros"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Thybros"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Tareth"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Arcinos"
+  },
+  {
+   "flag": 0,
+   "name": "Prince Elrith"
+  },
+  {
+   "flag": 0,
+   "name": "Lady Jorinas"
+  },
+  {
+   "flag": 0,
+   "name": "Empress Elva"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Fredhas"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Mystylla"
+  },
+  {
+   "flag": 1,
+   "name": "Queen Myrlani"
+  },
+  {
+   "flag": 1,
+   "name": "Princess Pamme"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Aramanth"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Ayell"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Celethra"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Alaron"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Xenon"
+  },
+  {
+   "flag": 0,
+   "name": "Prince Myrrhed"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Mythred"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Eldrik"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Eldros"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Elias"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Ithil"
+  },
+  {
+   "flag": 0,
+   "name": "Prince Yarith"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Aloris"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Moranin"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Celbarn"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Tintagel"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Orion"
+  },
+  {
+   "flag": 0,
+   "name": "Prince Oberon"
+  },
+  {
+   "flag": 0,
+   "name": "Prince Adonis"
+  },
+  {
+   "flag": 0,
+   "name": "Prince Myrkyn"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Galtin"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Tharris"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Mystul"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Argona"
+  },
+  {
+   "flag": 1,
+   "name": "Princess Alana"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Elina"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Melyodas"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Fingol"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Tinagol"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Duris"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Thirius"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Myella"
+  },
+  {
+   "flag": 1,
+   "name": "Princess Jhelit"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Gemmula"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Celyth"
+  },
+  {
+   "flag": 1,
+   "name": "Lady Feeruthe"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Thybros"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Tareth"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Arcinos"
+  },
+  {
+   "flag": 0,
+   "name": "Prince Elrith"
+  },
+  {
+   "flag": 0,
+   "name": "Lady Jorinas"
+  }
+ ],
+ "5": [
+  {
+   "flag": 0,
+   "name": "Lord Ianus"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Rogeris"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Nikolos"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Stevus"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Gregoris"
+  },
+  {
+   "flag": 0,
+   "name": "Quintus"
+  },
+  {
+   "flag": 0,
+   "name": "Vorona"
+  },
+  {
+   "flag": 0,
+   "name": "Ingarus"
+  },
+  {
+   "flag": 0,
+   "name": "Don Stephano"
+  },
+  {
+   "flag": 0,
+   "name": "Lamellus"
+  },
+  {
+   "flag": 0,
+   "name": "Brus Sanguis"
+  },
+  {
+   "flag": 1,
+   "name": "Brusala"
+  },
+  {
+   "flag": 1,
+   "name": "Agricola"
+  },
+  {
+   "flag": 1,
+   "name": "Karina"
+  },
+  {
+   "flag": 1,
+   "name": "Metella"
+  },
+  {
+   "flag": 0,
+   "name": "Caecilius"
+  },
+  {
+   "flag": 0,
+   "name": "Cerberus"
+  },
+  {
+   "flag": 0,
+   "name": "Pelarius"
+  },
+  {
+   "flag": 0,
+   "name": "Darian"
+  },
+  {
+   "flag": 0,
+   "name": "Dhariin"
+  },
+  {
+   "flag": 0,
+   "name": "Servinium"
+  },
+  {
+   "flag": 0,
+   "name": "Manx Andrus"
+  },
+  {
+   "flag": 1,
+   "name": "Gorina"
+  },
+  {
+   "flag": 1,
+   "name": "Morphia"
+  },
+  {
+   "flag": 1,
+   "name": "Lancella"
+  },
+  {
+   "flag": 0,
+   "name": "Thurius"
+  },
+  {
+   "flag": 0,
+   "name": "Retiarius"
+  },
+  {
+   "flag": 0,
+   "name": "Murmillone"
+  },
+  {
+   "flag": 0,
+   "name": "Stoicus"
+  },
+  {
+   "flag": 0,
+   "name": "Tharidenes"
+  },
+  {
+   "flag": 0,
+   "name": "Angwyshaunce"
+  },
+  {
+   "flag": 0,
+   "name": "Lakus"
+  },
+  {
+   "flag": 0,
+   "name": "Esthvenes"
+  },
+  {
+   "flag": 0,
+   "name": "Brandegoris"
+  },
+  {
+   "flag": 0,
+   "name": "Clarivaunce"
+  },
+  {
+   "flag": 0,
+   "name": "Morganoure"
+  },
+  {
+   "flag": 0,
+   "name": "Naridius"
+  },
+  {
+   "flag": 0,
+   "name": "Festus"
+  },
+  {
+   "flag": 0,
+   "name": "Vastans"
+  },
+  {
+   "flag": 0,
+   "name": "Bellicus"
+  },
+  {
+   "flag": 0,
+   "name": "Dwarios"
+  },
+  {
+   "flag": 0,
+   "name": "Alfonos"
+  },
+  {
+   "flag": 0,
+   "name": "Pyreges"
+  },
+  {
+   "flag": 0,
+   "name": "Hesthetes"
+  },
+  {
+   "flag": 0,
+   "name": "Elenicos"
+  },
+  {
+   "flag": 0,
+   "name": "Gordican"
+  },
+  {
+   "flag": 0,
+   "name": "Lefonthinos"
+  },
+  {
+   "flag": 0,
+   "name": "Fergathus"
+  },
+  {
+   "flag": 1,
+   "name": "Grafia"
+  },
+  {
+   "flag": 1,
+   "name": "Sybhryta"
+  },
+  {
+   "flag": 0,
+   "name": "Thalius"
+  },
+  {
+   "flag": 0,
+   "name": "Casarius"
+  },
+  {
+   "flag": 0,
+   "name": "Augustus"
+  },
+  {
+   "flag": 0,
+   "name": "Tiberius"
+  },
+  {
+   "flag": 0,
+   "name": "Caligula"
+  },
+  {
+   "flag": 0,
+   "name": "Claudius"
+  },
+  {
+   "flag": 0,
+   "name": "Nero"
+  },
+  {
+   "flag": 0,
+   "name": "Galba"
+  },
+  {
+   "flag": 0,
+   "name": "Otho"
+  },
+  {
+   "flag": 0,
+   "name": "Vitellius"
+  },
+  {
+   "flag": 0,
+   "name": "Vespasian"
+  },
+  {
+   "flag": 0,
+   "name": "Titus"
+  },
+  {
+   "flag": 0,
+   "name": "Domitian"
+  },
+  {
+   "flag": 0,
+   "name": "Nerva"
+  },
+  {
+   "flag": 0,
+   "name": "Trajan"
+  },
+  {
+   "flag": 0,
+   "name": "Hadrian"
+  },
+  {
+   "flag": 0,
+   "name": "Attila"
+  },
+  {
+   "flag": 1,
+   "name": "Morotha"
+  },
+  {
+   "flag": 1,
+   "name": "Ottara"
+  },
+  {
+   "flag": 1,
+   "name": "Oromora"
+  },
+  {
+   "flag": 1,
+   "name": "Kantora"
+  },
+  {
+   "flag": 0,
+   "name": "Sethus"
+  },
+  {
+   "flag": 0,
+   "name": "Draccus"
+  },
+  {
+   "flag": 0,
+   "name": "Ilyn Mortes"
+  },
+  {
+   "flag": 1,
+   "name": "Alovera"
+  },
+  {
+   "flag": 1,
+   "name": "Myllana"
+  },
+  {
+   "flag": 0,
+   "name": "Xenorites"
+  },
+  {
+   "flag": 0,
+   "name": "Tim Searcher"
+  },
+  {
+   "flag": 0,
+   "name": "John of Gene"
+  },
+  {
+   "flag": 0,
+   "name": "Mark of Plains"
+  },
+  {
+   "flag": 0,
+   "name": "Darrin of Dec"
+  },
+  {
+   "flag": 0,
+   "name": "Fredros"
+  },
+  {
+   "flag": 1,
+   "name": "Shelley laBonne"
+  },
+  {
+   "flag": 0,
+   "name": "Lamellus"
+  },
+  {
+   "flag": 0,
+   "name": "Brus Sanguis"
+  },
+  {
+   "flag": 1,
+   "name": "Brusala"
+  },
+  {
+   "flag": 1,
+   "name": "Agricola"
+  },
+  {
+   "flag": 1,
+   "name": "Karina"
+  },
+  {
+   "flag": 1,
+   "name": "Metella"
+  },
+  {
+   "flag": 0,
+   "name": "Caecilius"
+  },
+  {
+   "flag": 0,
+   "name": "Cerberus"
+  },
+  {
+   "flag": 0,
+   "name": "Pelarius"
+  },
+  {
+   "flag": 0,
+   "name": "Darian"
+  },
+  {
+   "flag": 0,
+   "name": "Dhariin"
+  },
+  {
+   "flag": 0,
+   "name": "Servinium"
+  },
+  {
+   "flag": 0,
+   "name": "Manx Andrus"
+  },
+  {
+   "flag": 1,
+   "name": "Gorina"
+  },
+  {
+   "flag": 1,
+   "name": "Morphia"
+  },
+  {
+   "flag": 1,
+   "name": "Lancella"
+  },
+  {
+   "flag": 0,
+   "name": "Thurius"
+  }
+ ],
+ "6": [
+  {
+   "flag": 0,
+   "name": "Ian the Mighty"
+  },
+  {
+   "flag": 0,
+   "name": "Roger the Fast"
+  },
+  {
+   "flag": 0,
+   "name": "Gregor the Red"
+  },
+  {
+   "flag": 0,
+   "name": "Steve the Slow"
+  },
+  {
+   "flag": 0,
+   "name": "Nick the Quick"
+  },
+  {
+   "flag": 1,
+   "name": "Red Sophia"
+  },
+  {
+   "flag": 0,
+   "name": "Alkor"
+  },
+  {
+   "flag": 0,
+   "name": "Volkor the Blue"
+  },
+  {
+   "flag": 0,
+   "name": "Nin the Fierce"
+  },
+  {
+   "flag": 0,
+   "name": "Dorik the Huge"
+  },
+  {
+   "flag": 0,
+   "name": "Dhus the Bloody"
+  },
+  {
+   "flag": 1,
+   "name": "Brusala"
+  },
+  {
+   "flag": 1,
+   "name": "Volkara"
+  },
+  {
+   "flag": 1,
+   "name": "Indeera"
+  },
+  {
+   "flag": 1,
+   "name": "Veerka"
+  },
+  {
+   "flag": 0,
+   "name": "Alex the Black"
+  },
+  {
+   "flag": 0,
+   "name": "Rohan the Red"
+  },
+  {
+   "flag": 0,
+   "name": "Gramek"
+  },
+  {
+   "flag": 0,
+   "name": "Hashik"
+  },
+  {
+   "flag": 0,
+   "name": "Green Garik"
+  },
+  {
+   "flag": 0,
+   "name": "Mangulorik"
+  },
+  {
+   "flag": 0,
+   "name": "Thor the Mighty"
+  },
+  {
+   "flag": 0,
+   "name": "Ilik the Brave"
+  },
+  {
+   "flag": 0,
+   "name": "Gron the Slayer"
+  },
+  {
+   "flag": 0,
+   "name": "Vokon the Axe"
+  },
+  {
+   "flag": 0,
+   "name": "Khan the Bull"
+  },
+  {
+   "flag": 0,
+   "name": "Ug the Mongrel"
+  },
+  {
+   "flag": 1,
+   "name": "Ugora"
+  },
+  {
+   "flag": 1,
+   "name": "Nirida"
+  },
+  {
+   "flag": 1,
+   "name": "Ankaara"
+  },
+  {
+   "flag": 1,
+   "name": "Liella"
+  },
+  {
+   "flag": 1,
+   "name": "Ghanara"
+  },
+  {
+   "flag": 0,
+   "name": "Jud the Stupid"
+  },
+  {
+   "flag": 0,
+   "name": "Kor the Falcon"
+  },
+  {
+   "flag": 0,
+   "name": "Nero the Hero"
+  },
+  {
+   "flag": 0,
+   "name": "Morgan"
+  },
+  {
+   "flag": 0,
+   "name": "Byrhtnoth"
+  },
+  {
+   "flag": 0,
+   "name": "Eadric"
+  },
+  {
+   "flag": 0,
+   "name": "Wulfstan"
+  },
+  {
+   "flag": 0,
+   "name": "Aelfere"
+  },
+  {
+   "flag": 0,
+   "name": "Wulfmaer"
+  },
+  {
+   "flag": 0,
+   "name": "Eadweard"
+  },
+  {
+   "flag": 0,
+   "name": "Aelfnoth"
+  },
+  {
+   "flag": 0,
+   "name": "Aelfwine"
+  },
+  {
+   "flag": 0,
+   "name": "Aelfric"
+  },
+  {
+   "flag": 0,
+   "name": "Ealhelm"
+  },
+  {
+   "flag": 0,
+   "name": "Godric"
+  },
+  {
+   "flag": 0,
+   "name": "Leofsunu"
+  },
+  {
+   "flag": 0,
+   "name": "Aescferth"
+  },
+  {
+   "flag": 0,
+   "name": "Ecglaf"
+  },
+  {
+   "flag": 0,
+   "name": "Sibyrht"
+  },
+  {
+   "flag": 0,
+   "name": "Aethelstan"
+  },
+  {
+   "flag": 0,
+   "name": "Thalmor"
+  },
+  {
+   "flag": 0,
+   "name": "Jon the Great"
+  },
+  {
+   "flag": 0,
+   "name": "Jal Lighfoot"
+  },
+  {
+   "flag": 0,
+   "name": "Dragonsbane"
+  },
+  {
+   "flag": 0,
+   "name": "Beowulf"
+  },
+  {
+   "flag": 1,
+   "name": "Lai"
+  },
+  {
+   "flag": 1,
+   "name": "Lucilla"
+  },
+  {
+   "flag": 1,
+   "name": "Philimina"
+  },
+  {
+   "flag": 1,
+   "name": "Lynthella"
+  },
+  {
+   "flag": 0,
+   "name": "Kuurok"
+  },
+  {
+   "flag": 0,
+   "name": "Wulf"
+  },
+  {
+   "flag": 0,
+   "name": "Thadik"
+  },
+  {
+   "flag": 0,
+   "name": "Vorkon the Red"
+  },
+  {
+   "flag": 0,
+   "name": "Siegfried"
+  },
+  {
+   "flag": 0,
+   "name": "Connor the Keen"
+  },
+  {
+   "flag": 0,
+   "name": "Keen Brendan"
+  },
+  {
+   "flag": 0,
+   "name": "Tim of the Kane"
+  },
+  {
+   "flag": 0,
+   "name": "Lord Chriskane"
+  },
+  {
+   "flag": 0,
+   "name": "Alex the Axe"
+  },
+  {
+   "flag": 0,
+   "name": "Anthony the Ant"
+  },
+  {
+   "flag": 0,
+   "name": "Dracco"
+  },
+  {
+   "flag": 0,
+   "name": "Ilyn Mor"
+  },
+  {
+   "flag": 1,
+   "name": "Alevera"
+  },
+  {
+   "flag": 1,
+   "name": "Mystylla"
+  },
+  {
+   "flag": 0,
+   "name": "Gary the Great"
+  },
+  {
+   "flag": 0,
+   "name": "Argon"
+  },
+  {
+   "flag": 0,
+   "name": "Boron"
+  },
+  {
+   "flag": 0,
+   "name": "Pete the Wise"
+  },
+  {
+   "flag": 0,
+   "name": "Roughead"
+  },
+  {
+   "flag": 0,
+   "name": "Thelikk"
+  },
+  {
+   "flag": 0,
+   "name": "Kramus"
+  },
+  {
+   "flag": 1,
+   "name": "Syrena"
+  },
+  {
+   "flag": 1,
+   "name": "Lelith"
+  },
+  {
+   "flag": 1,
+   "name": "Yseult"
+  },
+  {
+   "flag": 1,
+   "name": "Yara"
+  },
+  {
+   "flag": 0,
+   "name": "Akiloth"
+  },
+  {
+   "flag": 0,
+   "name": "Azur the Blue"
+  },
+  {
+   "flag": 0,
+   "name": "Buk the Fierce"
+  },
+  {
+   "flag": 0,
+   "name": "Leldor the Huge"
+  },
+  {
+   "flag": 0,
+   "name": "Dhos the Hungry"
+  },
+  {
+   "flag": 1,
+   "name": "Yvaga the Axe"
+  },
+  {
+   "flag": 1,
+   "name": "Hrunikka"
+  },
+  {
+   "flag": 1,
+   "name": "Darina"
+  },
+  {
+   "flag": 1,
+   "name": "Escerva"
+  },
+  {
+   "flag": 0,
+   "name": "Peter the Sly"
+  },
+  {
+   "flag": 0,
+   "name": "Mark the Mad"
+  },
+  {
+   "flag": 0,
+   "name": "Tim the Fool"
+  },
+  {
+   "flag": 0,
+   "name": "Fredrikk"
+  }
+ ],
+ "7": [
+  {
+   "flag": 0,
+   "name": "Ian the Mongrel"
+  },
+  {
+   "flag": 0,
+   "name": "Roger the Foul"
+  },
+  {
+   "flag": 0,
+   "name": "Steve the Evil"
+  },
+  {
+   "flag": 0,
+   "name": "Nick the Black"
+  },
+  {
+   "flag": 0,
+   "name": "Gregor the Foul"
+  },
+  {
+   "flag": 1,
+   "name": "Alevera"
+  },
+  {
+   "flag": 1,
+   "name": "Mystylla"
+  },
+  {
+   "flag": 1,
+   "name": "Toxillia"
+  },
+  {
+   "flag": 1,
+   "name": "Mia the Chaotic"
+  },
+  {
+   "flag": 1,
+   "name": "Arachnia"
+  },
+  {
+   "flag": 1,
+   "name": "Sanguala"
+  },
+  {
+   "flag": 0,
+   "name": "Siegfried"
+  },
+  {
+   "flag": 0,
+   "name": "Attila"
+  },
+  {
+   "flag": 0,
+   "name": "Janus Ebon"
+  },
+  {
+   "flag": 0,
+   "name": "Thar the Black"
+  },
+  {
+   "flag": 0,
+   "name": "Oromor"
+  },
+  {
+   "flag": 0,
+   "name": "Thiis-tor"
+  },
+  {
+   "flag": 0,
+   "name": "Seth"
+  },
+  {
+   "flag": 0,
+   "name": "Dracco"
+  },
+  {
+   "flag": 0,
+   "name": "Ilyn Mor"
+  },
+  {
+   "flag": 0,
+   "name": "Xenon"
+  },
+  {
+   "flag": 0,
+   "name": "Necros"
+  },
+  {
+   "flag": 0,
+   "name": "Argon"
+  },
+  {
+   "flag": 0,
+   "name": "Boron"
+  },
+  {
+   "flag": 0,
+   "name": "Zarit"
+  },
+  {
+   "flag": 0,
+   "name": "Xanit"
+  },
+  {
+   "flag": 0,
+   "name": "Saurith"
+  },
+  {
+   "flag": 0,
+   "name": "Paranox"
+  },
+  {
+   "flag": 0,
+   "name": "Antharg"
+  },
+  {
+   "flag": 0,
+   "name": "Myrkrn"
+  },
+  {
+   "flag": 0,
+   "name": "Bain the Bearer"
+  },
+  {
+   "flag": 0,
+   "name": "Azgoroth"
+  },
+  {
+   "flag": 0,
+   "name": "Banizar"
+  },
+  {
+   "flag": 0,
+   "name": "Kalazar"
+  },
+  {
+   "flag": 0,
+   "name": "Thulcondor"
+  },
+  {
+   "flag": 0,
+   "name": "Goth"
+  },
+  {
+   "flag": 0,
+   "name": "Shadowbearer"
+  },
+  {
+   "flag": 0,
+   "name": "Lightsbane"
+  },
+  {
+   "flag": 0,
+   "name": "Yar the Lich"
+  },
+  {
+   "flag": 0,
+   "name": "The Silent One"
+  },
+  {
+   "flag": 0,
+   "name": "Vlad"
+  },
+  {
+   "flag": 0,
+   "name": "Balor"
+  },
+  {
+   "flag": 0,
+   "name": "Baal"
+  },
+  {
+   "flag": 0,
+   "name": "Ashmaal"
+  },
+  {
+   "flag": 0,
+   "name": "Thesgaar"
+  },
+  {
+   "flag": 0,
+   "name": "Khan"
+  },
+  {
+   "flag": 0,
+   "name": "Loraak"
+  },
+  {
+   "flag": 1,
+   "name": "Trylioz"
+  },
+  {
+   "flag": 1,
+   "name": "Czarina"
+  },
+  {
+   "flag": 1,
+   "name": "Jhoragha"
+  },
+  {
+   "flag": 1,
+   "name": "Mala"
+  },
+  {
+   "flag": 0,
+   "name": "Malgonoth"
+  },
+  {
+   "flag": 1,
+   "name": "Malordra"
+  },
+  {
+   "flag": 1,
+   "name": "Mazgda"
+  },
+  {
+   "flag": 0,
+   "name": "Nigorith"
+  },
+  {
+   "flag": 0,
+   "name": "Darkon"
+  },
+  {
+   "flag": 0,
+   "name": "Zarigon"
+  },
+  {
+   "flag": 0,
+   "name": "Killer"
+  },
+  {
+   "flag": 0,
+   "name": "Zaradhras"
+  },
+  {
+   "flag": 0,
+   "name": "Zur"
+  },
+  {
+   "flag": 0,
+   "name": "Blade"
+  },
+  {
+   "flag": 0,
+   "name": "Dethelm"
+  },
+  {
+   "flag": 0,
+   "name": "Prince Yor"
+  },
+  {
+   "flag": 0,
+   "name": "Zar"
+  },
+  {
+   "flag": 0,
+   "name": "Albargath"
+  },
+  {
+   "flag": 0,
+   "name": "Faulyth"
+  },
+  {
+   "flag": 0,
+   "name": "Kragan"
+  },
+  {
+   "flag": 0,
+   "name": "Arakken"
+  },
+  {
+   "flag": 0,
+   "name": "Dorthaarg"
+  },
+  {
+   "flag": 1,
+   "name": "Sarah Sauvage"
+  },
+  {
+   "flag": 1,
+   "name": "Black Jennie"
+  },
+  {
+   "flag": 1,
+   "name": "Luscious Lorell"
+  },
+  {
+   "flag": 0,
+   "name": "Fredoraz"
+  },
+  {
+   "flag": 1,
+   "name": "Mia the Chaotic"
+  },
+  {
+   "flag": 1,
+   "name": "Arachnia"
+  },
+  {
+   "flag": 1,
+   "name": "Sanguala"
+  },
+  {
+   "flag": 0,
+   "name": "Siegfried"
+  },
+  {
+   "flag": 0,
+   "name": "Attila"
+  },
+  {
+   "flag": 0,
+   "name": "Janus Ebon"
+  },
+  {
+   "flag": 0,
+   "name": "Thar the Black"
+  },
+  {
+   "flag": 0,
+   "name": "Oromor"
+  },
+  {
+   "flag": 0,
+   "name": "Thiis-tor"
+  },
+  {
+   "flag": 0,
+   "name": "Seth"
+  },
+  {
+   "flag": 0,
+   "name": "Dracco"
+  },
+  {
+   "flag": 0,
+   "name": "Ilyn Mor"
+  },
+  {
+   "flag": 0,
+   "name": "Xenon"
+  },
+  {
+   "flag": 0,
+   "name": "Necros"
+  },
+  {
+   "flag": 0,
+   "name": "Argon"
+  },
+  {
+   "flag": 0,
+   "name": "Boron"
+  },
+  {
+   "flag": 0,
+   "name": "Zarit"
+  },
+  {
+   "flag": 0,
+   "name": "Xanit"
+  },
+  {
+   "flag": 0,
+   "name": "Saurith"
+  },
+  {
+   "flag": 0,
+   "name": "Paranox"
+  },
+  {
+   "flag": 0,
+   "name": "Antharg"
+  },
+  {
+   "flag": 0,
+   "name": "Myrkrn"
+  },
+  {
+   "flag": 0,
+   "name": "Bain the Bearer"
+  },
+  {
+   "flag": 0,
+   "name": "Azgoroth"
+  },
+  {
+   "flag": 0,
+   "name": "Banizar"
+  },
+  {
+   "flag": 0,
+   "name": "Kalazar"
+  },
+  {
+   "flag": 0,
+   "name": "Thulcondor"
+  }
+ ]
+}

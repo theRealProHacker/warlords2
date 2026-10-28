@@ -1,0 +1,2330 @@
+[
+ {
+  "id": 100,
+  "word2": 0,
+  "title": "- New Scenario -",
+  "text": "Shows list of scenarios"
+ },
+ {
+  "id": 101,
+  "word2": 0,
+  "title": "- Load Game -",
+  "text": "Shows list of saved games"
+ },
+ {
+  "id": 102,
+  "word2": 0,
+  "title": "- Random Map -",
+  "text": "Play with random map"
+ },
+ {
+  "id": 103,
+  "word2": 0,
+  "title": "- Begin Scenario -",
+  "text": "Begin playing this scenario"
+ },
+ {
+  "id": 104,
+  "word2": 0,
+  "title": "- Change Terrain -",
+  "text": "Use alternate terrain set"
+ },
+ {
+  "id": 105,
+  "word2": 0,
+  "title": "- Produce Allies -",
+  "text": "Let cities produce ally armies"
+ },
+ {
+  "id": 106,
+  "word2": 0,
+  "title": "- Water -",
+  "text": "Choose amount of water"
+ },
+ {
+  "id": 107,
+  "word2": 0,
+  "title": "- Hills -",
+  "text": "Choose amount of hills"
+ },
+ {
+  "id": 108,
+  "word2": 0,
+  "title": "- Cities -",
+  "text": "Choose number of cities"
+ },
+ {
+  "id": 109,
+  "word2": 0,
+  "title": "- Forest -",
+  "text": "Choose amount of forest"
+ },
+ {
+  "id": 110,
+  "word2": 0,
+  "title": "- Water -",
+  "text": "Random amount of water"
+ },
+ {
+  "id": 111,
+  "word2": 0,
+  "title": "- Hills -",
+  "text": "Random amount of hills"
+ },
+ {
+  "id": 112,
+  "word2": 0,
+  "title": "- Cities -",
+  "text": "Random number of cities"
+ },
+ {
+  "id": 113,
+  "word2": 0,
+  "title": "- Forest -",
+  "text": "Random amount of forest"
+ },
+ {
+  "id": 149,
+  "word2": 0,
+  "title": "- Setup Player 1 -",
+  "text": "Set name/leader of player 1"
+ },
+ {
+  "id": 150,
+  "word2": 0,
+  "title": "- Setup Player 2 -",
+  "text": "Set name/leader of player 2"
+ },
+ {
+  "id": 151,
+  "word2": 0,
+  "title": "- Setup Player 3 -",
+  "text": "Set name/leader of player 3"
+ },
+ {
+  "id": 152,
+  "word2": 0,
+  "title": "- Setup Player 4 -",
+  "text": "Set name/leader of player 4"
+ },
+ {
+  "id": 153,
+  "word2": 0,
+  "title": "- Setup Player 5 -",
+  "text": "Set name/leader of player 5"
+ },
+ {
+  "id": 154,
+  "word2": 0,
+  "title": "- Setup Player 6 -",
+  "text": "Set name/leader of player 6"
+ },
+ {
+  "id": 155,
+  "word2": 0,
+  "title": "- Setup Player 7 -",
+  "text": "Set name/leader of player 7"
+ },
+ {
+  "id": 156,
+  "word2": 0,
+  "title": "- Setup Player 8 -",
+  "text": "Set name/leader of player 8"
+ },
+ {
+  "id": 133,
+  "word2": 0,
+  "title": "- Setup Player 1 -",
+  "text": "Set name/leader of player 1"
+ },
+ {
+  "id": 134,
+  "word2": 0,
+  "title": "- Setup Player 2 -",
+  "text": "Set name/leader of player 2"
+ },
+ {
+  "id": 135,
+  "word2": 0,
+  "title": "- Setup Player 3 -",
+  "text": "Set name/leader of player 3"
+ },
+ {
+  "id": 136,
+  "word2": 0,
+  "title": "- Setup Player 4 -",
+  "text": "Set name/leader of player 4"
+ },
+ {
+  "id": 137,
+  "word2": 0,
+  "title": "- Setup Player 5 -",
+  "text": "Set name/leader of player 5"
+ },
+ {
+  "id": 138,
+  "word2": 0,
+  "title": "- Setup Player 6 -",
+  "text": "Set name/leader of player 6"
+ },
+ {
+  "id": 139,
+  "word2": 0,
+  "title": "- Setup Player 7 -",
+  "text": "Set name/leader of player 7"
+ },
+ {
+  "id": 140,
+  "word2": 0,
+  "title": "- Setup Player 8 -",
+  "text": "Set name/leader of player 8"
+ },
+ {
+  "id": 125,
+  "word2": 0,
+  "title": "- Player 1 -",
+  "text": "Set level of player 1"
+ },
+ {
+  "id": 126,
+  "word2": 0,
+  "title": "- Player 2 -",
+  "text": "Set level of player 2"
+ },
+ {
+  "id": 127,
+  "word2": 0,
+  "title": "- Player 3 -",
+  "text": "Set level of player 3"
+ },
+ {
+  "id": 128,
+  "word2": 0,
+  "title": "- Player 4 -",
+  "text": "Set level of player 4"
+ },
+ {
+  "id": 129,
+  "word2": 0,
+  "title": "- Player 5 -",
+  "text": "Set level of player 5"
+ },
+ {
+  "id": 130,
+  "word2": 0,
+  "title": "- Player 6 -",
+  "text": "Set level of player 6"
+ },
+ {
+  "id": 131,
+  "word2": 0,
+  "title": "- Player 7 -",
+  "text": "Set level of player 7"
+ },
+ {
+  "id": 132,
+  "word2": 0,
+  "title": "- Player 8 -",
+  "text": "Set level of player 8"
+ },
+ {
+  "id": 141,
+  "word2": 0,
+  "title": "- Begin Game -",
+  "text": "Start playing the game!"
+ },
+ {
+  "id": 142,
+  "word2": 0,
+  "title": "- Main Menu -",
+  "text": "Return to the main menu"
+ },
+ {
+  "id": 143,
+  "word2": 0,
+  "title": "- Top Level -",
+  "text": "Play the game at top level"
+ },
+ {
+  "id": 144,
+  "word2": 0,
+  "title": "- Top Level Off -",
+  "text": "Return the game to normal"
+ },
+ {
+  "id": 159,
+  "word2": 0,
+  "title": "- Neutral Cities -",
+  "text": "Set difficulty of neutral cities"
+ },
+ {
+  "id": 160,
+  "word2": 0,
+  "title": "- Diplomacy -",
+  "text": "Diplomatic options on or off"
+ },
+ {
+  "id": 161,
+  "word2": 0,
+  "title": "- Quests -",
+  "text": "Hero quests and hidden sites"
+ },
+ {
+  "id": 162,
+  "word2": 0,
+  "title": "- Hidden Map -",
+  "text": "Allows play with a hidden map"
+ },
+ {
+  "id": 165,
+  "word2": 0,
+  "title": "- Intense Combat -",
+  "text": "Bias combat towards large stacks"
+ },
+ {
+  "id": 168,
+  "word2": 0,
+  "title": "- Random Turns -",
+  "text": "Allows random ordering of turns"
+ },
+ {
+  "id": 166,
+  "word2": 0,
+  "title": "- Quick Start -",
+  "text": "Begin with all cities owned"
+ },
+ {
+  "id": 163,
+  "word2": 0,
+  "title": "- View Enemy -",
+  "text": "Can look inside enemy stacks"
+ },
+ {
+  "id": 167,
+  "word2": 0,
+  "title": "- Military Advisor -",
+  "text": "Speculates on combat results"
+ },
+ {
+  "id": 164,
+  "word2": 0,
+  "title": "- View Production -",
+  "text": "Is city production visible to all"
+ },
+ {
+  "id": 145,
+  "word2": 0,
+  "title": "- Beginner Game -",
+  "text": "Sets options for beginner game"
+ },
+ {
+  "id": 146,
+  "word2": 0,
+  "title": "- Mid-level Game -",
+  "text": "Sets options for mid-level game"
+ },
+ {
+  "id": 147,
+  "word2": 0,
+  "title": "- Advanced Game -",
+  "text": "Sets options for advanced game"
+ },
+ {
+  "id": 169,
+  "word2": 0,
+  "title": "- Beginner Game -",
+  "text": "Sets options for beginner game"
+ },
+ {
+  "id": 170,
+  "word2": 0,
+  "title": "- Mid-level Game -",
+  "text": "Sets options for mid-level game"
+ },
+ {
+  "id": 171,
+  "word2": 0,
+  "title": "- Advanced Game -",
+  "text": "Sets options for advanced game"
+ },
+ {
+  "id": 148,
+  "word2": 0,
+  "title": "- Edit Options -",
+  "text": "Customize game options"
+ },
+ {
+  "id": 172,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to setup screen"
+ },
+ {
+  "id": 157,
+  "word2": 0,
+  "title": "- Recall Options -",
+  "text": "Load options from the last game"
+ },
+ {
+  "id": 158,
+  "word2": 0,
+  "title": "- Random Characters -",
+  "text": "Select random leader for each side"
+ },
+ {
+  "id": 457,
+  "word2": 0,
+  "title": "- Okay -",
+  "text": "Return to setup screen"
+ },
+ {
+  "id": 458,
+  "word2": 0,
+  "title": "- Cancel -",
+  "text": "Ignore changes & return"
+ },
+ {
+  "id": 459,
+  "word2": 0,
+  "title": "- Side Name -",
+  "text": "Change the side name"
+ },
+ {
+  "id": 460,
+  "word2": 0,
+  "title": "- Up -",
+  "text": "Move list up one"
+ },
+ {
+  "id": 462,
+  "word2": 0,
+  "title": "- Page Up -",
+  "text": "Move list up one page"
+ },
+ {
+  "id": 461,
+  "word2": 0,
+  "title": "- Down -",
+  "text": "Move list down one"
+ },
+ {
+  "id": 463,
+  "word2": 0,
+  "title": "- Page Down -",
+  "text": "Move list down one page"
+ },
+ {
+  "id": 464,
+  "word2": 0,
+  "title": "- Select Leader -",
+  "text": "Choose leader for this side"
+ },
+ {
+  "id": 465,
+  "word2": 0,
+  "title": "- Select Leader -",
+  "text": "Choose leader for this side"
+ },
+ {
+  "id": 466,
+  "word2": 0,
+  "title": "- Select Leader -",
+  "text": "Choose leader for this side"
+ },
+ {
+  "id": 467,
+  "word2": 0,
+  "title": "- Select Leader -",
+  "text": "Choose leader for this side"
+ },
+ {
+  "id": 468,
+  "word2": 0,
+  "title": "- Select Leader -",
+  "text": "Choose leader for this side"
+ },
+ {
+  "id": 114,
+  "word2": 0,
+  "title": "- Select Item -",
+  "text": "Select an item from the list"
+ },
+ {
+  "id": 115,
+  "word2": 0,
+  "title": "- Select Item -",
+  "text": "Select an item from the list"
+ },
+ {
+  "id": 116,
+  "word2": 0,
+  "title": "- Select Item -",
+  "text": "Select an item from the list"
+ },
+ {
+  "id": 117,
+  "word2": 0,
+  "title": "- Select Item -",
+  "text": "Select an item from the list"
+ },
+ {
+  "id": 118,
+  "word2": 0,
+  "title": "- Select Item -",
+  "text": "Select an item from the list"
+ },
+ {
+  "id": 119,
+  "word2": 0,
+  "title": "- Page Up -",
+  "text": "Move one page up through list"
+ },
+ {
+  "id": 120,
+  "word2": 0,
+  "title": "- Page Down -",
+  "text": "Move one page down through list"
+ },
+ {
+  "id": 121,
+  "word2": 0,
+  "title": "- Up -",
+  "text": "Move one item up through list"
+ },
+ {
+  "id": 122,
+  "word2": 0,
+  "title": "- Down -",
+  "text": "Move one item down through list"
+ },
+ {
+  "id": 123,
+  "word2": 0,
+  "title": "- OK -",
+  "text": "Choose an item from the list"
+ },
+ {
+  "id": 124,
+  "word2": 0,
+  "title": "- Cancel -",
+  "text": "Choose no item from the list"
+ },
+ {
+  "id": 476,
+  "word2": 0,
+  "title": "- Select Item -",
+  "text": "Select an item from the list"
+ },
+ {
+  "id": 477,
+  "word2": 0,
+  "title": "- Select Item -",
+  "text": "Select an item from the list"
+ },
+ {
+  "id": 478,
+  "word2": 0,
+  "title": "- Select Item -",
+  "text": "Select an item from the list"
+ },
+ {
+  "id": 479,
+  "word2": 0,
+  "title": "- Select Item -",
+  "text": "Select an item from the list"
+ },
+ {
+  "id": 480,
+  "word2": 0,
+  "title": "- Select Item -",
+  "text": "Select an item from the list"
+ },
+ {
+  "id": 481,
+  "word2": 0,
+  "title": "- Select Item -",
+  "text": "Select an item from the list"
+ },
+ {
+  "id": 482,
+  "word2": 0,
+  "title": "- Select Item -",
+  "text": "Select an item from the list"
+ },
+ {
+  "id": 472,
+  "word2": 0,
+  "title": "- Page Up -",
+  "text": "Move one page up through list"
+ },
+ {
+  "id": 473,
+  "word2": 0,
+  "title": "- Page Down -",
+  "text": "Move one page down through list"
+ },
+ {
+  "id": 470,
+  "word2": 0,
+  "title": "- Up -",
+  "text": "Move one item up through list"
+ },
+ {
+  "id": 471,
+  "word2": 0,
+  "title": "- Down -",
+  "text": "Move one item down through list"
+ },
+ {
+  "id": 474,
+  "word2": 0,
+  "title": "- OK -",
+  "text": "Choose a scenario from the list"
+ },
+ {
+  "id": 475,
+  "word2": 0,
+  "title": "- Cancel -",
+  "text": "Choose no scenario from the list"
+ },
+ {
+  "id": 173,
+  "word2": 0,
+  "title": "- Move -",
+  "text": "Carry out movement orders"
+ },
+ {
+  "id": 174,
+  "word2": 0,
+  "title": "- Next Army -",
+  "text": "Select next army group"
+ },
+ {
+  "id": 175,
+  "word2": 0,
+  "title": "- Quit & Next -",
+  "text": "Finsh one group, then get next"
+ },
+ {
+  "id": 176,
+  "word2": 0,
+  "title": "- Defend -",
+  "text": "Assign army group to defence"
+ },
+ {
+  "id": 177,
+  "word2": 0,
+  "title": "- Centre Screen -",
+  "text": "Centre screen on current group"
+ },
+ {
+  "id": 178,
+  "word2": 0,
+  "title": "- Deselect -",
+  "text": "Deselect the current group"
+ },
+ {
+  "id": 179,
+  "word2": 33,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 180,
+  "word2": 34,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 181,
+  "word2": 35,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 182,
+  "word2": 36,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 183,
+  "word2": 0,
+  "title": "- Diplomacy -",
+  "text": "Call up the diplomatic screens"
+ },
+ {
+  "id": 184,
+  "word2": 0,
+  "title": "- Diplomacy -",
+  "text": "Call up the diplomatic screens"
+ },
+ {
+  "id": 185,
+  "word2": 0,
+  "title": "- Diplomacy -",
+  "text": "Call up the diplomatic screens"
+ },
+ {
+  "id": 186,
+  "word2": 0,
+  "title": "- Start/End Path -",
+  "text": "Move between start/end of path"
+ },
+ {
+  "id": 188,
+  "word2": 0,
+  "title": "- Help -",
+  "text": "Help with the main screen"
+ },
+ {
+  "id": 187,
+  "word2": 0,
+  "title": "- Cancel Path -",
+  "text": "Cancel movement path"
+ },
+ {
+  "id": 189,
+  "word2": 0,
+  "title": "- Okay -",
+  "text": "Agree to the option presented"
+ },
+ {
+  "id": 190,
+  "word2": 0,
+  "title": "- Cancel -",
+  "text": "Cancel the option presented"
+ },
+ {
+  "id": 191,
+  "word2": 0,
+  "title": "- Name Edit -",
+  "text": "Click here to change the name"
+ },
+ {
+  "id": 192,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to the main screen"
+ },
+ {
+  "id": 201,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to the main screen"
+ },
+ {
+  "id": 193,
+  "word2": 0,
+  "title": "- City Info -",
+  "text": "Look at info on any city"
+ },
+ {
+  "id": 194,
+  "word2": 0,
+  "title": "- City Build -",
+  "text": "Build, rename or raze your city"
+ },
+ {
+  "id": 195,
+  "word2": 0,
+  "title": "- City Production -",
+  "text": "Produce armies in your cities"
+ },
+ {
+  "id": 196,
+  "word2": 0,
+  "title": "- Vector Production -",
+  "text": "Give orders to armies produced"
+ },
+ {
+  "id": 202,
+  "word2": 0,
+  "title": "- Stop Production -",
+  "text": "Stop producing this army"
+ },
+ {
+  "id": 197,
+  "word2": 1,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 198,
+  "word2": 2,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 199,
+  "word2": 3,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 200,
+  "word2": 4,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 203,
+  "word2": 0,
+  "title": "- Rename City -",
+  "text": "Give city a new name"
+ },
+ {
+  "id": 205,
+  "word2": 0,
+  "title": "- Raze City -",
+  "text": "Permanently ruin city"
+ },
+ {
+  "id": 204,
+  "word2": 0,
+  "title": "- Build Production -",
+  "text": "Buy new army types for a city"
+ },
+ {
+  "id": 206,
+  "word2": 0,
+  "title": "- Up -",
+  "text": "Move one army up the list"
+ },
+ {
+  "id": 207,
+  "word2": 0,
+  "title": "- Down -",
+  "text": "Move one army down the list"
+ },
+ {
+  "id": 208,
+  "word2": 0,
+  "title": "- Page Up -",
+  "text": "Move one page up the list"
+ },
+ {
+  "id": 209,
+  "word2": 0,
+  "title": "- Page Down -",
+  "text": "Move one page down the list"
+ },
+ {
+  "id": 210,
+  "word2": 0,
+  "title": "- Vector Production -",
+  "text": "Create orders for armies"
+ },
+ {
+  "id": 211,
+  "word2": 0,
+  "title": "- Move Destination -",
+  "text": "Move all armies coming here"
+ },
+ {
+  "id": 212,
+  "word2": 0,
+  "title": "- Show All -",
+  "text": "Shows all vector paths"
+ },
+ {
+  "id": 214,
+  "word2": 0,
+  "title": "- Vector Production -",
+  "text": "Create orders for armies"
+ },
+ {
+  "id": 215,
+  "word2": 0,
+  "title": "- Move Destination -",
+  "text": "Move all armies coming here"
+ },
+ {
+  "id": 216,
+  "word2": 0,
+  "title": "- Show All -",
+  "text": "Shows all vector paths"
+ },
+ {
+  "id": 218,
+  "word2": 0,
+  "title": "- Army Report -",
+  "text": "Show number of armies"
+ },
+ {
+  "id": 219,
+  "word2": 0,
+  "title": "- City Report -",
+  "text": "Show number of cities"
+ },
+ {
+  "id": 220,
+  "word2": 0,
+  "title": "- Gold Report -",
+  "text": "Show amounts of gold"
+ },
+ {
+  "id": 221,
+  "word2": 0,
+  "title": "- Production Report -",
+  "text": "Show this turns armies"
+ },
+ {
+  "id": 222,
+  "word2": 0,
+  "title": "- Winning Report -",
+  "text": "Show the leaders"
+ },
+ {
+  "id": 223,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to main screen"
+ },
+ {
+  "id": 224,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 225,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 226,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 227,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 228,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 229,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 230,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 231,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 232,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 233,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 234,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 235,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 236,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 237,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 238,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 239,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 240,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 241,
+  "word2": 65535,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 242,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to main screen"
+ },
+ {
+  "id": 243,
+  "word2": 0,
+  "title": "- Next Hero -",
+  "text": "Cycle through each hero"
+ },
+ {
+  "id": 244,
+  "word2": 0,
+  "title": "- Previous Hero -",
+  "text": "Cycle through each hero"
+ },
+ {
+  "id": 245,
+  "word2": 0,
+  "title": "- Scroll Up -",
+  "text": "Show previous item"
+ },
+ {
+  "id": 246,
+  "word2": 0,
+  "title": "- Scroll Down -",
+  "text": "Show next item"
+ },
+ {
+  "id": 248,
+  "word2": 0,
+  "title": "- Take Item -",
+  "text": "Take the current item"
+ },
+ {
+  "id": 247,
+  "word2": 0,
+  "title": "- Drop Item -",
+  "text": "Drop the current item"
+ },
+ {
+  "id": 249,
+  "word2": 0,
+  "title": "- Items on Ground -",
+  "text": "Show items on the ground"
+ },
+ {
+  "id": 250,
+  "word2": 0,
+  "title": "- Items Carried -",
+  "text": "Show items being carried"
+ },
+ {
+  "id": 251,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to main screen"
+ },
+ {
+  "id": 252,
+  "word2": 0,
+  "title": "- Player 1 -",
+  "text": "Flip between human/computer"
+ },
+ {
+  "id": 253,
+  "word2": 0,
+  "title": "- Player 2 -",
+  "text": "Flip between human/computer"
+ },
+ {
+  "id": 254,
+  "word2": 0,
+  "title": "- Player 3 -",
+  "text": "Flip between human/computer"
+ },
+ {
+  "id": 255,
+  "word2": 0,
+  "title": "- Player 4 -",
+  "text": "Flip between human/computer"
+ },
+ {
+  "id": 256,
+  "word2": 0,
+  "title": "- Player 5 -",
+  "text": "Flip between human/computer"
+ },
+ {
+  "id": 257,
+  "word2": 0,
+  "title": "- Player 6 -",
+  "text": "Flip between human/computer"
+ },
+ {
+  "id": 258,
+  "word2": 0,
+  "title": "- Player 7 -",
+  "text": "Flip between human/computer"
+ },
+ {
+  "id": 259,
+  "word2": 0,
+  "title": "- Player 8 -",
+  "text": "Flip between human/computer"
+ },
+ {
+  "id": 260,
+  "word2": 0,
+  "title": "- Enhance Player 1 -",
+  "text": "Set enhance mode of player 1"
+ },
+ {
+  "id": 261,
+  "word2": 0,
+  "title": "- Enhance Player 2 -",
+  "text": "Set enhance mode of player 2"
+ },
+ {
+  "id": 262,
+  "word2": 0,
+  "title": "- Enhance Player 3 -",
+  "text": "Set enhance mode of player 3"
+ },
+ {
+  "id": 263,
+  "word2": 0,
+  "title": "- Enhance Player 4 -",
+  "text": "Set enhance mode of player 4"
+ },
+ {
+  "id": 264,
+  "word2": 0,
+  "title": "- Enhance Player 5 -",
+  "text": "Set enhance mode of player 5"
+ },
+ {
+  "id": 265,
+  "word2": 0,
+  "title": "- Enhance Player 6 -",
+  "text": "Set enhance mode of player 6"
+ },
+ {
+  "id": 266,
+  "word2": 0,
+  "title": "- Enhance Player 7 -",
+  "text": "Set enhance mode of player 7"
+ },
+ {
+  "id": 267,
+  "word2": 0,
+  "title": "- Enhance Player 8 -",
+  "text": "Set enhance mode of player 8"
+ },
+ {
+  "id": 268,
+  "word2": 0,
+  "title": "- Observe Player 1 -",
+  "text": "Observe player 1"
+ },
+ {
+  "id": 269,
+  "word2": 0,
+  "title": "- Observe Player 2 -",
+  "text": "Observe player 2"
+ },
+ {
+  "id": 270,
+  "word2": 0,
+  "title": "- Observe Player 3 -",
+  "text": "Observe player 3"
+ },
+ {
+  "id": 271,
+  "word2": 0,
+  "title": "- Observe Player 4 -",
+  "text": "Observe player 4"
+ },
+ {
+  "id": 272,
+  "word2": 0,
+  "title": "- Observe Player 5 -",
+  "text": "Observe player 5"
+ },
+ {
+  "id": 273,
+  "word2": 0,
+  "title": "- Observe Player 6 -",
+  "text": "Observe player 6"
+ },
+ {
+  "id": 274,
+  "word2": 0,
+  "title": "- Observe Player 7 -",
+  "text": "Observe player 7"
+ },
+ {
+  "id": 275,
+  "word2": 0,
+  "title": "- Observe Player 8 -",
+  "text": "Observe player 8"
+ },
+ {
+  "id": 276,
+  "word2": 0,
+  "title": "- Music On/Off -",
+  "text": "Turn music on/off"
+ },
+ {
+  "id": 277,
+  "word2": 0,
+  "title": "- Sound On/Off -",
+  "text": "Sound effects on/off"
+ },
+ {
+  "id": 278,
+  "word2": 0,
+  "title": "- Voice On/Off -",
+  "text": "Talking face on/off"
+ },
+ {
+  "id": 283,
+  "word2": 0,
+  "title": "- Pillage -",
+  "text": "Reduce defence for gold"
+ },
+ {
+  "id": 284,
+  "word2": 0,
+  "title": "- Raze -",
+  "text": "Burn city to the ground"
+ },
+ {
+  "id": 285,
+  "word2": 0,
+  "title": "- Pillage -",
+  "text": "Use this city to produce"
+ },
+ {
+  "id": 286,
+  "word2": 0,
+  "title": "- Sack -",
+  "text": "Destroy defences for gold"
+ },
+ {
+  "id": 287,
+  "word2": 0,
+  "title": "- Okay -",
+  "text": "Accept this hero"
+ },
+ {
+  "id": 288,
+  "word2": 0,
+  "title": "- Cancel -",
+  "text": "Decline this hero"
+ },
+ {
+  "id": 289,
+  "word2": 0,
+  "title": "- Name -",
+  "text": "Change the name"
+ },
+ {
+  "id": 290,
+  "word2": 0,
+  "title": "- Male Hero -",
+  "text": "Set this hero as male"
+ },
+ {
+  "id": 291,
+  "word2": 0,
+  "title": "- Female Hero -",
+  "text": "Set this hero as female"
+ },
+ {
+  "id": 292,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to main screen"
+ },
+ {
+  "id": 293,
+  "word2": 0,
+  "title": "- Take Item -",
+  "text": "Take the item you found"
+ },
+ {
+  "id": 294,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to main screen"
+ },
+ {
+  "id": 295,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 296,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 297,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 298,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 299,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 300,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 301,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 302,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 303,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 304,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 305,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 306,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 307,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 308,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 309,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 310,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 311,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 312,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 313,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 314,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 315,
+  "word2": 0,
+  "title": "- Button -",
+  "text": "Choose this button to setup"
+ },
+ {
+  "id": 316,
+  "word2": 0,
+  "title": "- Replace Button -",
+  "text": "Setup a button in this place"
+ },
+ {
+  "id": 317,
+  "word2": 0,
+  "title": "- Replace Button -",
+  "text": "Setup a button in this place"
+ },
+ {
+  "id": 318,
+  "word2": 0,
+  "title": "- Replace Button -",
+  "text": "Setup a button in this place"
+ },
+ {
+  "id": 319,
+  "word2": 0,
+  "title": "- Replace Button -",
+  "text": "Setup a button in this place"
+ },
+ {
+  "id": 320,
+  "word2": 0,
+  "title": "- Scroll View -",
+  "text": "Scroll the main view"
+ },
+ {
+  "id": 321,
+  "word2": 0,
+  "title": "- Scroll View -",
+  "text": "Scroll the main view"
+ },
+ {
+  "id": 322,
+  "word2": 0,
+  "title": "- Scroll View -",
+  "text": "Scroll the main view"
+ },
+ {
+  "id": 323,
+  "word2": 0,
+  "title": "- Scroll View -",
+  "text": "Scroll the main view"
+ },
+ {
+  "id": 324,
+  "word2": 0,
+  "title": "- Scroll View -",
+  "text": "Scroll the main view"
+ },
+ {
+  "id": 325,
+  "word2": 0,
+  "title": "- Scroll View -",
+  "text": "Scroll the main view"
+ },
+ {
+  "id": 326,
+  "word2": 0,
+  "title": "- Scroll View -",
+  "text": "Scroll the main view"
+ },
+ {
+  "id": 327,
+  "word2": 0,
+  "title": "- Scroll View -",
+  "text": "Scroll the main view"
+ },
+ {
+  "id": 328,
+  "word2": 0,
+  "title": "- Blessing -",
+  "text": "Receive +1 to strength"
+ },
+ {
+  "id": 329,
+  "word2": 0,
+  "title": "- Quest -",
+  "text": "Receive a quest for your hero"
+ },
+ {
+  "id": 330,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to main screen"
+ },
+ {
+  "id": 331,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to main screen"
+ },
+ {
+  "id": 279,
+  "word2": 0,
+  "title": "- Items -",
+  "text": "Find the location of items"
+ },
+ {
+  "id": 280,
+  "word2": 0,
+  "title": "- Money -",
+  "text": "Get money from the sage"
+ },
+ {
+  "id": 281,
+  "word2": 0,
+  "title": "- Maps -",
+  "text": "Uncover some hidden map"
+ },
+ {
+  "id": 282,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to main screen"
+ },
+ {
+  "id": 332,
+  "word2": 0,
+  "title": "- Okay -",
+  "text": "Return to main screen"
+ },
+ {
+  "id": 333,
+  "word2": 0,
+  "title": "- Cancel -",
+  "text": "Cancel changes and return"
+ },
+ {
+  "id": 334,
+  "word2": 0,
+  "title": "- Group All -",
+  "text": "Group all armies together"
+ },
+ {
+  "id": 335,
+  "word2": 0,
+  "title": "- Ungroup All -",
+  "text": "Ungroup every army"
+ },
+ {
+  "id": 336,
+  "word2": 37,
+  "title": "- Select Army -",
+  "text": "Select or deselect this unit"
+ },
+ {
+  "id": 337,
+  "word2": 38,
+  "title": "- Select Army -",
+  "text": "Select or deselect this unit"
+ },
+ {
+  "id": 338,
+  "word2": 39,
+  "title": "- Select Army -",
+  "text": "Select or deselect this unit"
+ },
+ {
+  "id": 339,
+  "word2": 40,
+  "title": "- Select Army -",
+  "text": "Select or deselect this unit"
+ },
+ {
+  "id": 340,
+  "word2": 41,
+  "title": "- Select Army -",
+  "text": "Select or deselect this unit"
+ },
+ {
+  "id": 341,
+  "word2": 42,
+  "title": "- Select Army -",
+  "text": "Select or deselect this unit"
+ },
+ {
+  "id": 342,
+  "word2": 43,
+  "title": "- Select Army -",
+  "text": "Select or deselect this unit"
+ },
+ {
+  "id": 343,
+  "word2": 44,
+  "title": "- Select Army -",
+  "text": "Select or deselect this unit"
+ },
+ {
+  "id": 344,
+  "word2": 0,
+  "title": "- Select Group -",
+  "text": "Select this group of armies"
+ },
+ {
+  "id": 345,
+  "word2": 0,
+  "title": "- Select Group -",
+  "text": "Select this group of armies"
+ },
+ {
+  "id": 346,
+  "word2": 0,
+  "title": "- Select Group -",
+  "text": "Select this group of armies"
+ },
+ {
+  "id": 347,
+  "word2": 0,
+  "title": "- Select Group -",
+  "text": "Select this group of armies"
+ },
+ {
+  "id": 348,
+  "word2": 0,
+  "title": "- Select Group -",
+  "text": "Select this group of armies"
+ },
+ {
+  "id": 349,
+  "word2": 0,
+  "title": "- Select Group -",
+  "text": "Select this group of armies"
+ },
+ {
+  "id": 350,
+  "word2": 0,
+  "title": "- Select Group -",
+  "text": "Select this group of armies"
+ },
+ {
+  "id": 351,
+  "word2": 0,
+  "title": "- Select Group -",
+  "text": "Select this group of armies"
+ },
+ {
+  "id": 396,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to the build screen"
+ },
+ {
+  "id": 397,
+  "word2": 0,
+  "title": "- Replace Army -",
+  "text": "Select new army to replace this"
+ },
+ {
+  "id": 398,
+  "word2": 0,
+  "title": "- Replace Army -",
+  "text": "Select new army to replace this"
+ },
+ {
+  "id": 399,
+  "word2": 0,
+  "title": "- Replace Army -",
+  "text": "Select new army to replace this"
+ },
+ {
+  "id": 400,
+  "word2": 0,
+  "title": "- Replace Army -",
+  "text": "Select new army to replace this"
+ },
+ {
+  "id": 401,
+  "word2": 5,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 402,
+  "word2": 6,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 403,
+  "word2": 7,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 404,
+  "word2": 8,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 405,
+  "word2": 9,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 406,
+  "word2": 10,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 407,
+  "word2": 11,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 408,
+  "word2": 12,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 409,
+  "word2": 13,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 410,
+  "word2": 14,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 411,
+  "word2": 15,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 412,
+  "word2": 16,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 413,
+  "word2": 17,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 414,
+  "word2": 18,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 415,
+  "word2": 19,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 416,
+  "word2": 20,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 417,
+  "word2": 21,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 418,
+  "word2": 22,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 419,
+  "word2": 23,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 420,
+  "word2": 24,
+  "title": "",
+  "text": ""
+ },
+ {
+  "id": 421,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to the main screen"
+ },
+ {
+  "id": 422,
+  "word2": 0,
+  "title": "- Edit Sign -",
+  "text": "Change writing on signpost"
+ },
+ {
+  "id": 421,
+  "word2": 0,
+  "title": "- Edit Sign -",
+  "text": "Change writing on signpost"
+ },
+ {
+  "id": 424,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to the main screen"
+ },
+ {
+  "id": 425,
+  "word2": 0,
+  "title": "- Okay -",
+  "text": "Return to the main screen"
+ },
+ {
+  "id": 426,
+  "word2": 0,
+  "title": "- Cancel -",
+  "text": "Ignore changes and return"
+ },
+ {
+  "id": 427,
+  "word2": 0,
+  "title": "- Reset -",
+  "text": "Set order to original values"
+ },
+ {
+  "id": 428,
+  "word2": 0,
+  "title": "- Increase Priority -",
+  "text": "Move to the front in a battle"
+ },
+ {
+  "id": 429,
+  "word2": 0,
+  "title": "- Decrease Priority -",
+  "text": "Move to the rear in a battle"
+ },
+ {
+  "id": 430,
+  "word2": 45,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 431,
+  "word2": 46,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 432,
+  "word2": 47,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 433,
+  "word2": 48,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 434,
+  "word2": 49,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 435,
+  "word2": 50,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 436,
+  "word2": 51,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 437,
+  "word2": 52,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 438,
+  "word2": 53,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 439,
+  "word2": 54,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 440,
+  "word2": 55,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 441,
+  "word2": 56,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 442,
+  "word2": 57,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 443,
+  "word2": 58,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 444,
+  "word2": 59,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 445,
+  "word2": 60,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 446,
+  "word2": 61,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 447,
+  "word2": 62,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 448,
+  "word2": 63,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 449,
+  "word2": 64,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 450,
+  "word2": 65,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 451,
+  "word2": 66,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 452,
+  "word2": 67,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 453,
+  "word2": 68,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 454,
+  "word2": 69,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 455,
+  "word2": 70,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 456,
+  "word2": 71,
+  "title": "- Swap Armies -",
+  "text": "Choose two armies to swap"
+ },
+ {
+  "id": 469,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to main screen"
+ },
+ {
+  "id": 368,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to main screen"
+ },
+ {
+  "id": 369,
+  "word2": 0,
+  "title": "- Report/Action -",
+  "text": "Switch report/action screens"
+ },
+ {
+  "id": 370,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to main screen"
+ },
+ {
+  "id": 371,
+  "word2": 0,
+  "title": "- Report/Action -",
+  "text": "Switch report/action screens"
+ },
+ {
+  "id": 372,
+  "word2": 0,
+  "title": "- Offer Peace -",
+  "text": "Offer peace to side 1"
+ },
+ {
+  "id": 373,
+  "word2": 0,
+  "title": "- Offer Peace -",
+  "text": "Offer peace to side 2"
+ },
+ {
+  "id": 374,
+  "word2": 0,
+  "title": "- Offer Peace -",
+  "text": "Offer peace to side 3"
+ },
+ {
+  "id": 375,
+  "word2": 0,
+  "title": "- Offer Peace -",
+  "text": "Offer peace to side 4"
+ },
+ {
+  "id": 376,
+  "word2": 0,
+  "title": "- Offer Peace -",
+  "text": "Offer peace to side 5"
+ },
+ {
+  "id": 377,
+  "word2": 0,
+  "title": "- Offer Peace -",
+  "text": "Offer peace to side 6"
+ },
+ {
+  "id": 378,
+  "word2": 0,
+  "title": "- Offer Peace -",
+  "text": "Offer peace to side 7"
+ },
+ {
+  "id": 379,
+  "word2": 0,
+  "title": "- Offer Peace -",
+  "text": "Offer peace to side 8"
+ },
+ {
+  "id": 380,
+  "word2": 0,
+  "title": "- Become Hostile -",
+  "text": "Become hostile with side 1"
+ },
+ {
+  "id": 381,
+  "word2": 0,
+  "title": "- Become Hostile -",
+  "text": "Become hostile with side 2"
+ },
+ {
+  "id": 382,
+  "word2": 0,
+  "title": "- Become Hostile -",
+  "text": "Become hostile with side 3"
+ },
+ {
+  "id": 383,
+  "word2": 0,
+  "title": "- Become Hostile -",
+  "text": "Become hostile with side 4"
+ },
+ {
+  "id": 384,
+  "word2": 0,
+  "title": "- Become Hostile -",
+  "text": "Become hostile with side 5"
+ },
+ {
+  "id": 385,
+  "word2": 0,
+  "title": "- Become Hostile -",
+  "text": "Become hostile with side 6"
+ },
+ {
+  "id": 386,
+  "word2": 0,
+  "title": "- Become Hostile -",
+  "text": "Become hostile with side 7"
+ },
+ {
+  "id": 387,
+  "word2": 0,
+  "title": "- Become Hostile -",
+  "text": "Become hostile with side 8"
+ },
+ {
+  "id": 388,
+  "word2": 0,
+  "title": "- Declare War -",
+  "text": "Declare war on side 1"
+ },
+ {
+  "id": 389,
+  "word2": 0,
+  "title": "- Declare War -",
+  "text": "Declare war on side 2"
+ },
+ {
+  "id": 390,
+  "word2": 0,
+  "title": "- Declare War -",
+  "text": "Declare war on side 3"
+ },
+ {
+  "id": 391,
+  "word2": 0,
+  "title": "- Declare War -",
+  "text": "Declare war on side 4"
+ },
+ {
+  "id": 392,
+  "word2": 0,
+  "title": "- Declare War -",
+  "text": "Declare war on side 5"
+ },
+ {
+  "id": 393,
+  "word2": 0,
+  "title": "- Declare War -",
+  "text": "Declare war on side 6"
+ },
+ {
+  "id": 394,
+  "word2": 0,
+  "title": "- Declare War -",
+  "text": "Declare war on side 7"
+ },
+ {
+  "id": 395,
+  "word2": 0,
+  "title": "- Declare War -",
+  "text": "Declare war on side 8"
+ },
+ {
+  "id": 359,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to main screen"
+ },
+ {
+  "id": 360,
+  "word2": 0,
+  "title": "- Triumphs -",
+  "text": "See the triumphs of side 1"
+ },
+ {
+  "id": 361,
+  "word2": 0,
+  "title": "- Triumphs -",
+  "text": "See the triumphs of side 2"
+ },
+ {
+  "id": 362,
+  "word2": 0,
+  "title": "- Triumphs -",
+  "text": "See the triumphs of side 3"
+ },
+ {
+  "id": 363,
+  "word2": 0,
+  "title": "- Triumphs -",
+  "text": "See the triumphs of side 4"
+ },
+ {
+  "id": 364,
+  "word2": 0,
+  "title": "- Triumphs -",
+  "text": "See the triumphs of side 5"
+ },
+ {
+  "id": 365,
+  "word2": 0,
+  "title": "- Triumphs -",
+  "text": "See the triumphs of side 6"
+ },
+ {
+  "id": 366,
+  "word2": 0,
+  "title": "- Triumphs -",
+  "text": "See the triumphs of side 7"
+ },
+ {
+  "id": 367,
+  "word2": 0,
+  "title": "- Triumphs -",
+  "text": "See the triumphs of side 8"
+ },
+ {
+  "id": 485,
+  "word2": 0,
+  "title": "- Accept -",
+  "text": "Accept surrender & end game"
+ },
+ {
+  "id": 486,
+  "word2": 0,
+  "title": "- Decline -",
+  "text": "Decline surrender & fight!"
+ },
+ {
+  "id": 484,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to main screen"
+ },
+ {
+  "id": 483,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to main screen"
+ },
+ {
+  "id": 489,
+  "word2": 0,
+  "title": "- Don't Resign -",
+  "text": "Return to the game"
+ },
+ {
+  "id": 487,
+  "word2": 0,
+  "title": "- Resign Gracefully -",
+  "text": "Leave your cities intact"
+ },
+ {
+  "id": 488,
+  "word2": 0,
+  "title": "- Resign Ungracefully -",
+  "text": "Burn all your cities!"
+ },
+ {
+  "id": 490,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to main screen"
+ },
+ {
+  "id": 491,
+  "word2": 0,
+  "title": "- Up -",
+  "text": "Move one army up the list"
+ },
+ {
+  "id": 492,
+  "word2": 0,
+  "title": "- Down -",
+  "text": "Move one army down the list"
+ },
+ {
+  "id": 493,
+  "word2": 0,
+  "title": "- Page Up -",
+  "text": "Move one page up the list"
+ },
+ {
+  "id": 494,
+  "word2": 0,
+  "title": "- Page Down -",
+  "text": "Move one page down the list"
+ },
+ {
+  "id": 495,
+  "word2": 0,
+  "title": "- Done -",
+  "text": "Return to main screen"
+ },
+ {
+  "id": 496,
+  "word2": 0,
+  "title": "- Bonus -",
+  "text": "List more info about bonuses"
+ }
+]

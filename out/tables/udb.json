@@ -1,0 +1,346 @@
+{
+ "buttons": [
+  {
+   "button_id": 507,
+   "name": "Move All",
+   "rect_large": [
+    128,
+    84,
+    64,
+    29
+   ],
+   "rect_small": [
+    192,
+    168,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 508,
+   "name": "Disband",
+   "rect_large": [
+    192,
+    84,
+    64,
+    29
+   ],
+   "rect_small": [
+    224,
+    168,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 510,
+   "name": "Army Rpt",
+   "rect_large": [
+    64,
+    56,
+    64,
+    29
+   ],
+   "rect_small": [
+    0,
+    168,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 511,
+   "name": "City Rpt",
+   "rect_large": [
+    128,
+    56,
+    64,
+    29
+   ],
+   "rect_small": [
+    32,
+    168,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 512,
+   "name": "Gold Rpt",
+   "rect_large": [
+    192,
+    56,
+    64,
+    29
+   ],
+   "rect_small": [
+    64,
+    168,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 513,
+   "name": "Prod Rpt",
+   "rect_large": [
+    0,
+    84,
+    64,
+    29
+   ],
+   "rect_small": [
+    128,
+    168,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 514,
+   "name": "Win Rpt",
+   "rect_large": [
+    64,
+    84,
+    64,
+    29
+   ],
+   "rect_small": [
+    160,
+    168,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 516,
+   "name": "Quest Report",
+   "rect_large": [
+    128,
+    28,
+    64,
+    29
+   ],
+   "rect_small": [
+    192,
+    140,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 517,
+   "name": "Heroes",
+   "rect_large": [
+    0,
+    28,
+    64,
+    29
+   ],
+   "rect_small": [
+    128,
+    140,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 518,
+   "name": "Plant Flag",
+   "rect_large": [
+    256,
+    28,
+    64,
+    29
+   ],
+   "rect_small": [
+    256,
+    140,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 521,
+   "name": "Search",
+   "rect_large": [
+    0,
+    56,
+    64,
+    29
+   ],
+   "rect_small": [
+    288,
+    140,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 524,
+   "name": "Build",
+   "rect_large": [
+    64,
+    0,
+    64,
+    29
+   ],
+   "rect_small": [
+    0,
+    140,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 525,
+   "name": "City Info",
+   "rect_large": [
+    128,
+    0,
+    64,
+    29
+   ],
+   "rect_small": [
+    32,
+    140,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 526,
+   "name": "Production",
+   "rect_large": [
+    192,
+    0,
+    64,
+    29
+   ],
+   "rect_small": [
+    64,
+    140,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 527,
+   "name": "Vectoring",
+   "rect_large": [
+    256,
+    0,
+    64,
+    29
+   ],
+   "rect_small": [
+    96,
+    140,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 528,
+   "name": "Ruins",
+   "rect_large": [
+    64,
+    28,
+    64,
+    29
+   ],
+   "rect_small": [
+    160,
+    140,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 529,
+   "name": "Stack",
+   "rect_large": [
+    256,
+    84,
+    64,
+    29
+   ],
+   "rect_small": [
+    256,
+    168,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 530,
+   "name": "City History",
+   "rect_large": [
+    192,
+    28,
+    64,
+    29
+   ],
+   "rect_small": [
+    224,
+    140,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 531,
+   "name": "Event History",
+   "rect_large": [
+    256,
+    56,
+    64,
+    29
+   ],
+   "rect_small": [
+    96,
+    168,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 534,
+   "name": "Triumphs",
+   "rect_large": [
+    0,
+    112,
+    64,
+    29
+   ],
+   "rect_small": [
+    288,
+    168,
+    32,
+    29
+   ]
+  },
+  {
+   "button_id": 535,
+   "name": "End Turn",
+   "rect_large": [
+    0,
+    0,
+    64,
+    29
+   ],
+   "rect_small": [
+    288,
+    112,
+    32,
+    29
+   ]
+  }
+ ],
+ "current": [
+  535,
+  514,
+  511,
+  517
+ ]
+}

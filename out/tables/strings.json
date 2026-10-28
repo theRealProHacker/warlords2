@@ -1,0 +1,3451 @@
+[
+ {
+  "group": 0,
+  "strings": [
+   {
+    "index": 0,
+    "text": "A Random World"
+   }
+  ]
+ },
+ {
+  "group": 1,
+  "strings": [
+   {
+    "index": 0,
+    "text": "New Scenario"
+   }
+  ]
+ },
+ {
+  "group": 2,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Water"
+   },
+   {
+    "index": 1,
+    "text": "Hills"
+   },
+   {
+    "index": 2,
+    "text": "Cities"
+   },
+   {
+    "index": 3,
+    "text": "Forest"
+   }
+  ]
+ },
+ {
+  "group": 3,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Cities can produce allies:  No"
+   },
+   {
+    "index": 1,
+    "text": "Cities can produce allies:  Yes"
+   }
+  ]
+ },
+ {
+  "group": 4,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Neutral Cities"
+   },
+   {
+    "index": 1,
+    "text": "Diplomacy"
+   },
+   {
+    "index": 2,
+    "text": "Quests"
+   },
+   {
+    "index": 3,
+    "text": "Hidden Map"
+   },
+   {
+    "index": 4,
+    "text": "View Enemies"
+   },
+   {
+    "index": 5,
+    "text": "View Production"
+   },
+   {
+    "index": 6,
+    "text": "Intense Combat"
+   },
+   {
+    "index": 7,
+    "text": "Quick Start"
+   },
+   {
+    "index": 8,
+    "text": "Military Advisor"
+   },
+   {
+    "index": 9,
+    "text": "Random Turns"
+   }
+  ]
+ },
+ {
+  "group": 5,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Average"
+   },
+   {
+    "index": 1,
+    "text": "Strong"
+   },
+   {
+    "index": 2,
+    "text": "Active"
+   }
+  ]
+ },
+ {
+  "group": 6,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Difficulty Rating %d%%"
+   }
+  ]
+ },
+ {
+  "group": 7,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Options"
+   },
+   {
+    "index": 1,
+    "text": "Game"
+   }
+  ]
+ },
+ {
+  "group": 8,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Game Options"
+   }
+  ]
+ },
+ {
+  "group": 9,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Affecting Difficulty"
+   }
+  ]
+ },
+ {
+  "group": 10,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Not Affecting Difficulty"
+   }
+  ]
+ },
+ {
+  "group": 11,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%s, for thee the war is over!"
+   },
+   {
+    "index": 1,
+    "text": "%s, thy empire has fallen!"
+   },
+   {
+    "index": 2,
+    "text": "%s, thou art vanquished!"
+   },
+   {
+    "index": 3,
+    "text": "%s, thou art no more!"
+   },
+   {
+    "index": 4,
+    "text": "%s, thy cities are as dust!"
+   }
+  ]
+ },
+ {
+  "group": 12,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Alas!"
+   },
+   {
+    "index": 1,
+    "text": "No more players are left!"
+   },
+   {
+    "index": 2,
+    "text": "So I bid thee a fond 'FAREWELL'"
+   },
+   {
+    "index": 3,
+    "text": "Hit any key to return to DOS."
+   }
+  ]
+ },
+ {
+  "group": 13,
+  "strings": [
+   {
+    "index": 0,
+    "text": "No further human resistance is possible!"
+   },
+   {
+    "index": 1,
+    "text": "But the battle will continue!"
+   },
+   {
+    "index": 2,
+    "text": "Hold down 'Shift' or 'Alt' to stop the war"
+   },
+   {
+    "index": 3,
+    "text": "and visit the sites of thy old battles"
+   }
+  ]
+ },
+ {
+  "group": 14,
+  "strings": [
+   {
+    "index": 0,
+    "text": "No humans are playing!"
+   },
+   {
+    "index": 1,
+    "text": "Hold down 'Shift' or 'Alt' to stop the war"
+   }
+  ]
+ },
+ {
+  "group": 15,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%s, thou hast triumphed!"
+   },
+   {
+    "index": 1,
+    "text": "No side remains to oppose thee!"
+   }
+  ]
+ },
+ {
+  "group": 16,
+  "strings": [
+   {
+    "index": 0,
+    "text": "At thy leisure"
+   },
+   {
+    "index": 1,
+    "text": "thou mayst inspect thy kingdom"
+   }
+  ]
+ },
+ {
+  "group": 17,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Surrender!"
+   },
+   {
+    "index": 1,
+    "text": "Ambassadors from all the other"
+   },
+   {
+    "index": 2,
+    "text": "nations offer their lands if"
+   },
+   {
+    "index": 3,
+    "text": "thou wilt spare their lives."
+   },
+   {
+    "index": 4,
+    "text": "Accept their resignation?"
+   }
+  ]
+ },
+ {
+  "group": 18,
+  "strings": [
+   {
+    "index": 0,
+    "text": "All cities seen! The game is open!"
+   }
+  ]
+ },
+ {
+  "group": 19,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%s"
+   },
+   {
+    "index": 1,
+    "text": "Thou canst be blessed or receive quests."
+   },
+   {
+    "index": 2,
+    "text": "What dost thou wish?"
+   }
+  ]
+ },
+ {
+  "group": 20,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Thou hast no quests!"
+   },
+   {
+    "index": 1,
+    "text": "But thou art not questing!"
+   },
+   {
+    "index": 2,
+    "text": "Quest?  What quest?"
+   },
+   {
+    "index": 3,
+    "text": "Seek a quest in a temple!"
+   }
+  ]
+ },
+ {
+  "group": 21,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Thou shalt seek out"
+   },
+   {
+    "index": 1,
+    "text": "and slay the foul"
+   },
+   {
+    "index": 2,
+    "text": "%s hero"
+   },
+   {
+    "index": 3,
+    "text": "He can be found to the"
+   }
+  ]
+ },
+ {
+  "group": 22,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Thou shalt retrieve"
+   },
+   {
+    "index": 1,
+    "text": "the famed and priceless"
+   },
+   {
+    "index": 2,
+    "text": "It can be found to the"
+   }
+  ]
+ },
+ {
+  "group": 23,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Thou shalt locate"
+   },
+   {
+    "index": 1,
+    "text": "and mercilessly slay"
+   },
+   {
+    "index": 2,
+    "text": "a unit of enemy"
+   }
+  ]
+ },
+ {
+  "group": 24,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Thou shalt slaughter"
+   },
+   {
+    "index": 1,
+    "text": "%d armies of the treacherous"
+   },
+   {
+    "index": 2,
+    "text": "Thou hast already slain"
+   },
+   {
+    "index": 3,
+    "text": "%d of them"
+   }
+  ]
+ },
+ {
+  "group": 25,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Thou shalt force the"
+   },
+   {
+    "index": 1,
+    "text": "city of %s"
+   },
+   {
+    "index": 2,
+    "text": "fabled city of %s"
+   },
+   {
+    "index": 3,
+    "text": "into submission and"
+   },
+   {
+    "index": 4,
+    "text": "occupy it."
+   },
+   {
+    "index": 5,
+    "text": "It can be found to the"
+   }
+  ]
+ },
+ {
+  "group": 26,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Thou shalt conquer the"
+   },
+   {
+    "index": 1,
+    "text": "city of %s"
+   },
+   {
+    "index": 2,
+    "text": "fabled city of %s"
+   },
+   {
+    "index": 3,
+    "text": "then burn it to the"
+   },
+   {
+    "index": 4,
+    "text": "ground"
+   },
+   {
+    "index": 5,
+    "text": "It can be found to the"
+   }
+  ]
+ },
+ {
+  "group": 27,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Thou shalt sack and"
+   },
+   {
+    "index": 1,
+    "text": "pillage %d gold"
+   },
+   {
+    "index": 2,
+    "text": "from thy mighty"
+   },
+   {
+    "index": 3,
+    "text": "foes."
+   },
+   {
+    "index": 4,
+    "text": "Thou hast already stolen"
+   },
+   {
+    "index": 5,
+    "text": "%d gold"
+   }
+  ]
+ },
+ {
+  "group": 28,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Thou hast completed thy"
+   },
+   {
+    "index": 1,
+    "text": "quest!"
+   }
+  ]
+ },
+ {
+  "group": 29,
+  "strings": [
+   {
+    "index": 0,
+    "text": "As reward, the priests"
+   },
+   {
+    "index": 1,
+    "text": "show thee the site of"
+   }
+  ]
+ },
+ {
+  "group": 30,
+  "strings": [
+   {
+    "index": 0,
+    "text": "As reward, the priests"
+   },
+   {
+    "index": 1,
+    "text": "give thee the"
+   }
+  ]
+ },
+ {
+  "group": 31,
+  "strings": [
+   {
+    "index": 0,
+    "text": "As reward, the priests"
+   },
+   {
+    "index": 1,
+    "text": "give thee"
+   },
+   {
+    "index": 2,
+    "text": "%d %s"
+   }
+  ]
+ },
+ {
+  "group": 32,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Alas! Thy hero is dead!"
+   },
+   {
+    "index": 1,
+    "text": "Thy quest hath become impossible!"
+   }
+  ]
+ },
+ {
+  "group": 33,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Alas! The city is razed!"
+   },
+   {
+    "index": 1,
+    "text": "Thy quest hath become impossible!"
+   }
+  ]
+ },
+ {
+  "group": 34,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Alas! The city was not taken by thy hero!"
+   },
+   {
+    "index": 1,
+    "text": "Thy quest is now invalid!"
+   }
+  ]
+ },
+ {
+  "group": 35,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Alas! Thy quest was to raze this city!"
+   },
+   {
+    "index": 1,
+    "text": "Thy quest is now invalid!"
+   }
+  ]
+ },
+ {
+  "group": 36,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Alas! Thy quest was not to pillage this city!"
+   },
+   {
+    "index": 1,
+    "text": "Thy quest is now invalid!"
+   }
+  ]
+ },
+ {
+  "group": 37,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Alas! The city was not razed by thy hero!"
+   },
+   {
+    "index": 1,
+    "text": "Thy quest is now invalid!"
+   }
+  ]
+ },
+ {
+  "group": 38,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Alas! Thy quest was to keep this city!"
+   },
+   {
+    "index": 1,
+    "text": "Thy quest is now invalid!"
+   }
+  ]
+ },
+ {
+  "group": 39,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Alas! The foes of thy quest are all dead!"
+   },
+   {
+    "index": 1,
+    "text": "Thy quest is now invalid!"
+   }
+  ]
+ },
+ {
+  "group": 40,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Alas! The item thou didst seek is gone!"
+   },
+   {
+    "index": 1,
+    "text": "Thy quest is now invalid!"
+   }
+  ]
+ },
+ {
+  "group": 41,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Alas! The hero thou didst seek is slain!"
+   },
+   {
+    "index": 1,
+    "text": "Thy quest is now invalid!"
+   }
+  ]
+ },
+ {
+  "group": 42,
+  "strings": [
+   {
+    "index": 0,
+    "text": "The city of thy quest was not won by thy hero!"
+   },
+   {
+    "index": 1,
+    "text": "Alas! Thy quest is now invalid!"
+   }
+  ]
+ },
+ {
+  "group": 43,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Observe not allowed in"
+   },
+   {
+    "index": 1,
+    "text": "hidden-map mode!"
+   },
+   {
+    "index": 2,
+    "text": "Observe is now off!"
+   },
+   {
+    "index": 3,
+    "text": "Observe is now on!"
+   }
+  ]
+ },
+ {
+  "group": 44,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Quit Game"
+   },
+   {
+    "index": 1,
+    "text": "Are you sure you"
+   },
+   {
+    "index": 2,
+    "text": "want to quit this game"
+   },
+   {
+    "index": 3,
+    "text": "O great and valiant"
+   },
+   {
+    "index": 4,
+    "text": "warrior?"
+   },
+   {
+    "index": 5,
+    "text": ""
+   }
+  ]
+ },
+ {
+  "group": 45,
+  "strings": [
+   {
+    "index": 0,
+    "text": "New Game"
+   },
+   {
+    "index": 1,
+    "text": "Are you sure you"
+   },
+   {
+    "index": 2,
+    "text": "want to quit this game"
+   },
+   {
+    "index": 3,
+    "text": "and start a new"
+   },
+   {
+    "index": 4,
+    "text": "one?"
+   }
+  ]
+ },
+ {
+  "group": 46,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Save Game"
+   },
+   {
+    "index": 1,
+    "text": "Type the name of the game"
+   },
+   {
+    "index": 2,
+    "text": "you wish to save"
+   }
+  ]
+ },
+ {
+  "group": 47,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Load Game"
+   },
+   {
+    "index": 1,
+    "text": "%s, thy turn continues!"
+   }
+  ]
+ },
+ {
+  "group": 48,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Save Map"
+   },
+   {
+    "index": 1,
+    "text": "Type a name for the map"
+   },
+   {
+    "index": 2,
+    "text": "you wish to save"
+   }
+  ]
+ },
+ {
+  "group": 49,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Load Map"
+   }
+  ]
+ },
+ {
+  "group": 50,
+  "strings": [
+   {
+    "index": 0,
+    "text": "It appears to be uninhabited!"
+   }
+  ]
+ },
+ {
+  "group": 51,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%s encounters a %s..."
+   },
+   {
+    "index": 1,
+    "text": "and is slain by it!"
+   },
+   {
+    "index": 2,
+    "text": "and is victorious!"
+   }
+  ]
+ },
+ {
+  "group": 52,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%s has found the %s!"
+   }
+  ]
+ },
+ {
+  "group": 53,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%s has found %d gp!"
+   }
+  ]
+ },
+ {
+  "group": 54,
+  "strings": [
+   {
+    "index": 0,
+    "text": "A unit of %s offer to join %s"
+   },
+   {
+    "index": 1,
+    "text": "%d units of %s offer to join %s"
+   }
+  ]
+ },
+ {
+  "group": 55,
+  "strings": [
+   {
+    "index": 0,
+    "text": "We have already blessed thee!"
+   }
+  ]
+ },
+ {
+  "group": 56,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Thou hast been blessed!"
+   },
+   {
+    "index": 1,
+    "text": "%d armies have been blessed!"
+   },
+   {
+    "index": 2,
+    "text": "Seek more blessings in far temples!"
+   }
+  ]
+ },
+ {
+  "group": 57,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Nothing"
+   },
+   {
+    "index": 1,
+    "text": "Blessings and Quests are found there!"
+   },
+   {
+    "index": 2,
+    "text": "An ancient artifact is there!"
+   },
+   {
+    "index": 3,
+    "text": "Ahhh grasshopper! A place to seek wisdom!"
+   },
+   {
+    "index": 4,
+    "text": "I believe there is much gold there!"
+   },
+   {
+    "index": 5,
+    "text": "Friendship is possible!"
+   }
+  ]
+ },
+ {
+  "group": 58,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%s has found a Sage!"
+   }
+  ]
+ },
+ {
+  "group": 59,
+  "strings": [
+   {
+    "index": 0,
+    "text": "The sage gives you a gem"
+   },
+   {
+    "index": 1,
+    "text": "worth %d gp!"
+   }
+  ]
+ },
+ {
+  "group": 60,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Then point to the map, young hero!"
+   },
+   {
+    "index": 1,
+    "text": "And I shall show thee"
+   },
+   {
+    "index": 2,
+    "text": "places undreamed of!"
+   }
+  ]
+ },
+ {
+  "group": 61,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Nothing evil lives here!"
+   },
+   {
+    "index": 1,
+    "text": "It has already been explored!"
+   },
+   {
+    "index": 2,
+    "text": "It is inhabited by a %s!"
+   }
+  ]
+ },
+ {
+  "group": 62,
+  "strings": [
+   {
+    "index": 0,
+    "text": "The %s"
+   },
+   {
+    "index": 1,
+    "text": "can be found"
+   },
+   {
+    "index": 2,
+    "text": "A huge pile of treasure"
+   },
+   {
+    "index": 3,
+    "text": "Powerful allies"
+   },
+   {
+    "index": 4,
+    "text": "with a hero of %s"
+   },
+   {
+    "index": 5,
+    "text": "near the %s city"
+   },
+   {
+    "index": 6,
+    "text": "of %s"
+   },
+   {
+    "index": 7,
+    "text": "at %s!"
+   }
+  ]
+ },
+ {
+  "group": 63,
+  "strings": [
+   {
+    "index": 0,
+    "text": "The Sage greets you warmly..."
+   },
+   {
+    "index": 1,
+    "text": "\"Welcome, O seeker of knowledge."
+   },
+   {
+    "index": 2,
+    "text": "I can show thee many things -"
+   },
+   {
+    "index": 3,
+    "text": "items, money or maps."
+   },
+   {
+    "index": 4,
+    "text": "What wouldst thou ask of me\""
+   }
+  ]
+ },
+ {
+  "group": 64,
+  "strings": [
+   {
+    "index": 0,
+    "text": "What???"
+   }
+  ]
+ },
+ {
+  "group": 65,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Victory!"
+   },
+   {
+    "index": 1,
+    "text": "The city is yours!"
+   },
+   {
+    "index": 2,
+    "text": "Will you..."
+   }
+  ]
+ },
+ {
+  "group": 66,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%s, you have triumphed"
+   },
+   {
+    "index": 1,
+    "text": "%s, you have claimed victory"
+   },
+   {
+    "index": 2,
+    "text": "%s, you have slain the foe"
+   },
+   {
+    "index": 3,
+    "text": "%s, you have shown no mercy"
+   }
+  ]
+ },
+ {
+  "group": 67,
+  "strings": [
+   {
+    "index": 0,
+    "text": "in the battle of %s"
+   },
+   {
+    "index": 1,
+    "text": "in the city of %s"
+   },
+   {
+    "index": 2,
+    "text": "in the conquest of %s"
+   }
+  ]
+ },
+ {
+  "group": 68,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Pillage!"
+   },
+   {
+    "index": 1,
+    "text": "Sack!"
+   },
+   {
+    "index": 2,
+    "text": "Destroyed"
+   },
+   {
+    "index": 3,
+    "text": "Gold"
+   }
+  ]
+ },
+ {
+  "group": 69,
+  "strings": [
+   {
+    "index": 0,
+    "text": "The city of %s is pillaged"
+   },
+   {
+    "index": 1,
+    "text": "The city of %s is sacked"
+   }
+  ]
+ },
+ {
+  "group": 70,
+  "strings": [
+   {
+    "index": 0,
+    "text": "for %d gold!"
+   }
+  ]
+ },
+ {
+  "group": 71,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Ability to produce %d unit has been lost"
+   },
+   {
+    "index": 1,
+    "text": "Ability to produce %d units has been lost"
+   }
+  ]
+ },
+ {
+  "group": 72,
+  "strings": [
+   {
+    "index": 0,
+    "text": "and only %d unit remains"
+   },
+   {
+    "index": 1,
+    "text": "and only %d units remain"
+   }
+  ]
+ },
+ {
+  "group": 73,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Army Report"
+   },
+   {
+    "index": 1,
+    "text": "City Report"
+   },
+   {
+    "index": 2,
+    "text": "Gold Report"
+   },
+   {
+    "index": 3,
+    "text": "Production"
+   },
+   {
+    "index": 4,
+    "text": "Winning Report"
+   }
+  ]
+ },
+ {
+  "group": 74,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Number of armies each side owns"
+   },
+   {
+    "index": 1,
+    "text": "Number of cities each side owns"
+   },
+   {
+    "index": 2,
+    "text": "Amount of gold each side possesses"
+   },
+   {
+    "index": 3,
+    "text": "Armies you produced this turn"
+   },
+   {
+    "index": 4,
+    "text": "Who is the most powerful nation"
+   }
+  ]
+ },
+ {
+  "group": 75,
+  "strings": [
+   {
+    "index": 0,
+    "text": "You have 1 army"
+   },
+   {
+    "index": 1,
+    "text": "You have %d armies"
+   }
+  ]
+ },
+ {
+  "group": 76,
+  "strings": [
+   {
+    "index": 0,
+    "text": "You have 1 city"
+   },
+   {
+    "index": 1,
+    "text": "You have %d cities"
+   }
+  ]
+ },
+ {
+  "group": 77,
+  "strings": [
+   {
+    "index": 0,
+    "text": "You have %d gold"
+   }
+  ]
+ },
+ {
+  "group": 78,
+  "strings": [
+   {
+    "index": 0,
+    "text": "You produced %d armies this turn"
+   },
+   {
+    "index": 1,
+    "text": "You produced %d army this turn"
+   }
+  ]
+ },
+ {
+  "group": 79,
+  "strings": [
+   {
+    "index": 0,
+    "text": "You are coming first"
+   },
+   {
+    "index": 1,
+    "text": "You are coming second"
+   },
+   {
+    "index": 2,
+    "text": "You are coming third"
+   },
+   {
+    "index": 3,
+    "text": "You are coming fourth"
+   },
+   {
+    "index": 4,
+    "text": "You are coming fifth"
+   },
+   {
+    "index": 5,
+    "text": "You are coming sixth"
+   },
+   {
+    "index": 6,
+    "text": "You are coming seventh"
+   },
+   {
+    "index": 7,
+    "text": "You are coming last"
+   }
+  ]
+ },
+ {
+  "group": 80,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Triumphs"
+   }
+  ]
+ },
+ {
+  "group": 81,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%d army died to ensure final victory!"
+   },
+   {
+    "index": 1,
+    "text": "%d armies died to ensure final victory!"
+   }
+  ]
+ },
+ {
+  "group": 82,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%d unnatural creature returned whence it came!"
+   },
+   {
+    "index": 1,
+    "text": "%d unnatural creatures returned whence they came!"
+   }
+  ]
+ },
+ {
+  "group": 83,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%d hero earned a fate worthy of legend!"
+   },
+   {
+    "index": 1,
+    "text": "%d heroes earned fates worthy of legend!"
+   }
+  ]
+ },
+ {
+  "group": 84,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%d navy is not currently in service!"
+   },
+   {
+    "index": 1,
+    "text": "%d navies not currently in service!"
+   }
+  ]
+ },
+ {
+  "group": 85,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%d standard betrayed by its guardian!"
+   },
+   {
+    "index": 1,
+    "text": "%d standards betrayed by their guardians!"
+   }
+  ]
+ },
+ {
+  "group": 86,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%d army smote like a sheep!"
+   },
+   {
+    "index": 1,
+    "text": "%d armies smote like sheep!"
+   }
+  ]
+ },
+ {
+  "group": 87,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%d unnatural creature dispatched!"
+   },
+   {
+    "index": 1,
+    "text": "%d unnatural creatures dispatched!"
+   }
+  ]
+ },
+ {
+  "group": 88,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%d so-called hero slaughtered without mercy!"
+   },
+   {
+    "index": 1,
+    "text": "%d so-called heroes slaughtered without mercy!"
+   }
+  ]
+ },
+ {
+  "group": 89,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%d navy rests with the fishes!"
+   },
+   {
+    "index": 1,
+    "text": "%d navies rest with the fishes!"
+   }
+  ]
+ },
+ {
+  "group": 90,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%d standard wrested from a vanquished foe!"
+   },
+   {
+    "index": 1,
+    "text": "%d standards wrested from a vanquished foe!"
+   }
+  ]
+ },
+ {
+  "group": 91,
+  "strings": [
+   {
+    "index": 0,
+    "text": "City History"
+   },
+   {
+    "index": 1,
+    "text": "History of Events"
+   },
+   {
+    "index": 2,
+    "text": "Gold History"
+   },
+   {
+    "index": 3,
+    "text": "History of Winners"
+   }
+  ]
+ },
+ {
+  "group": 92,
+  "strings": [
+   {
+    "index": 0,
+    "text": "On turn %d, thou hadst %d cities!"
+   },
+   {
+    "index": 1,
+    "text": "Garbage (not used)"
+   },
+   {
+    "index": 2,
+    "text": "On turn %d, thou hadst %d gold!"
+   },
+   {
+    "index": 3,
+    "text": "On turn %d, the leader was: %s!"
+   }
+  ]
+ },
+ {
+  "group": 93,
+  "strings": [
+   {
+    "index": 0,
+    "text": "'Tis only turn one, my liege!"
+   },
+   {
+    "index": 1,
+    "text": "There is no history yet!"
+   }
+  ]
+ },
+ {
+  "group": 94,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%s emerges in %s"
+   },
+   {
+    "index": 1,
+    "text": "%s killed in battle"
+   },
+   {
+    "index": 2,
+    "text": "%s killed searching"
+   },
+   {
+    "index": 3,
+    "text": "%s killed in %s"
+   },
+   {
+    "index": 4,
+    "text": "%s completes quest"
+   },
+   {
+    "index": 5,
+    "text": "%s receives a quest"
+   },
+   {
+    "index": 6,
+    "text": "%s vanquished!"
+   },
+   {
+    "index": 7,
+    "text": "%s won %s"
+   },
+   {
+    "index": 8,
+    "text": "%s won %s"
+   },
+   {
+    "index": 9,
+    "text": "%s finds %s"
+   },
+   {
+    "index": 10,
+    "text": "%s victorious!"
+   },
+   {
+    "index": 11,
+    "text": "%s at war with"
+   },
+   {
+    "index": 12,
+    "text": "%s at peace with"
+   },
+   {
+    "index": 13,
+    "text": "some allies"
+   },
+   {
+    "index": 14,
+    "text": "a sage"
+   },
+   {
+    "index": 15,
+    "text": "some gold"
+   },
+   {
+    "index": 16,
+    "text": "Treachery by %s on"
+   }
+  ]
+ },
+ {
+  "group": 95,
+  "strings": [
+   {
+    "index": 0,
+    "text": "A Hero!"
+   }
+  ]
+ },
+ {
+  "group": 96,
+  "strings": [
+   {
+    "index": 0,
+    "text": "And the hero brings 1 ally!"
+   },
+   {
+    "index": 1,
+    "text": "And the hero brings %d allies!"
+   }
+  ]
+ },
+ {
+  "group": 97,
+  "strings": [
+   {
+    "index": 0,
+    "text": ""
+   },
+   {
+    "index": 1,
+    "text": ""
+   },
+   {
+    "index": 2,
+    "text": "A Hero emerges in"
+   },
+   {
+    "index": 3,
+    "text": "%s"
+   },
+   {
+    "index": 4,
+    "text": "A Hero in %s offers to"
+   },
+   {
+    "index": 5,
+    "text": "join you for %d gold."
+   },
+   {
+    "index": 6,
+    "text": "You have %d gold to spend."
+   },
+   {
+    "index": 7,
+    "text": "Will you accept?"
+   },
+   {
+    "index": 8,
+    "text": ""
+   },
+   {
+    "index": 9,
+    "text": ""
+   },
+   {
+    "index": 10,
+    "text": "A Heroine emerges in"
+   },
+   {
+    "index": 11,
+    "text": "%s"
+   },
+   {
+    "index": 12,
+    "text": "A Heroine in %s"
+   },
+   {
+    "index": 13,
+    "text": "offers service for %d gold."
+   },
+   {
+    "index": 14,
+    "text": "You have %d gold to spend."
+   },
+   {
+    "index": 15,
+    "text": "Will you accept?"
+   }
+  ]
+ },
+ {
+  "group": 98,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Male"
+   },
+   {
+    "index": 1,
+    "text": "Female"
+   }
+  ]
+ },
+ {
+  "group": 99,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Hero (1)"
+   },
+   {
+    "index": 1,
+    "text": "Cavalier (2)"
+   },
+   {
+    "index": 2,
+    "text": "Champion (3)"
+   },
+   {
+    "index": 3,
+    "text": "Paladin (4)"
+   }
+  ]
+ },
+ {
+  "group": 100,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Heroine (1)"
+   },
+   {
+    "index": 1,
+    "text": "Amazon (2)"
+   },
+   {
+    "index": 2,
+    "text": "Champion (3)"
+   },
+   {
+    "index": 3,
+    "text": "Valkyrie (4)"
+   }
+  ]
+ },
+ {
+  "group": 101,
+  "strings": [
+   {
+    "index": 0,
+    "text": "A Cavalier!"
+   },
+   {
+    "index": 1,
+    "text": "has earned enough"
+   },
+   {
+    "index": 2,
+    "text": "experience to be known"
+   },
+   {
+    "index": 3,
+    "text": "as a Cavalier!"
+   },
+   {
+    "index": 4,
+    "text": "He is now"
+   },
+   {
+    "index": 5,
+    "text": "Level: %d   Str: %d (+%d)   Move: %d (+%d)"
+   },
+   {
+    "index": 6,
+    "text": "An Amazon!"
+   },
+   {
+    "index": 7,
+    "text": "has earned enough"
+   },
+   {
+    "index": 8,
+    "text": "experience to be known"
+   },
+   {
+    "index": 9,
+    "text": "as an Amazon!"
+   },
+   {
+    "index": 10,
+    "text": "She is now"
+   },
+   {
+    "index": 11,
+    "text": "Level: %d   Str: %d (+%d)   Move: %d (+%d)"
+   }
+  ]
+ },
+ {
+  "group": 102,
+  "strings": [
+   {
+    "index": 0,
+    "text": "A Champion!"
+   },
+   {
+    "index": 1,
+    "text": "has earned the right"
+   },
+   {
+    "index": 2,
+    "text": "to be known to all"
+   },
+   {
+    "index": 3,
+    "text": "as a Champion!"
+   },
+   {
+    "index": 4,
+    "text": "He is now"
+   },
+   {
+    "index": 5,
+    "text": "Level: %d   Str: %d (+%d)   Move: %d (+%d)"
+   },
+   {
+    "index": 6,
+    "text": "A Champion!"
+   },
+   {
+    "index": 7,
+    "text": "has earned the right"
+   },
+   {
+    "index": 8,
+    "text": "to be known to all"
+   },
+   {
+    "index": 9,
+    "text": "as a Champion!"
+   },
+   {
+    "index": 10,
+    "text": "She is now"
+   },
+   {
+    "index": 11,
+    "text": "Level: %d   Str: %d (+%d)   Move: %d (+%d)"
+   }
+  ]
+ },
+ {
+  "group": 103,
+  "strings": [
+   {
+    "index": 0,
+    "text": "A Paladin!"
+   },
+   {
+    "index": 1,
+    "text": "has fought long and hard"
+   },
+   {
+    "index": 2,
+    "text": "to finally gain the"
+   },
+   {
+    "index": 3,
+    "text": "title of Paladin!"
+   },
+   {
+    "index": 4,
+    "text": "He is now"
+   },
+   {
+    "index": 5,
+    "text": "Level: %d   Str: %d (+%d)   Move: %d (+%d)"
+   },
+   {
+    "index": 6,
+    "text": "A Valkyrie!"
+   },
+   {
+    "index": 7,
+    "text": "has fought long and hard"
+   },
+   {
+    "index": 8,
+    "text": "to finally gain the"
+   },
+   {
+    "index": 9,
+    "text": "title of Valkyrie!"
+   },
+   {
+    "index": 10,
+    "text": "She is now"
+   },
+   {
+    "index": 11,
+    "text": "Level: %d   Str: %d (+%d)   Move: %d (+%d)"
+   }
+  ]
+ },
+ {
+  "group": 104,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Hero Levels"
+   },
+   {
+    "index": 1,
+    "text": "Hero"
+   },
+   {
+    "index": 2,
+    "text": "Level"
+   },
+   {
+    "index": 3,
+    "text": "Exp"
+   },
+   {
+    "index": 4,
+    "text": "Needs"
+   },
+   {
+    "index": 5,
+    "text": "Str"
+   },
+   {
+    "index": 6,
+    "text": "Move"
+   }
+  ]
+ },
+ {
+  "group": 105,
+  "strings": [
+   {
+    "index": 0,
+    "text": "-"
+   },
+   {
+    "index": 1,
+    "text": "-"
+   },
+   {
+    "index": 2,
+    "text": "-"
+   },
+   {
+    "index": 3,
+    "text": "-"
+   },
+   {
+    "index": 4,
+    "text": "-"
+   },
+   {
+    "index": 5,
+    "text": "-"
+   },
+   {
+    "index": 6,
+    "text": "-"
+   },
+   {
+    "index": 7,
+    "text": "-"
+   },
+   {
+    "index": 8,
+    "text": "fly"
+   },
+   {
+    "index": 9,
+    "text": "fly"
+   },
+   {
+    "index": 10,
+    "text": "siege"
+   },
+   {
+    "index": 11,
+    "text": "-"
+   },
+   {
+    "index": 12,
+    "text": "-"
+   },
+   {
+    "index": 13,
+    "text": "-"
+   },
+   {
+    "index": 14,
+    "text": "-"
+   },
+   {
+    "index": 15,
+    "text": "fly"
+   },
+   {
+    "index": 16,
+    "text": "-"
+   },
+   {
+    "index": 17,
+    "text": "-"
+   },
+   {
+    "index": 18,
+    "text": "-"
+   },
+   {
+    "index": 19,
+    "text": "spc/fly"
+   },
+   {
+    "index": 20,
+    "text": "spc"
+   },
+   {
+    "index": 21,
+    "text": "spc"
+   },
+   {
+    "index": 22,
+    "text": "spc"
+   },
+   {
+    "index": 23,
+    "text": "spc"
+   },
+   {
+    "index": 24,
+    "text": "spc"
+   },
+   {
+    "index": 25,
+    "text": "spc/fly"
+   },
+   {
+    "index": 26,
+    "text": "spc"
+   },
+   {
+    "index": 27,
+    "text": "spc"
+   },
+   {
+    "index": 28,
+    "text": "+%d"
+   }
+  ]
+ },
+ {
+  "group": 106,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Statesman"
+   },
+   {
+    "index": 1,
+    "text": "Diplomat"
+   },
+   {
+    "index": 2,
+    "text": "Pragmatist"
+   },
+   {
+    "index": 3,
+    "text": "Politician"
+   },
+   {
+    "index": 4,
+    "text": "Deceiver"
+   },
+   {
+    "index": 5,
+    "text": "Scoundrel"
+   },
+   {
+    "index": 6,
+    "text": "Turncoat"
+   },
+   {
+    "index": 7,
+    "text": "Running Dog"
+   }
+  ]
+ },
+ {
+  "group": 107,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Diplomatic Report"
+   }
+  ]
+ },
+ {
+  "group": 108,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Diplomatic Action"
+   }
+  ]
+ },
+ {
+  "group": 109,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Diplomatic Rating"
+   }
+  ]
+ },
+ {
+  "group": 110,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Diplomatic State"
+   },
+   {
+    "index": 1,
+    "text": "Their Proposals"
+   },
+   {
+    "index": 2,
+    "text": ""
+   },
+   {
+    "index": 3,
+    "text": "Your offers and"
+   },
+   {
+    "index": 4,
+    "text": "replies"
+   },
+   {
+    "index": 5,
+    "text": ""
+   },
+   {
+    "index": 6,
+    "text": ""
+   }
+  ]
+ },
+ {
+  "group": 111,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Peace negotiated with %s!"
+   },
+   {
+    "index": 1,
+    "text": "War declared with %s!"
+   },
+   {
+    "index": 2,
+    "text": "Treachery upon %s!"
+   }
+  ]
+ },
+ {
+  "group": 112,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Build Production"
+   },
+   {
+    "index": 1,
+    "text": "The %s city of %s"
+   },
+   {
+    "index": 2,
+    "text": "Thou hast %d gold"
+   },
+   {
+    "index": 3,
+    "text": "Currently Producing"
+   }
+  ]
+ },
+ {
+  "group": 113,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Type: Ruin"
+   },
+   {
+    "index": 1,
+    "text": "Type: Temple"
+   },
+   {
+    "index": 2,
+    "text": "Type: Ruin"
+   },
+   {
+    "index": 3,
+    "text": "Type: Ruin"
+   },
+   {
+    "index": 4,
+    "text": "Type: Ruin"
+   },
+   {
+    "index": 5,
+    "text": "Type: Ruin"
+   },
+   {
+    "index": 6,
+    "text": "Type: Ruin"
+   },
+   {
+    "index": 7,
+    "text": "Type: Ruin"
+   },
+   {
+    "index": 8,
+    "text": "Type: Ruin"
+   }
+  ]
+ },
+ {
+  "group": 114,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Explored: No"
+   },
+   {
+    "index": 1,
+    "text": "Explored: Yes"
+   }
+  ]
+ },
+ {
+  "group": 115,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Unexplored"
+   },
+   {
+    "index": 1,
+    "text": "Explored"
+   },
+   {
+    "index": 2,
+    "text": "Temple"
+   },
+   {
+    "index": 3,
+    "text": "Stronghold"
+   }
+  ]
+ },
+ {
+  "group": 116,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Income: %d gold"
+   },
+   {
+    "index": 1,
+    "text": "Defence: %d"
+   },
+   {
+    "index": 2,
+    "text": "Owner: Razed City"
+   },
+   {
+    "index": 3,
+    "text": "Owner: Neutral City"
+   },
+   {
+    "index": 4,
+    "text": "Owner: %s"
+   }
+  ]
+ },
+ {
+  "group": 117,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Current:"
+   },
+   {
+    "index": 1,
+    "text": ", then to"
+   },
+   {
+    "index": 2,
+    "text": "Standard!"
+   },
+   {
+    "index": 3,
+    "text": "Nowhere!"
+   }
+  ]
+ },
+ {
+  "group": 118,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Current:"
+   },
+   {
+    "index": 1,
+    "text": "Ordered to %s"
+   },
+   {
+    "index": 2,
+    "text": "Ordered to Standard!"
+   },
+   {
+    "index": 3,
+    "text": "Ordered to Nowhere!"
+   },
+   {
+    "index": 4,
+    "text": "No orders!"
+   }
+  ]
+ },
+ {
+  "group": 119,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Give the city whatever"
+   },
+   {
+    "index": 1,
+    "text": "name you desire!"
+   }
+  ]
+ },
+ {
+  "group": 120,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Burn it until nothing"
+   },
+   {
+    "index": 1,
+    "text": "remains!"
+   }
+  ]
+ },
+ {
+  "group": 121,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Buy new army types"
+   },
+   {
+    "index": 1,
+    "text": "to produce!"
+   }
+  ]
+ },
+ {
+  "group": 122,
+  "strings": [
+   {
+    "index": 0,
+    "text": "- Select City -"
+   },
+   {
+    "index": 1,
+    "text": "Click to select a city"
+   },
+   {
+    "index": 2,
+    "text": "- Select Special -"
+   },
+   {
+    "index": 3,
+    "text": "Click to select a special"
+   },
+   {
+    "index": 4,
+    "text": "Left-click to select city"
+   },
+   {
+    "index": 5,
+    "text": "Shift-click for vectoring"
+   },
+   {
+    "index": 6,
+    "text": "Left-click to select city"
+   },
+   {
+    "index": 7,
+    "text": "Shift-click for vectoring"
+   }
+  ]
+ },
+ {
+  "group": 123,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Advisor!"
+   }
+  ]
+ },
+ {
+  "group": 124,
+  "strings": [
+   {
+    "index": 0,
+    "text": "O Mighty Leader,"
+   },
+   {
+    "index": 1,
+    "text": "O Great Warlord,"
+   },
+   {
+    "index": 2,
+    "text": "Great and Worthy Lord,"
+   },
+   {
+    "index": 3,
+    "text": "O Champion of Justice,"
+   },
+   {
+    "index": 4,
+    "text": "My Good Lord,"
+   }
+  ]
+ },
+ {
+  "group": 125,
+  "strings": [
+   {
+    "index": 0,
+    "text": "this battle would be"
+   },
+   {
+    "index": 1,
+    "text": "a battle here would be"
+   },
+   {
+    "index": 2,
+    "text": "this battle shall be"
+   },
+   {
+    "index": 3,
+    "text": "this battle will surely be"
+   },
+   {
+    "index": 4,
+    "text": "I believe this battle will be"
+   }
+  ]
+ },
+ {
+  "group": 126,
+  "strings": [
+   {
+    "index": 0,
+    "text": "complete and utter suicide!"
+   },
+   {
+    "index": 1,
+    "text": "sheerest folly! Thou shouldst not attack!"
+   },
+   {
+    "index": 2,
+    "text": "a foolish decision!"
+   },
+   {
+    "index": 3,
+    "text": "a brave choice! I leave it to thee!"
+   },
+   {
+    "index": 4,
+    "text": "difficult but not impossible to win!"
+   },
+   {
+    "index": 5,
+    "text": "very evenly matched!"
+   },
+   {
+    "index": 6,
+    "text": "a hard-fought victory! But we shall win!"
+   },
+   {
+    "index": 7,
+    "text": "a comfortable victory!"
+   },
+   {
+    "index": 8,
+    "text": "an easy victory! We cannot lose!"
+   },
+   {
+    "index": 9,
+    "text": "as simple as butchering sleeping cattle!"
+   }
+  ]
+ },
+ {
+  "group": 127,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Fighting Order"
+   },
+   {
+    "index": 1,
+    "text": "Order of combat for %s"
+   },
+   {
+    "index": 2,
+    "text": "Choose an army."
+   },
+   {
+    "index": 3,
+    "text": "Then use arrow buttons to move it, or"
+   },
+   {
+    "index": 4,
+    "text": "choose a 2nd army to swap positions with"
+   }
+  ]
+ },
+ {
+  "group": 128,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Road"
+   },
+   {
+    "index": 1,
+    "text": "Bridge"
+   },
+   {
+    "index": 2,
+    "text": "Water"
+   },
+   {
+    "index": 3,
+    "text": "Shore"
+   },
+   {
+    "index": 4,
+    "text": "Forest"
+   },
+   {
+    "index": 5,
+    "text": "Hills"
+   },
+   {
+    "index": 6,
+    "text": "Mountains"
+   },
+   {
+    "index": 7,
+    "text": "Plain"
+   },
+   {
+    "index": 8,
+    "text": "Marsh"
+   },
+   {
+    "index": 9,
+    "text": "Tower"
+   }
+  ]
+ },
+ {
+  "group": 129,
+  "strings": [
+   {
+    "index": 0,
+    "text": "The fastest way to travel"
+   },
+   {
+    "index": 1,
+    "text": "For land armies to cross water"
+   },
+   {
+    "index": 2,
+    "text": "Only for flying armies and boats"
+   },
+   {
+    "index": 3,
+    "text": "Only for flying armies and boats"
+   },
+   {
+    "index": 4,
+    "text": "Slows down movement"
+   },
+   {
+    "index": 5,
+    "text": "Slows down movement"
+   },
+   {
+    "index": 6,
+    "text": "Only for flying armies"
+   },
+   {
+    "index": 7,
+    "text": "The next best thing to roads"
+   },
+   {
+    "index": 8,
+    "text": "Very hard to pass through this"
+   },
+   {
+    "index": 9,
+    "text": "A good view of the countryside"
+   }
+  ]
+ },
+ {
+  "group": 130,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Tower"
+   },
+   {
+    "index": 1,
+    "text": "Very hard to conquer!"
+   }
+  ]
+ },
+ {
+  "group": 131,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Near:"
+   },
+   {
+    "index": 1,
+    "text": "In:"
+   },
+   {
+    "index": 2,
+    "text": "Battle:"
+   },
+   {
+    "index": 3,
+    "text": "Command:"
+   },
+   {
+    "index": 4,
+    "text": "Level:"
+   },
+   {
+    "index": 5,
+    "text": "Exp:"
+   },
+   {
+    "index": 6,
+    "text": "%d of %d"
+   },
+   {
+    "index": 7,
+    "text": "Items on the Ground"
+   },
+   {
+    "index": 8,
+    "text": "Items Being Carried"
+   }
+  ]
+ },
+ {
+  "group": 132,
+  "strings": [
+   {
+    "index": 0,
+    "text": "- Army Info -"
+   },
+   {
+    "index": 1,
+    "text": "Info on armies when present"
+   }
+  ]
+ },
+ {
+  "group": 133,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Warlords II"
+   },
+   {
+    "index": 1,
+    "text": ""
+   },
+   {
+    "index": 2,
+    "text": "Loading a saved game"
+   },
+   {
+    "index": 3,
+    "text": "Please wait..."
+   },
+   {
+    "index": 4,
+    "text": ""
+   },
+   {
+    "index": 5,
+    "text": ""
+   },
+   {
+    "index": 6,
+    "text": ""
+   }
+  ]
+ },
+ {
+  "group": 134,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Warlords II"
+   },
+   {
+    "index": 1,
+    "text": ""
+   },
+   {
+    "index": 2,
+    "text": "Loading a saved map"
+   },
+   {
+    "index": 3,
+    "text": "Please wait..."
+   },
+   {
+    "index": 4,
+    "text": ""
+   },
+   {
+    "index": 5,
+    "text": ""
+   },
+   {
+    "index": 6,
+    "text": ""
+   }
+  ]
+ },
+ {
+  "group": 135,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Warlords II"
+   },
+   {
+    "index": 1,
+    "text": ""
+   },
+   {
+    "index": 2,
+    "text": "Loading a new scenario"
+   },
+   {
+    "index": 3,
+    "text": "Please wait..."
+   },
+   {
+    "index": 4,
+    "text": ""
+   },
+   {
+    "index": 5,
+    "text": ""
+   },
+   {
+    "index": 6,
+    "text": ""
+   }
+  ]
+ },
+ {
+  "group": 136,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Warlords II"
+   },
+   {
+    "index": 1,
+    "text": ""
+   },
+   {
+    "index": 2,
+    "text": "Creating a new random map"
+   },
+   {
+    "index": 3,
+    "text": "Please wait..."
+   },
+   {
+    "index": 4,
+    "text": ""
+   },
+   {
+    "index": 5,
+    "text": ""
+   },
+   {
+    "index": 6,
+    "text": ""
+   }
+  ]
+ },
+ {
+  "group": 137,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Warlords II"
+   },
+   {
+    "index": 1,
+    "text": ""
+   },
+   {
+    "index": 2,
+    "text": "Creating the strategic map"
+   },
+   {
+    "index": 3,
+    "text": "Please wait..."
+   },
+   {
+    "index": 4,
+    "text": ""
+   },
+   {
+    "index": 5,
+    "text": ""
+   },
+   {
+    "index": 6,
+    "text": ""
+   }
+  ]
+ },
+ {
+  "group": 138,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Warlords II"
+   },
+   {
+    "index": 1,
+    "text": ""
+   },
+   {
+    "index": 2,
+    "text": "Setting Up Game"
+   },
+   {
+    "index": 3,
+    "text": "Please wait..."
+   },
+   {
+    "index": 4,
+    "text": ""
+   },
+   {
+    "index": 5,
+    "text": ""
+   },
+   {
+    "index": 6,
+    "text": ""
+   }
+  ]
+ },
+ {
+  "group": 139,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Warlords II"
+   },
+   {
+    "index": 1,
+    "text": ""
+   },
+   {
+    "index": 2,
+    "text": "version no. (not used)"
+   },
+   {
+    "index": 3,
+    "text": ""
+   },
+   {
+    "index": 4,
+    "text": "Free memory: %lu Kb"
+   },
+   {
+    "index": 5,
+    "text": "Largest block: %lu Kb"
+   },
+   {
+    "index": 6,
+    "text": "Locked memory: %lu Kb"
+   }
+  ]
+ },
+ {
+  "group": 140,
+  "strings": [
+   {
+    "index": 0,
+    "text": "War!"
+   },
+   {
+    "index": 1,
+    "text": "Milord! Thou art attacking"
+   },
+   {
+    "index": 2,
+    "text": "without first having declared war!"
+   },
+   {
+    "index": 3,
+    "text": "This shall make thee most unpopular!"
+   },
+   {
+    "index": 4,
+    "text": "Shall we attack anyway?"
+   }
+  ]
+ },
+ {
+  "group": 141,
+  "strings": [
+   {
+    "index": 0,
+    "text": "The garrison has fled before you!"
+   },
+   {
+    "index": 1,
+    "text": "The cowards have all run away!"
+   },
+   {
+    "index": 2,
+    "text": "How dare they not put up a fight!"
+   },
+   {
+    "index": 3,
+    "text": "No defenders?  That was too easy!"
+   }
+  ]
+ },
+ {
+  "group": 142,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%s has won the battle!"
+   }
+  ]
+ },
+ {
+  "group": 143,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Your armies have won the city!"
+   }
+  ]
+ },
+ {
+  "group": 144,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%s has won"
+   },
+   {
+    "index": 1,
+    "text": "the battle!"
+   }
+  ]
+ },
+ {
+  "group": 145,
+  "strings": [
+   {
+    "index": 0,
+    "text": "You are victorious!"
+   }
+  ]
+ },
+ {
+  "group": 146,
+  "strings": [
+   {
+    "index": 0,
+    "text": "You have lost!"
+   }
+  ]
+ },
+ {
+  "group": 147,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Your armies loot %d gp!"
+   }
+  ]
+ },
+ {
+  "group": 148,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%s, you are being attacked!"
+   }
+  ]
+ },
+ {
+  "group": 149,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Neutrals are being attacked!"
+   }
+  ]
+ },
+ {
+  "group": 150,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%s, you are victorious!"
+   }
+  ]
+ },
+ {
+  "group": 151,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Neutrals are victorious!"
+   }
+  ]
+ },
+ {
+  "group": 152,
+  "strings": [
+   {
+    "index": 0,
+    "text": "%s, you have lost!"
+   }
+  ]
+ },
+ {
+  "group": 153,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Neutrals have lost!"
+   }
+  ]
+ },
+ {
+  "group": 154,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Current:"
+   },
+   {
+    "index": 1,
+    "text": "%dt"
+   },
+   {
+    "index": 2,
+    "text": "Next turn:"
+   },
+   {
+    "index": 3,
+    "text": "Turn after:"
+   }
+  ]
+ },
+ {
+  "group": 155,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Click here to vector to"
+   },
+   {
+    "index": 1,
+    "text": "a new city"
+   },
+   {
+    "index": 2,
+    "text": "Click destination on map"
+   },
+   {
+    "index": 3,
+    "text": "or here to cancel"
+   }
+  ]
+ },
+ {
+  "group": 156,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Click here to change the"
+   },
+   {
+    "index": 1,
+    "text": "destination of armies"
+   },
+   {
+    "index": 2,
+    "text": "Click new destination on"
+   },
+   {
+    "index": 3,
+    "text": "map or here to cancel"
+   }
+  ]
+ },
+ {
+  "group": 157,
+  "strings": [
+   {
+    "index": 0,
+    "text": "A Medal!"
+   }
+  ]
+ },
+ {
+  "group": 158,
+  "strings": [
+   {
+    "index": 0,
+    "text": "For bravery and skill,"
+   },
+   {
+    "index": 1,
+    "text": "For extreme skill,"
+   },
+   {
+    "index": 2,
+    "text": "For killing the foe,"
+   },
+   {
+    "index": 3,
+    "text": "For showing no mercy,"
+   },
+   {
+    "index": 4,
+    "text": "For routing the foe,"
+   },
+   {
+    "index": 5,
+    "text": "For their initiative,"
+   },
+   {
+    "index": 6,
+    "text": "With much gratitude,"
+   }
+  ]
+ },
+ {
+  "group": 159,
+  "strings": [
+   {
+    "index": 0,
+    "text": "your unit of %s"
+   }
+  ]
+ },
+ {
+  "group": 160,
+  "strings": [
+   {
+    "index": 0,
+    "text": "has been awarded"
+   },
+   {
+    "index": 1,
+    "text": "has been given"
+   },
+   {
+    "index": 2,
+    "text": "has been honoured with"
+   },
+   {
+    "index": 3,
+    "text": "has been presented"
+   }
+  ]
+ },
+ {
+  "group": 161,
+  "strings": [
+   {
+    "index": 0,
+    "text": "the famed Star of Battle!"
+   },
+   {
+    "index": 1,
+    "text": "the mighty Warriors Cross!"
+   },
+   {
+    "index": 2,
+    "text": "the Shield of Courage!"
+   },
+   {
+    "index": 3,
+    "text": "the Heart of Virtue!"
+   }
+  ]
+ },
+ {
+  "group": 162,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Their strength has increased"
+   },
+   {
+    "index": 1,
+    "text": "Their movement has increased"
+   },
+   {
+    "index": 2,
+    "text": "from %d to %d!"
+   }
+  ]
+ },
+ {
+  "group": 163,
+  "strings": [
+   {
+    "index": 0,
+    "text": "  -"
+   },
+   {
+    "index": 1,
+    "text": "Boat strength of 4"
+   },
+   {
+    "index": 2,
+    "text": "+%d hero bonus"
+   },
+   {
+    "index": 3,
+    "text": "+1 & cancel hero"
+   },
+   {
+    "index": 4,
+    "text": "+1 & cancel non-hero"
+   },
+   {
+    "index": 5,
+    "text": "+%d special"
+   },
+   {
+    "index": 6,
+    "text": "Cancel city bonus"
+   },
+   {
+    "index": 7,
+    "text": "%d enemy stack"
+   },
+   {
+    "index": 8,
+    "text": "+%d stack in hills"
+   },
+   {
+    "index": 9,
+    "text": "+%d stack in woods"
+   },
+   {
+    "index": 10,
+    "text": "+%d stack in open"
+   },
+   {
+    "index": 11,
+    "text": "+%d stack in city"
+   },
+   {
+    "index": 12,
+    "text": "+%d str in hills"
+   },
+   {
+    "index": 13,
+    "text": "+%d str in woods"
+   },
+   {
+    "index": 14,
+    "text": "+%d str in open"
+   },
+   {
+    "index": 15,
+    "text": "+%d str in city"
+   },
+   {
+    "index": 16,
+    "text": "+%d to stack"
+   }
+  ]
+ },
+ {
+  "group": 164,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Army Bonus"
+   }
+  ]
+ },
+ {
+  "group": 165,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Resign!"
+   },
+   {
+    "index": 1,
+    "text": "Milord, this is a serious decision!"
+   },
+   {
+    "index": 2,
+    "text": "Dost thou truly wish to give in to"
+   },
+   {
+    "index": 3,
+    "text": "thy treacherous foes?"
+   },
+   {
+    "index": 4,
+    "text": "Ha! Now I've burned everything!"
+   },
+   {
+    "index": 5,
+    "text": "Let the enemy come!"
+   },
+   {
+    "index": 6,
+    "text": "Thou dost wish to resign... graciously?"
+   },
+   {
+    "index": 7,
+    "text": "Graciously ????"
+   },
+   {
+    "index": 8,
+    "text": "GRACIOUSLY  ???????"
+   },
+   {
+    "index": 9,
+    "text": "I don't think so!"
+   },
+   {
+    "index": 10,
+    "text": "I'm going to burn the cities anyway!"
+   }
+  ]
+ },
+ {
+  "group": 166,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Items"
+   }
+  ]
+ },
+ {
+  "group": 167,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Items in this scenario"
+   },
+   {
+    "index": 1,
+    "text": "+%d in battle!"
+   },
+   {
+    "index": 2,
+    "text": "+%d to command!"
+   },
+   {
+    "index": 3,
+    "text": "Allows flight!"
+   },
+   {
+    "index": 4,
+    "text": "Doubles movement!"
+   },
+   {
+    "index": 5,
+    "text": "+%d gold per city!"
+   }
+  ]
+ },
+ {
+  "group": 168,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Alas! %d armies have been sunk"
+   },
+   {
+    "index": 1,
+    "text": "due to lack of a boat!"
+   },
+   {
+    "index": 2,
+    "text": "Alas! 1 army has been sunk"
+   }
+  ]
+ }
+]

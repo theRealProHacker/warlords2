@@ -1,0 +1,29 @@
+[
+ {
+  "group": 0,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Error - Cannot open scenario: %s\\n"
+   }
+  ]
+ },
+ {
+  "group": 1,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Error - Cannot open file: %s\\n"
+   }
+  ]
+ },
+ {
+  "group": 2,
+  "strings": [
+   {
+    "index": 0,
+    "text": "Error - Cannot open mouse file: stand.pck\\n"
+   }
+  ]
+ }
+]

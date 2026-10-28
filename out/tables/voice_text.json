@@ -1,0 +1,189 @@
+{
+ "VBEGIN": {
+  "lines": [
+   "Very well then...",
+   "Let the war... begin!"
+  ],
+  "raw": "Very well then...|Let the war... begin!~\r\n"
+ },
+ "VGOLD00": {
+  "lines": [
+   "Thou art sadly in need",
+   "of gold!"
+  ],
+  "raw": "Thou art sadly in need|of gold!~\r\n\r\n"
+ },
+ "VGOLD01": {
+  "lines": [
+   "All thy gold must surely",
+   "be a burden!"
+  ],
+  "raw": "All thy gold must surely|be a burden!~\r\n\r\n"
+ },
+ "VGOLD01A": {
+  "lines": [
+   "Thy wealth is greater than",
+   "the mightiest of dragons!"
+  ],
+  "raw": "Thy wealth is greater than|the mightiest of dragons!~\r\n\r\n"
+ },
+ "VGREET0": {
+  "lines": [
+   "Greetings, Warlord!"
+  ],
+  "raw": "Greetings, Warlord!~\r\n\r\n"
+ },
+ "VHERO00": {
+  "lines": [
+   "Will no hero",
+   "defend thine honor?"
+  ],
+  "raw": "Will no hero|defend thine honor?~\r\n"
+ },
+ "VHERO1": {
+  "lines": [
+   "I see heroes are flocking",
+   "to thy banner!"
+  ],
+  "raw": "I see heroes are flocking|to thy banner!~\r\n"
+ },
+ "VLOSE05": {
+  "lines": [
+   "Thy sorry efforts",
+   "have come to nought!"
+  ],
+  "raw": "Thy sorry efforts|have come to nought!~\r\n"
+ },
+ "VLOSE10": {
+  "lines": [
+   "Thine enemies mock",
+   "thy feeble endeavors!"
+  ],
+  "raw": "Thine enemies mock|thy feeble endeavors!~\r\n"
+ },
+ "VLOSE15": {
+  "lines": [
+   "Dost thou feel the",
+   "wolves snapping at thy heels?"
+  ],
+  "raw": "Dost thou feel the|wolves snapping at thy heels?~\r\n"
+ },
+ "VLOSE20": {
+  "lines": [
+   "How much adversity",
+   "canst thou endure?"
+  ],
+  "raw": "How much adversity|canst thou endure?~\r\n"
+ },
+ "VLOSE25": {
+  "lines": [
+   "As this city has fallen,",
+   "so shalt thou!"
+  ],
+  "raw": "As this city has fallen,|so shalt thou!~\r\n"
+ },
+ "VLOSE35": {
+  "lines": [
+   "Victory is just",
+   "beyond thy reach!"
+  ],
+  "raw": "Victory is just|beyond thy reach!~\r\n"
+ },
+ "VMESS00": {
+  "lines": [
+   "Thy destiny",
+   "is forged in steel!"
+  ],
+  "raw": "Thy destiny|is forged in steel!~\r\n"
+ },
+ "VMESS01": {
+  "lines": [
+   "Thou dost stand at",
+   "the crossroads of victory!"
+  ],
+  "raw": "Thou dost stand at|the crossroads of victory!~\r\n"
+ },
+ "VMESS02": {
+  "lines": [
+   "Attack is the",
+   "best means of defence!"
+  ],
+  "raw": "Attack is the|best means of defence!~\r\n"
+ },
+ "VMESS03": {
+  "lines": [
+   "Thy dreams of conquest",
+   "confound thee!"
+  ],
+  "raw": "Thy dreams of conquest|confound thee!~\r\n"
+ },
+ "VMOMENT": {
+  "lines": [
+   "Prepare thyself!"
+  ],
+  "raw": "Prepare thyself!~\r\n"
+ },
+ "VQUIT": {
+  "lines": [
+   "Farewell, Warlord!",
+   "We -shall- meet again!"
+  ],
+  "raw": "Farewell, Warlord!|We -shall- meet again!~\r\n"
+ },
+ "VWIN05": {
+  "lines": [
+   "Thou art doing well...",
+   "...so far!"
+  ],
+  "raw": "Thou art doing well...|...so far!~\r\n"
+ },
+ "VWIN05A": {
+  "lines": [
+   "Ahhh, the expectation",
+   "of a coming battle!"
+  ],
+  "raw": "Ahhh, the expectation|of a coming battle!~\r\n"
+ },
+ "VWIN10": {
+  "lines": [
+   "Warlord! Thy progress",
+   "is astounding!"
+  ],
+  "raw": "Warlord! Thy progress|is astounding!~\r\n"
+ },
+ "VWIN15": {
+  "lines": [
+   "So, Warlord, thou dost",
+   "show some merit!"
+  ],
+  "raw": "So, Warlord, thou dost|show some merit!~\r\n"
+ },
+ "VWIN20": {
+  "lines": [
+   "Warlord... a mighty",
+   "battle is brewing!"
+  ],
+  "raw": "Warlord... a mighty|battle is brewing!~\r\n"
+ },
+ "VWIN25": {
+  "lines": [
+   "Beware!  Lest overconfidence",
+   "consume thee!"
+  ],
+  "raw": "Beware!  Lest overconfidence|consume thee!~\r\n"
+ },
+ "VWIN30": {
+  "lines": [
+   "Thy name evokes",
+   "fear and loathing!"
+  ],
+  "raw": "Thy name evokes|fear and loathing!~\r\n"
+ },
+ "VWIN35": {
+  "lines": [
+   "Thine enemies",
+   "are beyond measure!"
+  ],
+  "raw": "Thine enemies|are beyond measure!~\r\n"
+ }
+}
