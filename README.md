@@ -34,6 +34,12 @@ Python 3.12 or newer:
 Extras: `[music]` to render the music yourself (`python -m warlords2.audio.music_render`),
 `[record]` for `--record FILE.mp4`, e.g. `pip install "warlords2[music] @ git+https://github.com/theRealProHacker/warlords2"`.
 
+## Clone
+
+The `out` branch holds about 4.6 GB of generated outputs. To clone without it:
+
+    git clone --single-branch --branch main https://github.com/theRealProHacker/warlords2.git
+
 ## Run
 
     warlords2 --data /path/to/Warlrd2
