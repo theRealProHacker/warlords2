@@ -1,0 +1,7 @@
+
+void __cdecl16near FUN_1000_2524(void)
+
+{
+  return;
+}
+

@@ -1,0 +1,17 @@
+
+void __cdecl16far FUN_6bf2_0bbd(void)
+
+{
+  DAT_451b_04ac = DAT_451b_04aa;
+  DAT_451b_04aa = DAT_451b_04a8;
+  DAT_451b_04a8 = DAT_451b_04a8 + -1;
+  if (DAT_451b_04a8 < 0) {
+    DAT_451b_04a8 = -1;
+  }
+  FUN_22bf_07a5();
+  FUN_6bf2_0724();
+  FUN_6bf2_0620();
+  FUN_22bf_0757();
+  return;
+}
+

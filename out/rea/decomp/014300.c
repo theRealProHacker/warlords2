@@ -1,0 +1,12 @@
+
+void __cdecl16far
+FUN_1000_4300(undefined2 param_1,undefined2 param_2,undefined2 param_3,undefined2 param_4,
+             undefined2 param_5)
+
+{
+  uint in_AX;
+  
+  FUN_1000_1ef6(0x61,in_AX & 0xff00,param_5,param_3,param_4,param_1,param_2);
+  return;
+}
+
