@@ -1,0 +1,80 @@
+{
+ "git_commit": "4d50ea30cdb3d407a94750d932044f8bbbf6ddf8+dirty",
+ "exe_sha256": "9f9147af74d6b616b93fa0188dfdaff162a347b0202b7d2473cad8ee88922bc2",
+ "seed": 1,
+ "script": "tests/scripts/m2a_menubar_start.json",
+ "script_sha256": "c3d5eac546e98db1578947a98b1239ed9b7771dae85c6ea2381ce296510574c8",
+ "argv": [
+  "--probe",
+  "probe_ui_start",
+  "--seed",
+  "1",
+  "--headless",
+  "--user-dir",
+  "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/palette_ground/run_b/_u_m2a_menubar_start",
+  "--script",
+  "tests/scripts/m2a_menubar_start.json"
+ ],
+ "frames": 3,
+ "shots": [
+  {
+   "name": "menubar_shot00",
+   "frame": 1,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/palette_ground/run_b/m2a_menubar_start/frames/menubar_shot00.png",
+   "sha256": "74278825d254dd662273cc043b57bdbc56a30b3f15591055321956bde1e05547"
+  }
+ ],
+ "segments": [
+  {
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/palette_ground/run_b/m2a_menubar_start/run_0.mp4",
+   "codec": "mp4v",
+   "fps": 60,
+   "first_frame": 0,
+   "frame_step": 1,
+   "frames": 3,
+   "frame_sha256": [
+    "74278825d254dd662273cc043b57bdbc56a30b3f15591055321956bde1e05547",
+    "74278825d254dd662273cc043b57bdbc56a30b3f15591055321956bde1e05547",
+    "74278825d254dd662273cc043b57bdbc56a30b3f15591055321956bde1e05547"
+   ],
+   "nearest_ok": true,
+   "not_nearest": [],
+   "psnr": [
+    26.96,
+    27.51,
+    27.52
+   ]
+  }
+ ],
+ "checks": [
+  {
+   "frame": 1,
+   "op": "assert_state",
+   "want": {
+    "state": "probe_ui_start",
+    "dialog": null
+   },
+   "got": {
+    "state": "probe_ui_start",
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 1,
+   "op": "golden",
+   "ref": "screenshot_00.jpg",
+   "max_mae": 1.0,
+   "mae": {
+    "bar": 0.061,
+    "button_100": 0.219,
+    "button_101": 0.205,
+    "button_102": 0.238,
+    "button_103": 0.118
+   },
+   "ok": true
+  }
+ ],
+ "engine_state_hash": null,
+ "error": null
+}

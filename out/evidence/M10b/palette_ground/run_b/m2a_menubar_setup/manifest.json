@@ -1,0 +1,77 @@
+{
+ "git_commit": "4d50ea30cdb3d407a94750d932044f8bbbf6ddf8+dirty",
+ "exe_sha256": "9f9147af74d6b616b93fa0188dfdaff162a347b0202b7d2473cad8ee88922bc2",
+ "seed": 1,
+ "script": "tests/scripts/m2a_menubar_setup.json",
+ "script_sha256": "331e8f1cf9677c32a096c491e329860a7192c4b4b16a67e19c595afe503f264e",
+ "argv": [
+  "--probe",
+  "probe_ui_setup",
+  "--seed",
+  "1",
+  "--headless",
+  "--user-dir",
+  "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/palette_ground/run_b/_u_m2a_menubar_setup",
+  "--script",
+  "tests/scripts/m2a_menubar_setup.json"
+ ],
+ "frames": 3,
+ "shots": [
+  {
+   "name": "menubar_shot09",
+   "frame": 1,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/palette_ground/run_b/m2a_menubar_setup/frames/menubar_shot09.png",
+   "sha256": "444c7c012534b0b36c3a65fef7418bc17be8d279a7a150773327b8d668c8ec17"
+  }
+ ],
+ "segments": [
+  {
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/palette_ground/run_b/m2a_menubar_setup/run_0.mp4",
+   "codec": "mp4v",
+   "fps": 60,
+   "first_frame": 0,
+   "frame_step": 1,
+   "frames": 3,
+   "frame_sha256": [
+    "444c7c012534b0b36c3a65fef7418bc17be8d279a7a150773327b8d668c8ec17",
+    "444c7c012534b0b36c3a65fef7418bc17be8d279a7a150773327b8d668c8ec17",
+    "444c7c012534b0b36c3a65fef7418bc17be8d279a7a150773327b8d668c8ec17"
+   ],
+   "nearest_ok": true,
+   "not_nearest": [],
+   "psnr": [
+    27.24,
+    27.56,
+    27.57
+   ]
+  }
+ ],
+ "checks": [
+  {
+   "frame": 1,
+   "op": "assert_state",
+   "want": {
+    "state": "probe_ui_setup",
+    "dialog": null
+   },
+   "got": {
+    "state": "probe_ui_setup",
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 1,
+   "op": "golden",
+   "ref": "screenshot_09.jpg",
+   "max_mae": 1.0,
+   "mae": {
+    "bar": 0.077,
+    "pointer": 0.121
+   },
+   "ok": true
+  }
+ ],
+ "engine_state_hash": null,
+ "error": null
+}
