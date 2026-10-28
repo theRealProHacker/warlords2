@@ -1,0 +1,141 @@
+{
+ "git_commit": "4d50ea30cdb3d407a94750d932044f8bbbf6ddf8+dirty",
+ "exe_sha256": "9f9147af74d6b616b93fa0188dfdaff162a347b0202b7d2473cad8ee88922bc2",
+ "seed": 1,
+ "script": "tests/scripts/m1_backdrop.json",
+ "script_sha256": "a0241d20cb98e0240666e235801380ad6572ba342230ca89f46a17a1792423f2",
+ "argv": [
+  "--probe",
+  "probe_backdrop",
+  "--seed",
+  "1",
+  "--headless",
+  "--user-dir",
+  "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_b/_u_m1_backdrop",
+  "--script",
+  "tests/scripts/m1_backdrop.json"
+ ],
+ "frames": 31,
+ "shots": [
+  {
+   "name": "backdrop_0",
+   "frame": 0,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_b/m1_backdrop/frames/backdrop_0.png",
+   "sha256": "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c"
+  },
+  {
+   "name": "backdrop_29",
+   "frame": 29,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_b/m1_backdrop/frames/backdrop_29.png",
+   "sha256": "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c"
+  }
+ ],
+ "segments": [
+  {
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_b/m1_backdrop/run_0.mp4",
+   "codec": "mp4v",
+   "fps": 60,
+   "first_frame": 0,
+   "frame_step": 1,
+   "frames": 31,
+   "frame_sha256": [
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c",
+    "31249d136bface7cd6d77381bf262702b9d6cd7e533516b7c271a1c7c5c6ad7c"
+   ],
+   "nearest_ok": true,
+   "not_nearest": [],
+   "psnr": [
+    27.23,
+    27.55,
+    27.56,
+    27.56,
+    27.56,
+    27.56,
+    27.56,
+    27.56,
+    27.56,
+    27.56,
+    27.56,
+    27.56,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73
+   ]
+  }
+ ],
+ "checks": [
+  {
+   "frame": 0,
+   "op": "assert_state",
+   "want": {
+    "state": "probe_backdrop",
+    "dialog": null
+   },
+   "got": {
+    "state": "probe_backdrop",
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 0,
+   "op": "golden",
+   "ref": "screenshot_00.jpg",
+   "max_mae": 2.0,
+   "mae": {
+    "upper": 0.189,
+    "left": 0.18,
+    "right": 0.145,
+    "lower": 0.155
+   },
+   "ok": true
+  }
+ ],
+ "engine_state_hash": null,
+ "error": null
+}
