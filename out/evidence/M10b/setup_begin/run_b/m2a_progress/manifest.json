@@ -1,0 +1,289 @@
+{
+ "git_commit": "4d50ea30cdb3d407a94750d932044f8bbbf6ddf8+dirty",
+ "exe_sha256": "9f9147af74d6b616b93fa0188dfdaff162a347b0202b7d2473cad8ee88922bc2",
+ "seed": 1,
+ "script": "tests/scripts/m2a_progress.json",
+ "script_sha256": "9104a1345b82e7e1492e2bc2fc4e295be2ac77afd185816d14c75b6d16e4218f",
+ "argv": [
+  "--probe",
+  "probe_ui_progress",
+  "--seed",
+  "1",
+  "--headless",
+  "--user-dir",
+  "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/setup_begin/run_b/_u_m2a_progress",
+  "--script",
+  "tests/scripts/m2a_progress.json"
+ ],
+ "frames": 64,
+ "shots": [
+  {
+   "name": "progress_00",
+   "frame": 3,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/setup_begin/run_b/m2a_progress/frames/progress_00.png",
+   "sha256": "856d0a8b154ceb75a3edb62e45d499db12268603e3bfa4d13b3fd55b2fe8078e"
+  },
+  {
+   "name": "progress_10",
+   "frame": 14,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/setup_begin/run_b/m2a_progress/frames/progress_10.png",
+   "sha256": "6db4e89b2fd96aaef126de62ed10f444e15fc50d9da53f116fe84e18a787c729"
+  },
+  {
+   "name": "progress_30",
+   "frame": 26,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/setup_begin/run_b/m2a_progress/frames/progress_30.png",
+   "sha256": "11034e8117bf9eb5008c59f6eb7f8e9fa2a4263cd070afedeac772318b24d7fe"
+  },
+  {
+   "name": "progress_50",
+   "frame": 38,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/setup_begin/run_b/m2a_progress/frames/progress_50.png",
+   "sha256": "114d5479ba78391aa36ee61d419819b4eeb924eee8ce452af3a63758d0e86d41"
+  },
+  {
+   "name": "progress_70",
+   "frame": 50,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/setup_begin/run_b/m2a_progress/frames/progress_70.png",
+   "sha256": "c1534788a1bc6a26e4c7819207fdcfa1154ff9c04d1060fd7805a7b613702ced"
+  }
+ ],
+ "segments": [
+  {
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/setup_begin/run_b/m2a_progress/run_0.mp4",
+   "codec": "mp4v",
+   "fps": 60,
+   "first_frame": 0,
+   "frame_step": 1,
+   "frames": 64,
+   "frame_sha256": [
+    "5f0ec8d8e27fb7fdf286a02756853e394365e04d37367f4b422bd16bb92af01a",
+    "56066d91c8cf4a5b57fe39d3026b4b4a0987e917b636977264ef423c8a8ff9b8",
+    "4837f9a1f63070dd587a06fc0e2eedf20da9953f2d704788b5eba374e76f5058",
+    "856d0a8b154ceb75a3edb62e45d499db12268603e3bfa4d13b3fd55b2fe8078e",
+    "856d0a8b154ceb75a3edb62e45d499db12268603e3bfa4d13b3fd55b2fe8078e",
+    "856d0a8b154ceb75a3edb62e45d499db12268603e3bfa4d13b3fd55b2fe8078e",
+    "856d0a8b154ceb75a3edb62e45d499db12268603e3bfa4d13b3fd55b2fe8078e",
+    "856d0a8b154ceb75a3edb62e45d499db12268603e3bfa4d13b3fd55b2fe8078e",
+    "1f69807e41458215ed195b84d023a9d1c96cb15b6d82b6bd28202e097e49f63a",
+    "e75cf612127e8dbed407adcec0a6db445a6e52c3a529ab2d34c978dd69778983",
+    "e75cf612127e8dbed407adcec0a6db445a6e52c3a529ab2d34c978dd69778983",
+    "e75cf612127e8dbed407adcec0a6db445a6e52c3a529ab2d34c978dd69778983",
+    "e75cf612127e8dbed407adcec0a6db445a6e52c3a529ab2d34c978dd69778983",
+    "e75cf612127e8dbed407adcec0a6db445a6e52c3a529ab2d34c978dd69778983",
+    "6db4e89b2fd96aaef126de62ed10f444e15fc50d9da53f116fe84e18a787c729",
+    "25d9052c0819771e3c7ae3f81ba7205ecab10d2ea50a4d777ec8bdafe476a39a",
+    "25d9052c0819771e3c7ae3f81ba7205ecab10d2ea50a4d777ec8bdafe476a39a",
+    "25d9052c0819771e3c7ae3f81ba7205ecab10d2ea50a4d777ec8bdafe476a39a",
+    "25d9052c0819771e3c7ae3f81ba7205ecab10d2ea50a4d777ec8bdafe476a39a",
+    "25d9052c0819771e3c7ae3f81ba7205ecab10d2ea50a4d777ec8bdafe476a39a",
+    "e53ca0c984e7f3f9d70b800c982f4e75d2f502277e30ae1d6ae4e632a8d81589",
+    "4fa3d5d98a61cc581af8ce7ce4a21162d1f69c4ab74c7c3290492ff3d3bb650f",
+    "4fa3d5d98a61cc581af8ce7ce4a21162d1f69c4ab74c7c3290492ff3d3bb650f",
+    "4fa3d5d98a61cc581af8ce7ce4a21162d1f69c4ab74c7c3290492ff3d3bb650f",
+    "4fa3d5d98a61cc581af8ce7ce4a21162d1f69c4ab74c7c3290492ff3d3bb650f",
+    "4fa3d5d98a61cc581af8ce7ce4a21162d1f69c4ab74c7c3290492ff3d3bb650f",
+    "11034e8117bf9eb5008c59f6eb7f8e9fa2a4263cd070afedeac772318b24d7fe",
+    "3634dccf0e24229bb39031c93ebfd7fa24b8c50350cae78e533d43ae8d6d5b94",
+    "3634dccf0e24229bb39031c93ebfd7fa24b8c50350cae78e533d43ae8d6d5b94",
+    "3634dccf0e24229bb39031c93ebfd7fa24b8c50350cae78e533d43ae8d6d5b94",
+    "3634dccf0e24229bb39031c93ebfd7fa24b8c50350cae78e533d43ae8d6d5b94",
+    "3634dccf0e24229bb39031c93ebfd7fa24b8c50350cae78e533d43ae8d6d5b94",
+    "417cff6458d1f5991200e44fa53d01f137f58e58e720cb896ec96c5d9636f955",
+    "3f0b7d514314f482ebcba04210319f39f517c3b3ca578fe3d9178f8374cadad6",
+    "3f0b7d514314f482ebcba04210319f39f517c3b3ca578fe3d9178f8374cadad6",
+    "3f0b7d514314f482ebcba04210319f39f517c3b3ca578fe3d9178f8374cadad6",
+    "3f0b7d514314f482ebcba04210319f39f517c3b3ca578fe3d9178f8374cadad6",
+    "3f0b7d514314f482ebcba04210319f39f517c3b3ca578fe3d9178f8374cadad6",
+    "114d5479ba78391aa36ee61d419819b4eeb924eee8ce452af3a63758d0e86d41",
+    "5d105c95f46bcb435dd4c8874252bc55be4093277678feddaad11f54de777687",
+    "5d105c95f46bcb435dd4c8874252bc55be4093277678feddaad11f54de777687",
+    "5d105c95f46bcb435dd4c8874252bc55be4093277678feddaad11f54de777687",
+    "5d105c95f46bcb435dd4c8874252bc55be4093277678feddaad11f54de777687",
+    "5d105c95f46bcb435dd4c8874252bc55be4093277678feddaad11f54de777687",
+    "de7feca76531a90520c6e7b9b25d3737520d5ac54711440b55f2ae0065578f79",
+    "bf166c18e8734ebc298b847288a3d15c12d9c343a6e7bd5ae99556c53aca3a18",
+    "bf166c18e8734ebc298b847288a3d15c12d9c343a6e7bd5ae99556c53aca3a18",
+    "bf166c18e8734ebc298b847288a3d15c12d9c343a6e7bd5ae99556c53aca3a18",
+    "bf166c18e8734ebc298b847288a3d15c12d9c343a6e7bd5ae99556c53aca3a18",
+    "bf166c18e8734ebc298b847288a3d15c12d9c343a6e7bd5ae99556c53aca3a18",
+    "c1534788a1bc6a26e4c7819207fdcfa1154ff9c04d1060fd7805a7b613702ced",
+    "64451a35d59b67942b9d72951194b358a11b104015997d8927efb7c9748593d2",
+    "64451a35d59b67942b9d72951194b358a11b104015997d8927efb7c9748593d2",
+    "64451a35d59b67942b9d72951194b358a11b104015997d8927efb7c9748593d2",
+    "64451a35d59b67942b9d72951194b358a11b104015997d8927efb7c9748593d2",
+    "64451a35d59b67942b9d72951194b358a11b104015997d8927efb7c9748593d2",
+    "57080779a526ef695d11bd3dc153f0e887d05c2e6e4970b114f4cbc4431f12f3",
+    "72063a8b78613f9620c2e50904a101dee5c7d81b3ad9d2f043df5c464ce36c48",
+    "72063a8b78613f9620c2e50904a101dee5c7d81b3ad9d2f043df5c464ce36c48",
+    "72063a8b78613f9620c2e50904a101dee5c7d81b3ad9d2f043df5c464ce36c48",
+    "72063a8b78613f9620c2e50904a101dee5c7d81b3ad9d2f043df5c464ce36c48",
+    "72063a8b78613f9620c2e50904a101dee5c7d81b3ad9d2f043df5c464ce36c48",
+    "5f0ec8d8e27fb7fdf286a02756853e394365e04d37367f4b422bd16bb92af01a",
+    "5f0ec8d8e27fb7fdf286a02756853e394365e04d37367f4b422bd16bb92af01a"
+   ],
+   "nearest_ok": true,
+   "not_nearest": [],
+   "psnr": [
+    33.57,
+    18.97,
+    18.98,
+    18.98,
+    18.98,
+    18.98,
+    18.98,
+    18.98,
+    18.98,
+    18.99,
+    18.99,
+    18.99,
+    19.0,
+    19.0,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.01,
+    19.02,
+    19.02,
+    19.02,
+    19.02,
+    19.02,
+    19.02,
+    19.02,
+    19.02,
+    19.02,
+    19.02,
+    19.02,
+    19.02,
+    19.02,
+    19.02,
+    19.03,
+    19.02,
+    19.02,
+    19.02,
+    19.02,
+    19.02,
+    19.03,
+    19.03,
+    19.03,
+    19.03,
+    19.03,
+    19.03,
+    36.13,
+    36.16
+   ]
+  }
+ ],
+ "checks": [
+  {
+   "frame": 1,
+   "op": "wait_dialog",
+   "from": 0,
+   "want": "progress",
+   "got": "progress",
+   "ok": true
+  },
+  {
+   "frame": 3,
+   "op": "assert_state",
+   "want": {
+    "dialog": "Progress"
+   },
+   "got": {
+    "dialog": "Progress"
+   },
+   "ok": true
+  },
+  {
+   "frame": 3,
+   "op": "golden",
+   "ref": "screenshot_03.jpg",
+   "max_mae": 1.0,
+   "mae": {
+    "bscroll": 0.283,
+    "menubar": 0.076,
+    "bar": 0.435
+   },
+   "ok": true
+  },
+  {
+   "frame": 14,
+   "op": "golden",
+   "ref": "screenshot_04.jpg",
+   "max_mae": 1.0,
+   "mae": {
+    "bscroll": 0.285,
+    "menubar": 0.076,
+    "bar": 0.523
+   },
+   "ok": true
+  },
+  {
+   "frame": 26,
+   "op": "golden",
+   "ref": "screenshot_05.jpg",
+   "max_mae": 1.0,
+   "mae": {
+    "bscroll": 0.288,
+    "menubar": 0.076,
+    "bar": 0.542
+   },
+   "ok": true
+  },
+  {
+   "frame": 38,
+   "op": "golden",
+   "ref": "screenshot_06.jpg",
+   "max_mae": 1.0,
+   "mae": {
+    "bscroll": 0.289,
+    "menubar": 0.076,
+    "bar": 0.543
+   },
+   "ok": true
+  },
+  {
+   "frame": 50,
+   "op": "golden",
+   "ref": "screenshot_07.jpg",
+   "max_mae": 1.0,
+   "mae": {
+    "bscroll": 0.292,
+    "menubar": 0.076,
+    "bar": 0.547
+   },
+   "ok": true
+  },
+  {
+   "frame": 62,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  }
+ ],
+ "engine_state_hash": null,
+ "error": null
+}
