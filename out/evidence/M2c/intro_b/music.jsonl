@@ -1,0 +1,3 @@
+{"frame": 1, "group": null, "index": null, "kind": "start", "loop": 0, "mode": null, "site": "0579:002d", "via": "intro", "wav": "SANIM.wav"}
+{"frame": 2638, "kind": "stop", "wav": "SANIM.wav", "why": "end"}
+{"dice": [], "frame": 2639, "kind": "call", "mode": 0, "outcome": "off", "site": "ovl60:00fb"}

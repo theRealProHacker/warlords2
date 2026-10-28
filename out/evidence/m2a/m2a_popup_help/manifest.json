@@ -1,0 +1,95 @@
+{
+ "git_commit": null,
+ "exe_sha256": "9f9147af74d6b616b93fa0188dfdaff162a347b0202b7d2473cad8ee88922bc2",
+ "seed": 1,
+ "script": "tests/scripts/m2a_popup_help.json",
+ "script_sha256": "37c1e094a9ae014cffc294b92f6b08ef7fe67d2313803d2017845d389ada5041",
+ "argv": [
+  "--probe",
+  "probe_ui_start",
+  "--seed",
+  "1",
+  "--headless",
+  "--user-dir",
+  "/tmp/claude-1000/-home-rharvey-Dokumente-Programmieren-warlords2/3e1ff059-9e9d-444f-881a-e3dd85b79111/scratchpad/u",
+  "--script",
+  "tests/scripts/m2a_popup_help.json"
+ ],
+ "frames": 10,
+ "shots": [
+  {
+   "name": "popup_help_100",
+   "frame": 4,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/m2a/m2a_popup_help/frames/popup_help_100.png",
+   "sha256": "970dc353049a1e99c17d9c89452e0ec0a7d2f02139afe1649e5ec4f4b27bcda3"
+  },
+  {
+   "name": "after_press_100",
+   "frame": 8,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/m2a/m2a_popup_help/frames/after_press_100.png",
+   "sha256": "90624bf3ce59368dca50c8f780d80613448827708a61375c8640333b2db01dbc"
+  }
+ ],
+ "segments": [
+  {
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/m2a/m2a_popup_help/run_0.mp4",
+   "codec": "mp4v",
+   "fps": 60,
+   "first_frame": 0,
+   "frame_step": 1,
+   "frames": 10,
+   "frame_sha256": [
+    "787b50f26b33d697dfcba3abf2e3bbb3b2a28dc8d0407691b92be876fc1d7b73",
+    "970dc353049a1e99c17d9c89452e0ec0a7d2f02139afe1649e5ec4f4b27bcda3",
+    "970dc353049a1e99c17d9c89452e0ec0a7d2f02139afe1649e5ec4f4b27bcda3",
+    "970dc353049a1e99c17d9c89452e0ec0a7d2f02139afe1649e5ec4f4b27bcda3",
+    "970dc353049a1e99c17d9c89452e0ec0a7d2f02139afe1649e5ec4f4b27bcda3",
+    "970dc353049a1e99c17d9c89452e0ec0a7d2f02139afe1649e5ec4f4b27bcda3",
+    "970dc353049a1e99c17d9c89452e0ec0a7d2f02139afe1649e5ec4f4b27bcda3",
+    "6262b1406bd8c6750ae5c0c15dbc6b7e773864fdd0e13640294d0ffecd5d1016",
+    "90624bf3ce59368dca50c8f780d80613448827708a61375c8640333b2db01dbc",
+    "90624bf3ce59368dca50c8f780d80613448827708a61375c8640333b2db01dbc"
+   ],
+   "nearest_ok": true,
+   "not_nearest": [],
+   "psnr": [
+    26.96,
+    27.34,
+    27.35,
+    27.35,
+    27.35,
+    27.35,
+    27.35,
+    27.54,
+    27.54,
+    27.54
+   ]
+  }
+ ],
+ "checks": [
+  {
+   "frame": 4,
+   "op": "assert_state",
+   "want": {
+    "dialog": "PopupHelp"
+   },
+   "got": {
+    "dialog": "PopupHelp"
+   },
+   "ok": true
+  },
+  {
+   "frame": 7,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  }
+ ],
+ "engine_state_hash": null,
+ "error": null
+}

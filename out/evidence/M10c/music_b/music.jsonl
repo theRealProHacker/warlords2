@@ -1,0 +1,23 @@
+{"dice": [], "frame": 52, "kind": "call", "mode": 2, "outcome": "off", "site": "ovl61:21d4"}
+{"dice": [], "frame": 135, "kind": "call", "mode": 2, "outcome": "off", "site": "ovl61:21d4"}
+{"dice": [], "frame": 237, "kind": "call", "mode": 2, "outcome": "off", "site": "ovl61:21d4"}
+{"dice": [], "frame": 359, "kind": "call", "mode": 2, "outcome": "off", "site": "ovl61:21d4"}
+{"dice": [], "frame": 461, "kind": "call", "mode": 4, "outcome": "off", "site": "ovl68:0529"}
+{"dice": [[1, 8, -1, 6]], "frame": 534, "group": 10, "index": 6, "kind": "call", "loop": 1, "mode": 1, "outcome": "play", "site": "ovl33:05a0", "wav": "SINT17.wav"}
+{"frame": 534, "group": 10, "index": 6, "kind": "start", "loop": 1, "mode": 1, "site": "ovl33:05a0", "via": "event", "wav": "SINT17.wav"}
+{"dice": [], "frame": 604, "kind": "call", "mode": 1, "outcome": "same", "site": "ovl49:040a"}
+{"dice": [[1, 2, -1, 0]], "frame": 693, "group": 13, "index": 0, "kind": "call", "loop": 1, "mode": 5, "outcome": "play", "site": "ovl01:0006", "wav": "SINT1.wav"}
+{"frame": 693, "group": 13, "index": 0, "kind": "start", "loop": 1, "mode": 5, "site": null, "via": "ovl01:0006", "wav": "SINT1.wav"}
+{"frame": 726, "kind": "stop", "wav": "SINT1.wav", "why": "settings"}
+{"dice": [[1, 8, -1, 7]], "frame": 730, "group": 10, "index": 7, "kind": "call", "loop": 1, "mode": 1, "outcome": "play", "site": "ovl33:05a0", "wav": "SINT23.wav"}
+{"frame": 730, "group": 10, "index": 7, "kind": "start", "loop": 1, "mode": 1, "site": "ovl33:05a0", "via": "event", "wav": "SINT23.wav"}
+{"dice": [[1, 5, -1, 1]], "frame": 739, "group": 11, "index": 1, "kind": "call", "loop": 0, "mode": 2, "outcome": "play", "site": "ovl61:21d4", "wav": "SINT3.wav"}
+{"frame": 739, "group": 11, "index": 1, "kind": "start", "loop": 0, "mode": 2, "site": null, "via": "ovl61:21d4", "wav": "SINT3.wav"}
+{"dice": [], "frame": 832, "kind": "call", "mode": 2, "outcome": "same", "site": "ovl61:21d4"}
+{"dice": [], "frame": 944, "kind": "call", "mode": 2, "outcome": "same", "site": "ovl61:21d4"}
+{"dice": [], "frame": 1086, "kind": "call", "mode": 2, "outcome": "same", "site": "ovl61:21d4"}
+{"dice": [], "frame": 1155, "kind": "call", "mode": 2, "outcome": "same", "site": "ovl61:21d4"}
+{"dice": [], "frame": 1155, "kind": "call", "mode": 2, "outcome": "same", "site": "ovl61:21d4"}
+{"dice": [], "frame": 1194, "kind": "call", "mode": 2, "outcome": "same", "site": "ovl61:21d4"}
+{"dice": [[1, 8, -1, 6]], "frame": 1194, "group": 10, "index": 6, "kind": "call", "loop": 1, "mode": 1, "outcome": "play", "site": "ovl68:0546", "wav": "SINT17.wav"}
+{"frame": 1363, "group": 10, "index": 6, "kind": "start", "loop": 1, "mode": 1, "site": "ovl68:0546", "via": "event", "wav": "SINT17.wav"}

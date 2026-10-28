@@ -1,0 +1,439 @@
+{
+ "git_commit": null,
+ "exe_sha256": "9f9147af74d6b616b93fa0188dfdaff162a347b0202b7d2473cad8ee88922bc2",
+ "seed": 1,
+ "script": "tests/scripts/m2a_menus.json",
+ "script_sha256": "4ec331ebc7b9acdf8f3be659638ea4d3bb20209da7d2c3266be51508a3c4be6e",
+ "argv": [
+  "--probe",
+  "probe_ui_start",
+  "--seed",
+  "1",
+  "--headless",
+  "--user-dir",
+  "/tmp/claude-1000/-home-rharvey-Dokumente-Programmieren-warlords2/3e1ff059-9e9d-444f-881a-e3dd85b79111/scratchpad/u",
+  "--script",
+  "tests/scripts/m2a_menus.json"
+ ],
+ "frames": 70,
+ "shots": [
+  {
+   "name": "menu_open_0",
+   "frame": 5,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/m2a/m2a_menus/frames/menu_open_0.png",
+   "sha256": "10a625472ee00d207081be012fd6bc354b9f2d994d3b6c70d30bc6a69645cc41"
+  },
+  {
+   "name": "menu_open_1",
+   "frame": 13,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/m2a/m2a_menus/frames/menu_open_1.png",
+   "sha256": "602dfd454f4708375226d0333ecb5fff2a2308fe4d89e775c308a08f62912d02"
+  },
+  {
+   "name": "menu_open_2",
+   "frame": 21,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/m2a/m2a_menus/frames/menu_open_2.png",
+   "sha256": "95e9e40454a5d04f0c24f515257225e03d25764f3ae3e929d9a0fd36e63cf015"
+  },
+  {
+   "name": "menu_open_3",
+   "frame": 29,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/m2a/m2a_menus/frames/menu_open_3.png",
+   "sha256": "65bb93f942ef667b7d968fb6be7c7596d7292e07cad2a5481ea28cc6271ae3ae"
+  },
+  {
+   "name": "menu_open_4",
+   "frame": 37,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/m2a/m2a_menus/frames/menu_open_4.png",
+   "sha256": "1ddbb2f1b275fddbb548995eecfd8a78de931e1cea4b8eab0c1991f5fb9e26ba"
+  },
+  {
+   "name": "menu_open_5",
+   "frame": 45,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/m2a/m2a_menus/frames/menu_open_5.png",
+   "sha256": "00dd88d1a57f4b00b6eba76b4cdfccd48615662dd798b12fabe26e90006f86ec"
+  },
+  {
+   "name": "menu_open_6",
+   "frame": 53,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/m2a/m2a_menus/frames/menu_open_6.png",
+   "sha256": "887d2db81b5eee1e8cd055c8b323fb293db6e2b42f0c1c8de4731f7103f00bac"
+  },
+  {
+   "name": "menu_open_7",
+   "frame": 61,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/m2a/m2a_menus/frames/menu_open_7.png",
+   "sha256": "06d7e5b98761a3c535c45f3f98049534a7b352e6585f7201814ae2c09be6cacc"
+  },
+  {
+   "name": "menu_key_alt_f",
+   "frame": 66,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/m2a/m2a_menus/frames/menu_key_alt_f.png",
+   "sha256": "1ae7f8738ca3d69843c0248965ec7d77466c76688b48d58f0074623e68756ed1"
+  },
+  {
+   "name": "menu_key_down",
+   "frame": 67,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/m2a/m2a_menus/frames/menu_key_down.png",
+   "sha256": "1ae7f8738ca3d69843c0248965ec7d77466c76688b48d58f0074623e68756ed1"
+  }
+ ],
+ "segments": [
+  {
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/m2a/m2a_menus/run_0.mp4",
+   "codec": "mp4v",
+   "fps": 60,
+   "first_frame": 0,
+   "frame_step": 1,
+   "frames": 70,
+   "frame_sha256": [
+    "787b50f26b33d697dfcba3abf2e3bbb3b2a28dc8d0407691b92be876fc1d7b73",
+    "787b50f26b33d697dfcba3abf2e3bbb3b2a28dc8d0407691b92be876fc1d7b73",
+    "6c6d62fb9094042d91a06c5a400180d2b498e0e64aabd16242b82e4a87a120a8",
+    "7bfcb7077299cfb040dd85a34f73a84b5e90a1eb6c536739788db2a4ed3eee0a",
+    "cae4ab2cff674f96c501c9d16db83963fdc06eb0da9d1888ac2ff1e586f1094c",
+    "10a625472ee00d207081be012fd6bc354b9f2d994d3b6c70d30bc6a69645cc41",
+    "38ffbd67f5f811e7db523b504d3e09efcf3ce9fdbb8dcc9338e4deff475c3997",
+    "38ffbd67f5f811e7db523b504d3e09efcf3ce9fdbb8dcc9338e4deff475c3997",
+    "38ffbd67f5f811e7db523b504d3e09efcf3ce9fdbb8dcc9338e4deff475c3997",
+    "38ffbd67f5f811e7db523b504d3e09efcf3ce9fdbb8dcc9338e4deff475c3997",
+    "8d1a45c2d888908055d2c74b468437cefb7ec36d5d68b667ca93f6961282a1ef",
+    "1df67d7e0e35ced0783bbeaab8fb928d9463f9665a3ccab21f2d424cb6fd4078",
+    "1070208fcc79ac537e16836b63372152ea5878c0d270452c2be24fa6b3aebc1a",
+    "602dfd454f4708375226d0333ecb5fff2a2308fe4d89e775c308a08f62912d02",
+    "d72bfdcc6fd1a45a65c5c7cdf0c5d861e1e6ecd8e453d40ea819a9e854aa8b30",
+    "d72bfdcc6fd1a45a65c5c7cdf0c5d861e1e6ecd8e453d40ea819a9e854aa8b30",
+    "d72bfdcc6fd1a45a65c5c7cdf0c5d861e1e6ecd8e453d40ea819a9e854aa8b30",
+    "d72bfdcc6fd1a45a65c5c7cdf0c5d861e1e6ecd8e453d40ea819a9e854aa8b30",
+    "48eb28e5e70e617f6258f347a6df7d98f70bdd9e26b48df0da7c8ad697976550",
+    "9c306229f4905ddd198fccad1dabe7211267ba4b509c28112bd348599daf1cbf",
+    "4affdcc8c70c6269d89e2b586079c4807ec07df96fc9ace003c155e3063c7133",
+    "95e9e40454a5d04f0c24f515257225e03d25764f3ae3e929d9a0fd36e63cf015",
+    "4787dc9eb591d72a91a4347df3596b44b29cf44a848100d5987ef98376f2d36a",
+    "4787dc9eb591d72a91a4347df3596b44b29cf44a848100d5987ef98376f2d36a",
+    "4787dc9eb591d72a91a4347df3596b44b29cf44a848100d5987ef98376f2d36a",
+    "4787dc9eb591d72a91a4347df3596b44b29cf44a848100d5987ef98376f2d36a",
+    "2ba0a8febbc9495aa757e730cb334bfa64874c58f5cba83ee3a45949bdb0c94e",
+    "8529771123d0da19168c80fb94e312de4c7ff09f462a3917c84204a9e4f12874",
+    "53dd7cef30a2760c56738530647f9b4155fbc9ba7a3519ea14dbcce18642888a",
+    "65bb93f942ef667b7d968fb6be7c7596d7292e07cad2a5481ea28cc6271ae3ae",
+    "6946d82902341443fbe6ab30c7dde3bfdb57933f2332eedb232c5dd65496e682",
+    "6946d82902341443fbe6ab30c7dde3bfdb57933f2332eedb232c5dd65496e682",
+    "6946d82902341443fbe6ab30c7dde3bfdb57933f2332eedb232c5dd65496e682",
+    "6946d82902341443fbe6ab30c7dde3bfdb57933f2332eedb232c5dd65496e682",
+    "696283d5e35cb656d01bf5bf8cc058e2dad442ae5f9bee69e6b864a588919bc9",
+    "28441677ae061b9d35a2133ac151c4d0e1533d79ddf877c7f8af5f29c6f68948",
+    "5b34e19bdd1c8247c59a89419df133ed69d9fa6321b7b0c15f7468f44f3655d1",
+    "1ddbb2f1b275fddbb548995eecfd8a78de931e1cea4b8eab0c1991f5fb9e26ba",
+    "e4a7d3e0fcb21e9a05c4ac57b3bd15278ad49371ab62d0391f50bd8ff9198769",
+    "e4a7d3e0fcb21e9a05c4ac57b3bd15278ad49371ab62d0391f50bd8ff9198769",
+    "e4a7d3e0fcb21e9a05c4ac57b3bd15278ad49371ab62d0391f50bd8ff9198769",
+    "e4a7d3e0fcb21e9a05c4ac57b3bd15278ad49371ab62d0391f50bd8ff9198769",
+    "c40cae3f2e147f8b3a3aa3a57d1545695a374d9c6c8733a924959079a6d9cadd",
+    "1fa00872adf3b06b0664fdcda98803d0e9c6afe13eda5e2923c354befb2f7ba5",
+    "c858b29417349c42d101e64299827d856084f1b2fe65494dd4d48089c13f42ff",
+    "00dd88d1a57f4b00b6eba76b4cdfccd48615662dd798b12fabe26e90006f86ec",
+    "20bbb2da33e59bd38a4c2b802ae9da6e784ed8bfa56e6386ceee0a83449d6dec",
+    "20bbb2da33e59bd38a4c2b802ae9da6e784ed8bfa56e6386ceee0a83449d6dec",
+    "20bbb2da33e59bd38a4c2b802ae9da6e784ed8bfa56e6386ceee0a83449d6dec",
+    "20bbb2da33e59bd38a4c2b802ae9da6e784ed8bfa56e6386ceee0a83449d6dec",
+    "fbf02700bd4a0c564911210a881119eac4df3b624f441694b66f6e8755a386f8",
+    "10bb373b301cfdf0782b0c930d515a38a518f6d012a105c510e5f2b44ffa08ab",
+    "4062ca523fda75152935785525b00e59b0e013ab696edb591ec6ab602d2f4b83",
+    "887d2db81b5eee1e8cd055c8b323fb293db6e2b42f0c1c8de4731f7103f00bac",
+    "2fec403cbca1c9eaf09adf3cb2a41c5b3c814234e0eb88a75db9920b48096895",
+    "2fec403cbca1c9eaf09adf3cb2a41c5b3c814234e0eb88a75db9920b48096895",
+    "2fec403cbca1c9eaf09adf3cb2a41c5b3c814234e0eb88a75db9920b48096895",
+    "2fec403cbca1c9eaf09adf3cb2a41c5b3c814234e0eb88a75db9920b48096895",
+    "6bcc02417d4817906b289f1005f74efbc1b3763d00cdcd9b45ec3327a480b007",
+    "2d2c1e3fdcc4894c16099f0d1c19899b26424a57667e09ad663a511b7cd33122",
+    "e4fd379ee73280794ab60e8aa316800c94b99516a73f17a69a4f42f43100c9d5",
+    "06d7e5b98761a3c535c45f3f98049534a7b352e6585f7201814ae2c09be6cacc",
+    "d254ee46432d2ead0b985c6d1d1208ec2a23ec7e2086d814c38a0537c777ff5c",
+    "d254ee46432d2ead0b985c6d1d1208ec2a23ec7e2086d814c38a0537c777ff5c",
+    "d254ee46432d2ead0b985c6d1d1208ec2a23ec7e2086d814c38a0537c777ff5c",
+    "d254ee46432d2ead0b985c6d1d1208ec2a23ec7e2086d814c38a0537c777ff5c",
+    "1ae7f8738ca3d69843c0248965ec7d77466c76688b48d58f0074623e68756ed1",
+    "1ae7f8738ca3d69843c0248965ec7d77466c76688b48d58f0074623e68756ed1",
+    "d254ee46432d2ead0b985c6d1d1208ec2a23ec7e2086d814c38a0537c777ff5c",
+    "d254ee46432d2ead0b985c6d1d1208ec2a23ec7e2086d814c38a0537c777ff5c"
+   ],
+   "nearest_ok": true,
+   "not_nearest": [],
+   "psnr": [
+    26.96,
+    27.51,
+    27.51,
+    27.52,
+    27.52,
+    27.52,
+    27.53,
+    27.53,
+    27.53,
+    27.53,
+    27.7,
+    27.71,
+    27.91,
+    27.91,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    28.2,
+    28.21,
+    28.21,
+    28.21,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    28.79,
+    28.79,
+    28.8,
+    28.8,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    28.67,
+    28.67,
+    28.68,
+    28.68,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    29.72,
+    29.72,
+    29.72,
+    29.72,
+    27.74,
+    27.74,
+    27.75,
+    27.75,
+    28.59,
+    28.59,
+    28.59,
+    28.59,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.72,
+    27.72,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.91,
+    27.91,
+    27.72,
+    27.72
+   ]
+  }
+ ],
+ "checks": [
+  {
+   "frame": 5,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 7,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 13,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 15,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 21,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 23,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 29,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 31,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 37,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 39,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 45,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 47,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 53,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 55,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 61,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 63,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 66,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 68,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  }
+ ],
+ "engine_state_hash": null,
+ "error": null
+}

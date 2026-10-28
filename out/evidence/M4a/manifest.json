@@ -1,0 +1,75 @@
+{
+ "milestone": "M4a",
+ "git_head": "HEAD",
+ "allow_unverified": false,
+ "cfg": {
+  "controls": [
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "levels": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "cards": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "enhanced": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "names": null,
+  "options": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "army_set": 0,
+  "seed": 1,
+  "armytypes": "TERRAIN0/ARMYTYPE.DAT"
+ },
+ "new_game_state_sha256": {
+  "TUTORIA": "d91a7eb606c689ed5f526208880c7f79403765b59a1591a239120c5d65751adf",
+  "DRAGON": "8f1dcbbe935f93f7262a1cf1d0a447120e7d38f7003cf0cdee7ae1a4bbbcda71",
+  "SORCERY": "e524320fb38214ec92ef7b76ffefc91f710c30e84a24a1a0db79d3f1929b6036",
+  "ERYTHEA": "9f807de6275a6f0c99f7f92bd1515104e0e1ac3d62423cecb17695394adf4ace",
+  "HADESHA": "b759a0c5c98e45cf3907711f15b529270b32c98b46c485214c9be86608da1111",
+  "ISLADIA": "3e369160dfe92b5f1b3ca10fdabfcd225f48662238e6ef88b42b894d7a621be9",
+  "RANDOM": "ae280ce67a2a11589c3b0244741e68ddffc57cb2e530633eaa5baf826c068ac4"
+ },
+ "pytest": "999 passed, 2 skipped in 106.71s (0:01:46)",
+ "unused_name": "from WARLORD2.EXE DS:256f",
+ "hero_names": "rules.heroes.load_hero_names(gd, SCN 0x161) passed as new_game(hero_names=...)"
+}

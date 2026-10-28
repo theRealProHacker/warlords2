@@ -1,0 +1,7 @@
+boot -> probe_loop
+game->game log [('enter', 'boot', {}), ('exit', 'probe_loop'), ('enter', 'probe_loop', {'load_slot': 1})]
+double request: second transition request in one frame: 'probe_backdrop', then 'probe_loop'
+now probe_backdrop frame 3
+probe_raise {}: raised ProbeError: probe: on_enter from probe_backdrop at frame 3; tb ends in on_enter
+probe_strict {'bad': 1}: raised TypeError: StrictEnter.on_enter() got an unexpected keyword argument 'bad' at frame 1; tb ends in thread_func
+probe_loop {'frm': 'x'}: raised TypeError: warlords2.debug.probe_states.Loop.on_enter() got multiple values for keyword argument 'frm' at frame 1; tb ends in thread_func

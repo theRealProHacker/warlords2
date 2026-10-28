@@ -1,0 +1,160 @@
+{
+ "git_commit": "6f70c180f86791a22135083906f01d22fe5cfd6c+dirty",
+ "exe_sha256": "9f9147af74d6b616b93fa0188dfdaff162a347b0202b7d2473cad8ee88922bc2",
+ "seed": 7,
+ "script": "tests/scripts/m11_random.json",
+ "script_sha256": "a09a8b0899fd144608d6faa310d4bb6dc8a91159eda4f2eeb168b296ee07a9a0",
+ "argv": [
+  "--seed",
+  "7",
+  "--no-voice",
+  "--headless",
+  "--user-dir",
+  "/tmp/claude-1000/-home-rharvey-Dokumente-Programmieren-warlords2/3e1ff059-9e9d-444f-881a-e3dd85b79111/scratchpad/u11/user",
+  "--script",
+  "tests/scripts/m11_random.json"
+ ],
+ "frames": 30,
+ "shots": [
+  {
+   "name": "panel_defaults",
+   "frame": 5,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M11/m11_random/frames/panel_defaults.png",
+   "sha256": "a7ffcd10c958d789651a98d24af7d32a172f6cce1bb17cde955d20eb7f464193"
+  },
+  {
+   "name": "panel_changed",
+   "frame": 18,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M11/m11_random/frames/panel_changed.png",
+   "sha256": "54f9851e4843e01ee44ba1c3c5d7fb2f8f97e5bfe5307da4823b70714b58949d"
+  },
+  {
+   "name": "panel_query_pressed_again",
+   "frame": 22,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M11/m11_random/frames/panel_query_pressed_again.png",
+   "sha256": "7db39d548d46c701fbc447b585fbca1fe0714eaad49a2a50dad0c642674ed2ca"
+  },
+  {
+   "name": "panel_query_back",
+   "frame": 28,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M11/m11_random/frames/panel_query_back.png",
+   "sha256": "4fea28a2678696ed1c26b1b7c8a482c16e1030e55303f36362b1fff61c22cff5"
+  }
+ ],
+ "segments": [
+  {
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M11/m11_random/run_0.mp4",
+   "codec": "mp4v",
+   "fps": 60,
+   "first_frame": 0,
+   "frame_step": 1,
+   "frames": 30,
+   "frame_sha256": [
+    "019ce1edd2c446d429ceff6f8f0f206ce60493ee80d1958b1887a93ffe1822ca",
+    "019ce1edd2c446d429ceff6f8f0f206ce60493ee80d1958b1887a93ffe1822ca",
+    "019ce1edd2c446d429ceff6f8f0f206ce60493ee80d1958b1887a93ffe1822ca",
+    "a7ffcd10c958d789651a98d24af7d32a172f6cce1bb17cde955d20eb7f464193",
+    "a7ffcd10c958d789651a98d24af7d32a172f6cce1bb17cde955d20eb7f464193",
+    "a7ffcd10c958d789651a98d24af7d32a172f6cce1bb17cde955d20eb7f464193",
+    "b6da3af3a720ed7b921ef466cd26487eab239fb69c6a3a7216ae11010b8ca397",
+    "b6da3af3a720ed7b921ef466cd26487eab239fb69c6a3a7216ae11010b8ca397",
+    "3689a70acc3fbdc08c3efda136d59c2ef1efed67656c3e4f8e85f67e91de2e5a",
+    "3689a70acc3fbdc08c3efda136d59c2ef1efed67656c3e4f8e85f67e91de2e5a",
+    "98c30cc5be09e0e3dce811cebb03cd98169ed600e27583ff52b7767fabc0cda4",
+    "98c30cc5be09e0e3dce811cebb03cd98169ed600e27583ff52b7767fabc0cda4",
+    "98abbf4271228ba5c5f612167421119debecc5aff644e8765742bcb16c963395",
+    "98abbf4271228ba5c5f612167421119debecc5aff644e8765742bcb16c963395",
+    "77c97473adbf8465f8c4f01548af89d66127b0fb8e864cbd70ac765f4cc80b6c",
+    "77c97473adbf8465f8c4f01548af89d66127b0fb8e864cbd70ac765f4cc80b6c",
+    "54f9851e4843e01ee44ba1c3c5d7fb2f8f97e5bfe5307da4823b70714b58949d",
+    "54f9851e4843e01ee44ba1c3c5d7fb2f8f97e5bfe5307da4823b70714b58949d",
+    "54f9851e4843e01ee44ba1c3c5d7fb2f8f97e5bfe5307da4823b70714b58949d",
+    "54f9851e4843e01ee44ba1c3c5d7fb2f8f97e5bfe5307da4823b70714b58949d",
+    "7db39d548d46c701fbc447b585fbca1fe0714eaad49a2a50dad0c642674ed2ca",
+    "7db39d548d46c701fbc447b585fbca1fe0714eaad49a2a50dad0c642674ed2ca",
+    "7db39d548d46c701fbc447b585fbca1fe0714eaad49a2a50dad0c642674ed2ca",
+    "7db39d548d46c701fbc447b585fbca1fe0714eaad49a2a50dad0c642674ed2ca",
+    "46d251975aae22736e99b5bab998ace4659b1d15e1f81820f55805c3a6a4137e",
+    "46d251975aae22736e99b5bab998ace4659b1d15e1f81820f55805c3a6a4137e",
+    "4fea28a2678696ed1c26b1b7c8a482c16e1030e55303f36362b1fff61c22cff5",
+    "4fea28a2678696ed1c26b1b7c8a482c16e1030e55303f36362b1fff61c22cff5",
+    "4fea28a2678696ed1c26b1b7c8a482c16e1030e55303f36362b1fff61c22cff5",
+    "4fea28a2678696ed1c26b1b7c8a482c16e1030e55303f36362b1fff61c22cff5"
+   ],
+   "nearest_ok": true,
+   "not_nearest": [],
+   "psnr": [
+    20.31,
+    20.53,
+    20.54,
+    26.93,
+    26.93,
+    26.93,
+    26.92,
+    26.92,
+    26.92,
+    26.92,
+    26.92,
+    26.92,
+    27.1,
+    27.1,
+    27.1,
+    27.1,
+    27.1,
+    27.1,
+    27.1,
+    27.1,
+    27.1,
+    27.1,
+    27.1,
+    27.1,
+    27.12,
+    27.12,
+    27.12,
+    27.12,
+    27.12,
+    27.12
+   ]
+  }
+ ],
+ "checks": [
+  {
+   "frame": 2,
+   "op": "assert_state",
+   "want": {
+    "state": "menu",
+    "dialog": null
+   },
+   "got": {
+    "state": "menu",
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 28,
+   "op": "assert_state",
+   "want": {
+    "state": "menu",
+    "dialog": null
+   },
+   "got": {
+    "state": "menu",
+    "dialog": null
+   },
+   "ok": true
+  }
+ ],
+ "engine_state_hash": null,
+ "music": {
+  "records": 1,
+  "log_sha256": "08b0da9d41c6123437a8420df22dc031675a984a819b370ceadce7bc48408951",
+  "variant": "opl",
+  "cache": "/home/rharvey/Dokumente/Programmieren/warlords2/out/music",
+  "silent": false,
+  "stale": null,
+  "on": 0,
+  "driver": 1
+ },
+ "error": null
+}
