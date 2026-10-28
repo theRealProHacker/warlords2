@@ -1,0 +1,97 @@
+{
+ "git_commit": "4d50ea30cdb3d407a94750d932044f8bbbf6ddf8+dirty",
+ "exe_sha256": "9f9147af74d6b616b93fa0188dfdaff162a347b0202b7d2473cad8ee88922bc2",
+ "seed": 1,
+ "script": "tests/scripts/m1_input.json",
+ "script_sha256": "f026af0898862fb17e1d8397632d564d68cc4d5cf86069dec9ecdbef3b5a6b71",
+ "argv": [
+  "--probe",
+  "probe_loop",
+  "--seed",
+  "1",
+  "--headless",
+  "--user-dir",
+  "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/_u_m1_input",
+  "--script",
+  "tests/scripts/m1_input.json"
+ ],
+ "frames": 13,
+ "shots": [
+  {
+   "name": "loop_11",
+   "frame": 11,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m1_input/frames/loop_11.png",
+   "sha256": "0b150fd32588b1daca5569992ebe559c0102c837306b1af4c44d35128ec58366"
+  }
+ ],
+ "segments": [
+  {
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m1_input/run_0.mp4",
+   "codec": "mp4v",
+   "fps": 60,
+   "first_frame": 0,
+   "frame_step": 1,
+   "frames": 13,
+   "frame_sha256": [
+    "0b150fd32588b1daca5569992ebe559c0102c837306b1af4c44d35128ec58366",
+    "0b150fd32588b1daca5569992ebe559c0102c837306b1af4c44d35128ec58366",
+    "0b150fd32588b1daca5569992ebe559c0102c837306b1af4c44d35128ec58366",
+    "0b150fd32588b1daca5569992ebe559c0102c837306b1af4c44d35128ec58366",
+    "0b150fd32588b1daca5569992ebe559c0102c837306b1af4c44d35128ec58366",
+    "0b150fd32588b1daca5569992ebe559c0102c837306b1af4c44d35128ec58366",
+    "0b150fd32588b1daca5569992ebe559c0102c837306b1af4c44d35128ec58366",
+    "0b150fd32588b1daca5569992ebe559c0102c837306b1af4c44d35128ec58366",
+    "0b150fd32588b1daca5569992ebe559c0102c837306b1af4c44d35128ec58366",
+    "0b150fd32588b1daca5569992ebe559c0102c837306b1af4c44d35128ec58366",
+    "0b150fd32588b1daca5569992ebe559c0102c837306b1af4c44d35128ec58366",
+    "0b150fd32588b1daca5569992ebe559c0102c837306b1af4c44d35128ec58366",
+    "0b150fd32588b1daca5569992ebe559c0102c837306b1af4c44d35128ec58366"
+   ],
+   "nearest_ok": true,
+   "not_nearest": [],
+   "psnr": [
+    99.0,
+    99.0,
+    99.0,
+    99.0,
+    99.0,
+    99.0,
+    99.0,
+    99.0,
+    99.0,
+    99.0,
+    99.0,
+    99.0,
+    99.0
+   ]
+  }
+ ],
+ "checks": [
+  {
+   "frame": 0,
+   "op": "assert_state",
+   "want": {
+    "state": "probe_loop",
+    "dialog": null
+   },
+   "got": {
+    "state": "probe_loop",
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 11,
+   "op": "assert_state",
+   "want": {
+    "state": "probe_loop"
+   },
+   "got": {
+    "state": "probe_loop"
+   },
+   "ok": true
+  }
+ ],
+ "engine_state_hash": null,
+ "error": null
+}

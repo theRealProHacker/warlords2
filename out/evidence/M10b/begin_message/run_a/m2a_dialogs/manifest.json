@@ -1,0 +1,390 @@
+{
+ "git_commit": "4d50ea30cdb3d407a94750d932044f8bbbf6ddf8+dirty",
+ "exe_sha256": "9f9147af74d6b616b93fa0188dfdaff162a347b0202b7d2473cad8ee88922bc2",
+ "seed": 1,
+ "script": "tests/scripts/m2a_dialogs.json",
+ "script_sha256": "3fbee64a7b9df31cf86986c57efdc449a0b040720e5d95e615a2919cefb53c42",
+ "argv": [
+  "--probe",
+  "probe_ui_dialogs",
+  "--seed",
+  "1",
+  "--headless",
+  "--user-dir",
+  "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/_u_m2a_dialogs",
+  "--script",
+  "tests/scripts/m2a_dialogs.json"
+ ],
+ "frames": 38,
+ "shots": [
+  {
+   "name": "message_1line",
+   "frame": 1,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/message_1line.png",
+   "sha256": "d124678b41b7c67d735b744e826f875db0f94421f63ee12b0893bb3eadf58a72"
+  },
+  {
+   "name": "message_2lines",
+   "frame": 3,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/message_2lines.png",
+   "sha256": "40f8400b31e3e4cc0810f0011cc7e43bc50a2cf9140e881b2fa32eac6a71019e"
+  },
+  {
+   "name": "confirm_quit",
+   "frame": 5,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/confirm_quit.png",
+   "sha256": "f975fd13365a0276a5070d303f9f8e1bdb2490a79edac9ba2ebe5a8e106176af"
+  },
+  {
+   "name": "confirm_war",
+   "frame": 7,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/confirm_war.png",
+   "sha256": "3e6ac1add47b5b8c85a74a7c72d0eb828ea67eb5abf2f34343cfaba5892124d5"
+  },
+  {
+   "name": "help_page_0",
+   "frame": 9,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/help_page_0.png",
+   "sha256": "7098163519e24b61cc0d1f2c92b0516f13dca330400f2f89714505dc654b280a"
+  },
+  {
+   "name": "help_page_1",
+   "frame": 10,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/help_page_1.png",
+   "sha256": "295d1ee66c031d34cb98f9e01dafa817a0b082b09f3a5525a253ee5a866e5e2f"
+  },
+  {
+   "name": "help_items_0",
+   "frame": 12,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/help_items_0.png",
+   "sha256": "071680f721a39abfeff94b9f5e9440bf7420236819793ef8bba90b8f66813429"
+  },
+  {
+   "name": "tutorial_00",
+   "frame": 14,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/tutorial_00.png",
+   "sha256": "f59712f562b7ef6f71f4b9f9733bab38f2621d67de6b7183d39fec6684a9cc61"
+  },
+  {
+   "name": "tutorial_01",
+   "frame": 16,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/tutorial_01.png",
+   "sha256": "5d66aaa5c2f07c859f66cf808675f7fe12d9f9f82e8be12e1326be38a79f29ac"
+  },
+  {
+   "name": "tutorial_02",
+   "frame": 18,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/tutorial_02.png",
+   "sha256": "a88ff89b6aab1155509508c381b7f536e7efea4583ca428d788d07b50158870a"
+  },
+  {
+   "name": "tutorial_03",
+   "frame": 20,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/tutorial_03.png",
+   "sha256": "b538d949259b03581baa8af36aaedd92483c195d659fa49e72f12f797ba1a8c6"
+  },
+  {
+   "name": "tutorial_04",
+   "frame": 22,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/tutorial_04.png",
+   "sha256": "c959dffb001838da1a3f9e34769afa0d08195e2879790923cdff99218c281933"
+  },
+  {
+   "name": "tutorial_05",
+   "frame": 24,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/tutorial_05.png",
+   "sha256": "c46a14c42850c91ad15ae38f009b69cc461ef75f6c875ca46f0d930699955d8d"
+  },
+  {
+   "name": "tutorial_06",
+   "frame": 26,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/tutorial_06.png",
+   "sha256": "c55ba9fb5d12a6a379068f07900eef5cd6ead63297249f0a43fe97ecb0b6b190"
+  },
+  {
+   "name": "tutorial_07",
+   "frame": 28,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/tutorial_07.png",
+   "sha256": "c0e8d06148fa499389779a9099f79fb5167750cb1d828e7abbb855934bef9b2a"
+  },
+  {
+   "name": "tutorial_08",
+   "frame": 30,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/tutorial_08.png",
+   "sha256": "b175a23dd8b4e23b393223c3815a72b8f7003110a40b5ffe1b72698bb8213b41"
+  },
+  {
+   "name": "tutorial_09",
+   "frame": 32,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/tutorial_09.png",
+   "sha256": "f064aa35095d234d295c59db0411ff6710bb457a82cdd50e5b681b1284178cf1"
+  },
+  {
+   "name": "tutorial_10",
+   "frame": 34,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/frames/tutorial_10.png",
+   "sha256": "ad16198f22779a84b03906c220fd18539738b356fde100213743548943f4e676"
+  }
+ ],
+ "segments": [
+  {
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_dialogs/run_0.mp4",
+   "codec": "mp4v",
+   "fps": 60,
+   "first_frame": 0,
+   "frame_step": 1,
+   "frames": 38,
+   "frame_sha256": [
+    "3bf97c2c1b09ce31b5f0e36a3b9d09dae735e16007082f152029b8e304ef9541",
+    "d124678b41b7c67d735b744e826f875db0f94421f63ee12b0893bb3eadf58a72",
+    "3bf97c2c1b09ce31b5f0e36a3b9d09dae735e16007082f152029b8e304ef9541",
+    "40f8400b31e3e4cc0810f0011cc7e43bc50a2cf9140e881b2fa32eac6a71019e",
+    "4d59230fa5f6766dd780950286477db6004cc1060807490963b6d79203e58ebb",
+    "f975fd13365a0276a5070d303f9f8e1bdb2490a79edac9ba2ebe5a8e106176af",
+    "9e95b81b500af333c9ef23ffe65c88d530a01b7a60c003e00d90c00333591c2d",
+    "3e6ac1add47b5b8c85a74a7c72d0eb828ea67eb5abf2f34343cfaba5892124d5",
+    "7614fa0a447a11b27e02be9605ce65f5fc1b2a73b1f2c5cb75d2024d6ca00848",
+    "7098163519e24b61cc0d1f2c92b0516f13dca330400f2f89714505dc654b280a",
+    "295d1ee66c031d34cb98f9e01dafa817a0b082b09f3a5525a253ee5a866e5e2f",
+    "7614fa0a447a11b27e02be9605ce65f5fc1b2a73b1f2c5cb75d2024d6ca00848",
+    "071680f721a39abfeff94b9f5e9440bf7420236819793ef8bba90b8f66813429",
+    "4d59230fa5f6766dd780950286477db6004cc1060807490963b6d79203e58ebb",
+    "f59712f562b7ef6f71f4b9f9733bab38f2621d67de6b7183d39fec6684a9cc61",
+    "4d59230fa5f6766dd780950286477db6004cc1060807490963b6d79203e58ebb",
+    "5d66aaa5c2f07c859f66cf808675f7fe12d9f9f82e8be12e1326be38a79f29ac",
+    "4d59230fa5f6766dd780950286477db6004cc1060807490963b6d79203e58ebb",
+    "a88ff89b6aab1155509508c381b7f536e7efea4583ca428d788d07b50158870a",
+    "4d59230fa5f6766dd780950286477db6004cc1060807490963b6d79203e58ebb",
+    "b538d949259b03581baa8af36aaedd92483c195d659fa49e72f12f797ba1a8c6",
+    "4d59230fa5f6766dd780950286477db6004cc1060807490963b6d79203e58ebb",
+    "c959dffb001838da1a3f9e34769afa0d08195e2879790923cdff99218c281933",
+    "4d59230fa5f6766dd780950286477db6004cc1060807490963b6d79203e58ebb",
+    "c46a14c42850c91ad15ae38f009b69cc461ef75f6c875ca46f0d930699955d8d",
+    "4d59230fa5f6766dd780950286477db6004cc1060807490963b6d79203e58ebb",
+    "c55ba9fb5d12a6a379068f07900eef5cd6ead63297249f0a43fe97ecb0b6b190",
+    "4d59230fa5f6766dd780950286477db6004cc1060807490963b6d79203e58ebb",
+    "c0e8d06148fa499389779a9099f79fb5167750cb1d828e7abbb855934bef9b2a",
+    "4d59230fa5f6766dd780950286477db6004cc1060807490963b6d79203e58ebb",
+    "b175a23dd8b4e23b393223c3815a72b8f7003110a40b5ffe1b72698bb8213b41",
+    "4d59230fa5f6766dd780950286477db6004cc1060807490963b6d79203e58ebb",
+    "f064aa35095d234d295c59db0411ff6710bb457a82cdd50e5b681b1284178cf1",
+    "4d59230fa5f6766dd780950286477db6004cc1060807490963b6d79203e58ebb",
+    "ad16198f22779a84b03906c220fd18539738b356fde100213743548943f4e676",
+    "4d59230fa5f6766dd780950286477db6004cc1060807490963b6d79203e58ebb",
+    "4d59230fa5f6766dd780950286477db6004cc1060807490963b6d79203e58ebb",
+    "4d59230fa5f6766dd780950286477db6004cc1060807490963b6d79203e58ebb"
+   ],
+   "nearest_ok": true,
+   "not_nearest": [],
+   "psnr": [
+    33.57,
+    35.3,
+    35.38,
+    35.36,
+    35.39,
+    35.34,
+    35.4,
+    35.35,
+    35.41,
+    25.61,
+    26.7,
+    35.46,
+    29.53,
+    36.03,
+    28.93,
+    35.86,
+    30.09,
+    35.94,
+    30.3,
+    36.13,
+    28.43,
+    35.92,
+    29.11,
+    35.85,
+    30.22,
+    36.07,
+    28.97,
+    35.93,
+    28.7,
+    35.84,
+    29.06,
+    35.87,
+    29.48,
+    35.86,
+    29.62,
+    35.86,
+    36.51,
+    36.5
+   ]
+  }
+ ],
+ "checks": [
+  {
+   "frame": 1,
+   "op": "wait_dialog",
+   "from": 0,
+   "want": "message",
+   "got": "message",
+   "ok": true
+  },
+  {
+   "frame": 1,
+   "op": "wait_dialog",
+   "from": 1,
+   "want": "message",
+   "got": "message",
+   "ok": true
+  },
+  {
+   "frame": 3,
+   "op": "wait_dialog",
+   "from": 3,
+   "want": "message",
+   "got": "message",
+   "ok": true
+  },
+  {
+   "frame": 5,
+   "op": "wait_dialog",
+   "from": 5,
+   "want": "confirm",
+   "got": "confirm",
+   "ok": true
+  },
+  {
+   "frame": 7,
+   "op": "wait_dialog",
+   "from": 7,
+   "want": "confirm",
+   "got": "confirm",
+   "ok": true
+  },
+  {
+   "frame": 9,
+   "op": "wait_dialog",
+   "from": 9,
+   "want": "help_page",
+   "got": "help_page",
+   "ok": true
+  },
+  {
+   "frame": 10,
+   "op": "wait_dialog",
+   "from": 10,
+   "want": "help_page",
+   "got": "help_page",
+   "ok": true
+  },
+  {
+   "frame": 12,
+   "op": "wait_dialog",
+   "from": 12,
+   "want": "help_items",
+   "got": "help_items",
+   "ok": true
+  },
+  {
+   "frame": 14,
+   "op": "wait_dialog",
+   "from": 14,
+   "want": "tutorial_page",
+   "got": "tutorial_page",
+   "ok": true
+  },
+  {
+   "frame": 16,
+   "op": "wait_dialog",
+   "from": 16,
+   "want": "tutorial_page",
+   "got": "tutorial_page",
+   "ok": true
+  },
+  {
+   "frame": 18,
+   "op": "wait_dialog",
+   "from": 18,
+   "want": "tutorial_page",
+   "got": "tutorial_page",
+   "ok": true
+  },
+  {
+   "frame": 20,
+   "op": "wait_dialog",
+   "from": 20,
+   "want": "tutorial_page",
+   "got": "tutorial_page",
+   "ok": true
+  },
+  {
+   "frame": 22,
+   "op": "wait_dialog",
+   "from": 22,
+   "want": "tutorial_page",
+   "got": "tutorial_page",
+   "ok": true
+  },
+  {
+   "frame": 24,
+   "op": "wait_dialog",
+   "from": 24,
+   "want": "tutorial_page",
+   "got": "tutorial_page",
+   "ok": true
+  },
+  {
+   "frame": 26,
+   "op": "wait_dialog",
+   "from": 26,
+   "want": "tutorial_page",
+   "got": "tutorial_page",
+   "ok": true
+  },
+  {
+   "frame": 28,
+   "op": "wait_dialog",
+   "from": 28,
+   "want": "tutorial_page",
+   "got": "tutorial_page",
+   "ok": true
+  },
+  {
+   "frame": 30,
+   "op": "wait_dialog",
+   "from": 30,
+   "want": "tutorial_page",
+   "got": "tutorial_page",
+   "ok": true
+  },
+  {
+   "frame": 32,
+   "op": "wait_dialog",
+   "from": 32,
+   "want": "tutorial_page",
+   "got": "tutorial_page",
+   "ok": true
+  },
+  {
+   "frame": 34,
+   "op": "wait_dialog",
+   "from": 34,
+   "want": "tutorial_page",
+   "got": "tutorial_page",
+   "ok": true
+  },
+  {
+   "frame": 36,
+   "op": "assert_state",
+   "want": {
+    "state": "probe_ui_dialogs",
+    "dialog": null
+   },
+   "got": {
+    "state": "probe_ui_dialogs",
+    "dialog": null
+   },
+   "ok": true
+  }
+ ],
+ "engine_state_hash": null,
+ "error": null
+}

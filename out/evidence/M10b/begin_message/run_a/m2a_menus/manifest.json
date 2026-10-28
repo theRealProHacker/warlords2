@@ -1,0 +1,439 @@
+{
+ "git_commit": "4d50ea30cdb3d407a94750d932044f8bbbf6ddf8+dirty",
+ "exe_sha256": "9f9147af74d6b616b93fa0188dfdaff162a347b0202b7d2473cad8ee88922bc2",
+ "seed": 1,
+ "script": "tests/scripts/m2a_menus.json",
+ "script_sha256": "4ec331ebc7b9acdf8f3be659638ea4d3bb20209da7d2c3266be51508a3c4be6e",
+ "argv": [
+  "--probe",
+  "probe_ui_start",
+  "--seed",
+  "1",
+  "--headless",
+  "--user-dir",
+  "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/_u_m2a_menus",
+  "--script",
+  "tests/scripts/m2a_menus.json"
+ ],
+ "frames": 70,
+ "shots": [
+  {
+   "name": "menu_open_0",
+   "frame": 5,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_menus/frames/menu_open_0.png",
+   "sha256": "f9d2925df465364fa20c9d2c5708c538d37da5ee05830814c88c837db3fbe4d5"
+  },
+  {
+   "name": "menu_open_1",
+   "frame": 13,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_menus/frames/menu_open_1.png",
+   "sha256": "2f9e1503b42b9a88cb01bad9cf60c0f6af5cb928c3884046e56e424d43de327b"
+  },
+  {
+   "name": "menu_open_2",
+   "frame": 21,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_menus/frames/menu_open_2.png",
+   "sha256": "9f1197fe547404ff4d72cd34ee8c6b137c727385f70d8d050e8245e31c186298"
+  },
+  {
+   "name": "menu_open_3",
+   "frame": 29,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_menus/frames/menu_open_3.png",
+   "sha256": "906a3f962247beecc299e7350bdf3bf2451cdb2dfd2981d3faf667c4575a2257"
+  },
+  {
+   "name": "menu_open_4",
+   "frame": 37,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_menus/frames/menu_open_4.png",
+   "sha256": "4cfe2796e171e30dea0f78a36084b59aa6a3b1517d660dc2ec5a4f5e6ab64dfc"
+  },
+  {
+   "name": "menu_open_5",
+   "frame": 45,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_menus/frames/menu_open_5.png",
+   "sha256": "d0a6dd093351eb24ccbbb52f1fcd441a4299371288d0dba7ba515cd5f005b8f1"
+  },
+  {
+   "name": "menu_open_6",
+   "frame": 53,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_menus/frames/menu_open_6.png",
+   "sha256": "3b9909e2814b560ac2d8af6cf38d95492b67d8dc847bba2c7bf392ffd6a32a53"
+  },
+  {
+   "name": "menu_open_7",
+   "frame": 61,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_menus/frames/menu_open_7.png",
+   "sha256": "f318d28f1a0b1712fda4b9c5f43970d68141670afefadcf712654481ce0a84d8"
+  },
+  {
+   "name": "menu_key_alt_f",
+   "frame": 66,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_menus/frames/menu_key_alt_f.png",
+   "sha256": "d396f1ecf9ffbcf6c187a87e674a2fcee0a2d38ac07062c0d429d3b10e1cc1e8"
+  },
+  {
+   "name": "menu_key_down",
+   "frame": 67,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_menus/frames/menu_key_down.png",
+   "sha256": "33bf9fb91eb5666095057a452e865c7a9d250fc56eda226aec9b02177a4e5aab"
+  }
+ ],
+ "segments": [
+  {
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10b/begin_message/run_a/m2a_menus/run_0.mp4",
+   "codec": "mp4v",
+   "fps": 60,
+   "first_frame": 0,
+   "frame_step": 1,
+   "frames": 70,
+   "frame_sha256": [
+    "787b50f26b33d697dfcba3abf2e3bbb3b2a28dc8d0407691b92be876fc1d7b73",
+    "787b50f26b33d697dfcba3abf2e3bbb3b2a28dc8d0407691b92be876fc1d7b73",
+    "e85ca09128176de589517fcaac569f7202209afe6609bbdd6853589b0757ec9e",
+    "b85f683d35c6a956043eb4a4461c657bf9c9554b6b6fa71897a547ad971eee47",
+    "9183eea1e15c596271ed4f3e958343343b45caa24ba67415addc30b3fe7ae83e",
+    "f9d2925df465364fa20c9d2c5708c538d37da5ee05830814c88c837db3fbe4d5",
+    "38ffbd67f5f811e7db523b504d3e09efcf3ce9fdbb8dcc9338e4deff475c3997",
+    "38ffbd67f5f811e7db523b504d3e09efcf3ce9fdbb8dcc9338e4deff475c3997",
+    "38ffbd67f5f811e7db523b504d3e09efcf3ce9fdbb8dcc9338e4deff475c3997",
+    "38ffbd67f5f811e7db523b504d3e09efcf3ce9fdbb8dcc9338e4deff475c3997",
+    "8db6db01b7fa52d9dcbdcb274762304a0c7e3fc925914205c9823dcec99b43a3",
+    "81a7c44e8c4a65a18477b1df73aad73278a693958eaac9beb41f3c78fde5a77c",
+    "369ee0a7dd8d1537d753a0d517e3653cd26bb10df106ba08e88f436f3c48a2b6",
+    "2f9e1503b42b9a88cb01bad9cf60c0f6af5cb928c3884046e56e424d43de327b",
+    "d72bfdcc6fd1a45a65c5c7cdf0c5d861e1e6ecd8e453d40ea819a9e854aa8b30",
+    "d72bfdcc6fd1a45a65c5c7cdf0c5d861e1e6ecd8e453d40ea819a9e854aa8b30",
+    "d72bfdcc6fd1a45a65c5c7cdf0c5d861e1e6ecd8e453d40ea819a9e854aa8b30",
+    "d72bfdcc6fd1a45a65c5c7cdf0c5d861e1e6ecd8e453d40ea819a9e854aa8b30",
+    "9722f5ed4cfddf8808ed52d11805d3716e3a63fa2d9c0c423ed4a263cea6f64b",
+    "534d7c076ec9cabd265398c1b3ce8a3c4d25fb6a40286a6268079900a1552be3",
+    "fb531ad44af28769fc2e364a3598e43d318b35df12dfaa99f56ac51145661103",
+    "9f1197fe547404ff4d72cd34ee8c6b137c727385f70d8d050e8245e31c186298",
+    "4787dc9eb591d72a91a4347df3596b44b29cf44a848100d5987ef98376f2d36a",
+    "4787dc9eb591d72a91a4347df3596b44b29cf44a848100d5987ef98376f2d36a",
+    "4787dc9eb591d72a91a4347df3596b44b29cf44a848100d5987ef98376f2d36a",
+    "4787dc9eb591d72a91a4347df3596b44b29cf44a848100d5987ef98376f2d36a",
+    "d0c4ab47684d7f5cc6813106010da578ee5f3bd34bd75b56bb1529eda57b6075",
+    "39d52cd6b217368f2feaa694c1ed0b35c53d5dcbfa822315738777e21560f888",
+    "6524c734267b1cacae6184ead8cd9a15326f2e99169108caae3b137241265106",
+    "906a3f962247beecc299e7350bdf3bf2451cdb2dfd2981d3faf667c4575a2257",
+    "6946d82902341443fbe6ab30c7dde3bfdb57933f2332eedb232c5dd65496e682",
+    "6946d82902341443fbe6ab30c7dde3bfdb57933f2332eedb232c5dd65496e682",
+    "6946d82902341443fbe6ab30c7dde3bfdb57933f2332eedb232c5dd65496e682",
+    "6946d82902341443fbe6ab30c7dde3bfdb57933f2332eedb232c5dd65496e682",
+    "27c8ebdeaaa46f283c4e4dd1e8d6dd6b3ea6cbc505a8d5ea66b75e3017224a04",
+    "0dc236a00aecc81dfbe052849754fc5df5b2f8a8db5e2e5848851908b1d469a8",
+    "b969eb070457ae10a09e5df0cf34a94f653ac5db1e71e05e4d1ebabd31dd05c8",
+    "4cfe2796e171e30dea0f78a36084b59aa6a3b1517d660dc2ec5a4f5e6ab64dfc",
+    "e4a7d3e0fcb21e9a05c4ac57b3bd15278ad49371ab62d0391f50bd8ff9198769",
+    "e4a7d3e0fcb21e9a05c4ac57b3bd15278ad49371ab62d0391f50bd8ff9198769",
+    "e4a7d3e0fcb21e9a05c4ac57b3bd15278ad49371ab62d0391f50bd8ff9198769",
+    "e4a7d3e0fcb21e9a05c4ac57b3bd15278ad49371ab62d0391f50bd8ff9198769",
+    "6c9f9ddbd9b4049b7260aaa7bc9e3c419e299b25c30afc179f6eed1a971e4008",
+    "3d253b9da09b6e929ae33623387fdb03df33f1347d59c80bed6763a4c7e0cde8",
+    "cd28ce58c8f6c1eb669bd0fea6151dae7d955cc8368c32ea05c17de67895621d",
+    "d0a6dd093351eb24ccbbb52f1fcd441a4299371288d0dba7ba515cd5f005b8f1",
+    "20bbb2da33e59bd38a4c2b802ae9da6e784ed8bfa56e6386ceee0a83449d6dec",
+    "20bbb2da33e59bd38a4c2b802ae9da6e784ed8bfa56e6386ceee0a83449d6dec",
+    "20bbb2da33e59bd38a4c2b802ae9da6e784ed8bfa56e6386ceee0a83449d6dec",
+    "20bbb2da33e59bd38a4c2b802ae9da6e784ed8bfa56e6386ceee0a83449d6dec",
+    "cc828b0b6cdae2af528e176b13fa05372f4a6f67fbfd594450d9627f47aed95b",
+    "6096552bd93c32c771b15c638a37f4013f3989598e2395193d9036361d0fa011",
+    "efedcaa65597b5a49e6bca4b096e07f70eed79e41ff0504768832a464dba5fd7",
+    "3b9909e2814b560ac2d8af6cf38d95492b67d8dc847bba2c7bf392ffd6a32a53",
+    "2fec403cbca1c9eaf09adf3cb2a41c5b3c814234e0eb88a75db9920b48096895",
+    "2fec403cbca1c9eaf09adf3cb2a41c5b3c814234e0eb88a75db9920b48096895",
+    "2fec403cbca1c9eaf09adf3cb2a41c5b3c814234e0eb88a75db9920b48096895",
+    "2fec403cbca1c9eaf09adf3cb2a41c5b3c814234e0eb88a75db9920b48096895",
+    "b2fbfff21712275a262c806145bb1585f5ceefaafa03ea335caadff0b89389cd",
+    "a9d46f8519fc755a067b1169c7bd9ca7eaef43cd0a40998096228b892ef26178",
+    "92e508b4bb519f764e74fb22813479887c9d01a259a579f91bc38e82d780d137",
+    "f318d28f1a0b1712fda4b9c5f43970d68141670afefadcf712654481ce0a84d8",
+    "d254ee46432d2ead0b985c6d1d1208ec2a23ec7e2086d814c38a0537c777ff5c",
+    "d254ee46432d2ead0b985c6d1d1208ec2a23ec7e2086d814c38a0537c777ff5c",
+    "d254ee46432d2ead0b985c6d1d1208ec2a23ec7e2086d814c38a0537c777ff5c",
+    "d254ee46432d2ead0b985c6d1d1208ec2a23ec7e2086d814c38a0537c777ff5c",
+    "d396f1ecf9ffbcf6c187a87e674a2fcee0a2d38ac07062c0d429d3b10e1cc1e8",
+    "33bf9fb91eb5666095057a452e865c7a9d250fc56eda226aec9b02177a4e5aab",
+    "d254ee46432d2ead0b985c6d1d1208ec2a23ec7e2086d814c38a0537c777ff5c",
+    "d254ee46432d2ead0b985c6d1d1208ec2a23ec7e2086d814c38a0537c777ff5c"
+   ],
+   "nearest_ok": true,
+   "not_nearest": [],
+   "psnr": [
+    26.96,
+    27.51,
+    27.51,
+    27.52,
+    27.52,
+    27.52,
+    27.53,
+    27.53,
+    27.53,
+    27.53,
+    27.71,
+    27.71,
+    27.92,
+    27.92,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    28.21,
+    28.21,
+    28.22,
+    28.22,
+    27.72,
+    27.72,
+    27.73,
+    27.73,
+    28.79,
+    28.8,
+    28.8,
+    28.8,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    28.67,
+    28.68,
+    28.69,
+    28.69,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    29.72,
+    29.73,
+    29.73,
+    29.73,
+    27.74,
+    27.74,
+    27.75,
+    27.75,
+    28.59,
+    28.59,
+    28.6,
+    28.6,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.72,
+    27.72,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.73,
+    27.91,
+    27.91,
+    27.72,
+    27.72
+   ]
+  }
+ ],
+ "checks": [
+  {
+   "frame": 5,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 7,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 13,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 15,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 21,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 23,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 29,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 31,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 37,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 39,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 45,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 47,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 53,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 55,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 61,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 63,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  },
+  {
+   "frame": 66,
+   "op": "assert_state",
+   "want": {
+    "dialog": "MenuDialog"
+   },
+   "got": {
+    "dialog": "MenuDialog"
+   },
+   "ok": true
+  },
+  {
+   "frame": 68,
+   "op": "assert_state",
+   "want": {
+    "dialog": null
+   },
+   "got": {
+    "dialog": null
+   },
+   "ok": true
+  }
+ ],
+ "engine_state_hash": null,
+ "error": null
+}

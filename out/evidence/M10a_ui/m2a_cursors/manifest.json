@@ -1,0 +1,52 @@
+{
+ "git_commit": null,
+ "exe_sha256": "9f9147af74d6b616b93fa0188dfdaff162a347b0202b7d2473cad8ee88922bc2",
+ "seed": 1,
+ "script": "tests/scripts/m2a_cursors.json",
+ "script_sha256": "53c231eec811d1fd8af113bf086f5ec8f35e880b9f4d8ea2e68194778739af51",
+ "argv": [
+  "--probe",
+  "probe_cursors",
+  "--seed",
+  "1",
+  "--headless",
+  "--script",
+  "tests/scripts/m2a_cursors.json",
+  "--user-dir",
+  "/tmp/wl2-user-nnuff5y4"
+ ],
+ "frames": 3,
+ "shots": [
+  {
+   "name": "buttons_states_cursors",
+   "frame": 1,
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10a_ui/m2a_cursors/frames/buttons_states_cursors.png",
+   "sha256": "6764b5716f31add3d60141b2bf77fea94432bacee6af3912e897f3e25d0d8b07"
+  }
+ ],
+ "segments": [
+  {
+   "path": "/home/rharvey/Dokumente/Programmieren/warlords2/out/evidence/M10a_ui/m2a_cursors/run_0.mp4",
+   "codec": "mp4v",
+   "fps": 60,
+   "first_frame": 0,
+   "frame_step": 1,
+   "frames": 3,
+   "frame_sha256": [
+    "6764b5716f31add3d60141b2bf77fea94432bacee6af3912e897f3e25d0d8b07",
+    "6764b5716f31add3d60141b2bf77fea94432bacee6af3912e897f3e25d0d8b07",
+    "6764b5716f31add3d60141b2bf77fea94432bacee6af3912e897f3e25d0d8b07"
+   ],
+   "nearest_ok": true,
+   "not_nearest": [],
+   "psnr": [
+    26.78,
+    27.08,
+    27.09
+   ]
+  }
+ ],
+ "checks": [],
+ "engine_state_hash": null,
+ "error": null
+}
